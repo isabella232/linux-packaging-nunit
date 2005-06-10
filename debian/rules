@@ -3,7 +3,7 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 BUILDDIR = build/mono-1.0/release
-export MONO_SHARED_DIR = $(CURDIR)
+export MONO_SHARED_DIR=$(CURDIR)
 NANT = nant
 
 build: build-stamp
