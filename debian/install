@@ -1,0 +1,5 @@
+debian/nunit-core.pc /usr/lib/pkgconfig
+debian/nunit-framework.pc /usr/lib/pkgconfig
+debian/nunit-console /usr/bin/
+doc/*.html doc/css doc/img doc/files /usr/share/doc/nunit/html/
+samples/* /usr/share/doc/nunit/examples

@@ -1,0 +1,6 @@
+nunit (2.2.0-1) unstable; urgency=low
+
+  * Initial Release.
+    (closes: Bug#311413)
+
+ -- Jelmer Vernooij <jelmer@samba.org>  Mon, 30 May 2005 14:01:43 +0200

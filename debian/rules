@@ -1,0 +1,56 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+BUILDDIR = build/mono-1.0/release
+export MONO_SHARED_DIR = $(CURDIR)
+NANT = nant
+
+build: build-stamp
+build-stamp: 
+	dh_testdir
+	$(NANT) /f:nunit.build mono-1.0 release build
+	touch build-stamp
+
+clean: 
+	dh_testdir
+	dh_testroot
+	rm -rf build
+	$(NANT) /f:nunit.build mono-1.0 clean-all
+	rm -f build-stamp
+	dh_clean
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+	gacutil -root debian/tmp/usr/lib -i $(BUILDDIR)/bin/nunit.framework.dll 
+	gacutil -root debian/tmp/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
+	dh_install $(BUILDDIR)/bin/* /usr/lib/nunit/bin/
+	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
+	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
+
+binary-indep: install
+	dh_testdir -i
+	dh_testroot -i
+	dh_movefiles -i
+	dh_link -i
+	dh_install -i
+	dh_installchangelogs -i doc/ChangeLog.txt
+	dh_installdocs -i doc/ReleaseNotes.txt
+	dh_installexamples -i
+	dh_installmenu -i
+	dh_installman -i debian/nunit-console.1
+	dh_strip -i
+	dh_compress -i
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_makeclilibs -i
+	dh_clideps -i -d
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+binary: binary-indep
+.PHONY: clean build binary-indep binary install 
