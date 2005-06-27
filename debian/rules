@@ -18,6 +18,7 @@ clean:
 	rm -rf build
 	$(NANT) /f:nunit.build mono-1.0 clean-all
 	rm -f build-stamp
+	rm -rf .wapi
 	dh_clean
 
 install: build
@@ -25,9 +26,10 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-	gacutil -root debian/tmp/usr/lib -i $(BUILDDIR)/bin/nunit.framework.dll 
-	gacutil -root debian/tmp/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
-	dh_install $(BUILDDIR)/bin/* /usr/lib/nunit/bin/
+	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/bin/nunit.framework.dll 
+	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
+	dh_install -p nunit-console $(BUILDDIR)/bin/nunit-console.exe* /usr/lib/nunit/bin/
+	dh_install -p libnunit-cil $(BUILDDIR)/bin/*.dll /usr/lib/nunit/bin/
 	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
 	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
 
@@ -39,7 +41,7 @@ binary-indep: install
 	dh_install -i
 	dh_installchangelogs -i doc/ChangeLog.txt
 	dh_installdocs -i doc/ReleaseNotes.txt
-	dh_installexamples -i
+	dh_installexamples -i 
 	dh_installmenu -i
 	dh_installman -i debian/nunit-console.1
 	dh_strip -i
