@@ -6,17 +6,26 @@ BUILDDIR = build/mono-1.0/release
 export MONO_SHARED_DIR=$(CURDIR)
 NANT = nant
 
+patch: patch-stamp
+patch-stamp:
+	dpatch apply-all && touch patch-stamp
+
+unpatch:
+	dpatch deapply-all
+	rm -rf patch-stamp debian/patched
+
 build: build-stamp
-build-stamp: 
+build-stamp: patch-stamp
 	dh_testdir
 	$(NANT) /f:nunit.build mono-1.0 release build
 	touch build-stamp
 
-clean: 
+clean: clean1 unpatch
+clean1:
 	dh_testdir
 	dh_testroot
 	rm -rf build
-	$(NANT) /f:nunit.build mono-1.0 clean-all
+	-$(NANT) /f:nunit.build mono-1.0 clean-all
 	rm -f build-stamp
 	rm -rf .wapi
 	dh_clean
@@ -30,13 +39,16 @@ install: build
 	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
 	dh_install -p nunit-console $(BUILDDIR)/bin/nunit-console.exe* /usr/lib/nunit/bin/
 	dh_install -p libnunit-cil $(BUILDDIR)/bin/*.dll /usr/lib/nunit/bin/
+	mkdir -p debian/nunit-console/usr/bin
+	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
+	chmod 755 debian/nunit-console/usr/bin/nunit-console
+
 	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
 	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
 
 binary-indep: install
 	dh_testdir -i
 	dh_testroot -i
-	dh_movefiles -i
 	dh_link -i
 	dh_install -i
 	dh_installchangelogs -i doc/ChangeLog.txt
@@ -55,4 +67,5 @@ binary-indep: install
 	dh_builddeb -i
 
 binary: binary-indep
-.PHONY: clean build binary-indep binary install 
+.PHONY: clean build binary-indep binary install \
+	patch unpatch clean1
