@@ -1,0 +1,76 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 01_dir_seperator.dpatch by  <jelmer@samba.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix dir seperator for POSIX
+
+@DPATCH@
+
+--- nunit-2.2.0.orig/core/AssemblyInfo.cs
++++ nunit-2.2.0/core/AssemblyInfo.cs
+@@ -58,6 +58,6 @@
+ #if !StronglyNamedAssembly
+ [assembly: AssemblyDelaySign(false)]
+ #else
+-[assembly: AssemblyKeyFile("..\\..\\..\\nunit.key")]
++[assembly: AssemblyKeyFile("../../../nunit.key")]
+ [assembly: AssemblyKeyName("")]
+ #endif
+--- nunit-2.2.0.orig/framework/AssemblyInfo.cs
++++ nunit-2.2.0/framework/AssemblyInfo.cs
+@@ -58,6 +58,6 @@
+ #if !StronglyNamedAssembly
+ [assembly: AssemblyDelaySign(false)]
+ #else
+-[assembly: AssemblyKeyFile("..\\..\\..\\nunit.key")]
++[assembly: AssemblyKeyFile("../../../nunit.key")]
+ [assembly: AssemblyKeyName("")]
+ #endif
+--- nunit-2.2.0.orig/nunit.build
++++ nunit-2.2.0/nunit.build
+@@ -42,8 +42,8 @@
+   -->
+ 
+ <!-- Global settings and defaults -->
+-    <property name="project.build.dir" value="${nant.project.basedir}\build"/>
+-    <property name="project.package.dir" value="${nant.project.basedir}\package"/>
++    <property name="project.build.dir" value="${nant.project.basedir}/build"/>
++    <property name="project.package.dir" value="${nant.project.basedir}/package"/>
+ 
+ <!-- List supported frameworks and flag which ones are available -->
+     <property name="frameworks" value="net-1.0,net-1.1,mono-1.0"/>
+@@ -240,12 +240,12 @@
+         <copy file="nunit.key" todir="${project.build.dir}"/>
+ 
+         <!-- Build everything except the samples -->
+-        <nant buildfile="framework\nunit.framework.build" target="build"/>
+-        <nant buildfile="core\nunit.core.build" target="build"/>
+-        <nant buildfile="extensions\nunit.extensions.build" target="build"/>
+-        <nant buildfile="util\nunit.util.build" target="build"/>
+-        <nant buildfile="nunit-console\nunit-console.build" target="build"/>
+-        <nant buildfile="mocks\nunit.mocks.build" target="build"/>
++        <nant buildfile="framework/nunit.framework.build" target="build"/>
++        <nant buildfile="core/nunit.core.build" target="build"/>
++        <nant buildfile="extensions/nunit.extensions.build" target="build"/>
++        <nant buildfile="util/nunit.util.build" target="build"/>
++        <nant buildfile="nunit-console/nunit-console.build" target="build"/>
++        <nant buildfile="mocks/nunit.mocks.build" target="build"/>
+ 
+         <!-- Build Win32-only projects -->
+         <if test="${build.win32}">
+@@ -261,7 +261,7 @@
+ 
+     <!-- Build sample programs -->
+     <target name="samples" depends="build" description="Build sample programs">
+-        <nant buildfile="samples\samples.build" target="build"/>
++        <nant buildfile="samples/samples.build" target="build"/>
+     </target>
+ 
+     <target name="build-msi" depends="set-build-dir,set-package-config"
+@@ -620,4 +620,4 @@
+         <echo>  VS 2003:      ${vs.2003.path}</echo>
+     </target>
+ 
+-</project>
+\ No newline at end of file
++</project>
