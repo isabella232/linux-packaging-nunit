@@ -1,3 +1,3 @@
 #!/bin/sh
 
-exec /usr/bin/cli /usr/lib/nunit/bin/nunit-console.exe "$@"
+exec /usr/bin/cli /usr/lib/nunit/nunit-console.exe "$@"
