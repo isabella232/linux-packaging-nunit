@@ -1,0 +1,9 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+
+
+Name: NUnit
+Description: Testing framework for .NET
+Version: 2.2.0
+Libs: -r:${libdir}/nunit/nunit.core.dll -r:${libdir}/nunit/nunit.util.dll -r:${libdir}/nunit/nunit.framework.dll
