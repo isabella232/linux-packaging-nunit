@@ -6,22 +6,16 @@ BUILDDIR = build/mono-1.0/release
 export MONO_SHARED_DIR=$(CURDIR)
 NANT = nant
 
-patch: patch-stamp
-patch-stamp:
-	dpatch apply-all && touch patch-stamp
+# Include dpatch stuff.
+include /usr/share/dpatch/dpatch.make
 
-unpatch:
-	dpatch deapply-all
-	rm -rf patch-stamp debian/patched
-
-build: build-stamp
-build-stamp: patch-stamp
+build: patch build-stamp
+build-stamp:
 	dh_testdir
 	$(NANT) /f:nunit.build mono-1.0 release build
 	touch build-stamp
 
-clean: clean1 unpatch
-clean1:
+clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -rf build
@@ -67,5 +61,4 @@ binary-indep: install
 	dh_builddeb -i
 
 binary: binary-indep
-.PHONY: clean build binary-indep binary install \
-	patch unpatch clean1
+.PHONY: clean build binary-indep binary install
