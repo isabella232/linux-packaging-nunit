@@ -6,71 +6,191 @@
 
 @DPATCH@
 
---- nunit-2.2.0.orig/core/AssemblyInfo.cs
-+++ nunit-2.2.0/core/AssemblyInfo.cs
-@@ -58,6 +58,6 @@
- #if !StronglyNamedAssembly
+diff -ur nunit-2.2.6/src/ClientUtilities/util/AssemblyInfo.cs nunit-2.2.6-new/src/ClientUtilities/util/AssemblyInfo.cs
+--- nunit-2.2.6/src/ClientUtilities/util/AssemblyInfo.cs	2005-12-09 07:54:44.000000000 +1300
++++ nunit-2.2.6-new/src/ClientUtilities/util/AssemblyInfo.cs	2006-01-24 12:39:34.000000000 +1300
+@@ -55,5 +55,5 @@
+ //       documentation for more information on this.
+ //
  [assembly: AssemblyDelaySign(false)]
- #else
--[assembly: AssemblyKeyFile("..\\..\\..\\nunit.key")]
-+[assembly: AssemblyKeyFile("../../../nunit.key")]
+-[assembly: AssemblyKeyFile("..\\..\\..\\..\\nunit.snk")]
++[assembly: AssemblyKeyFile("../../../../nunit.snk")]
  [assembly: AssemblyKeyName("")]
- #endif
---- nunit-2.2.0.orig/framework/AssemblyInfo.cs
-+++ nunit-2.2.0/framework/AssemblyInfo.cs
-@@ -58,6 +58,6 @@
- #if !StronglyNamedAssembly
+diff -ur nunit-2.2.6/src/ClientUtilities/util/nunit.util.build nunit-2.2.6-new/src/ClientUtilities/util/nunit.util.build
+--- nunit-2.2.6/src/ClientUtilities/util/nunit.util.build	2005-12-09 08:08:12.000000000 +1300
++++ nunit-2.2.6-new/src/ClientUtilities/util/nunit.util.build	2006-01-24 12:39:00.000000000 +1300
+@@ -1,7 +1,7 @@
+ <?xml version="1.0"?>
+ <project name="NUnit.Util" default="build">
+ 
+-  <include buildfile="..\..\nunit.project.include"/>
++  <include buildfile="../../nunit.project.include"/>
+   
+   <property name="current.build.output" value="nunit.util"/>
+ 
+diff -ur nunit-2.2.6/src/ConsoleRunner/nunit-console/AssemblyInfo.cs nunit-2.2.6-new/src/ConsoleRunner/nunit-console/AssemblyInfo.cs
+--- nunit-2.2.6/src/ConsoleRunner/nunit-console/AssemblyInfo.cs	2005-12-09 07:54:44.000000000 +1300
++++ nunit-2.2.6-new/src/ConsoleRunner/nunit-console/AssemblyInfo.cs	2006-01-24 12:39:34.000000000 +1300
+@@ -55,5 +55,5 @@
+ //       documentation for more information on this.
+ //
  [assembly: AssemblyDelaySign(false)]
- #else
--[assembly: AssemblyKeyFile("..\\..\\..\\nunit.key")]
-+[assembly: AssemblyKeyFile("../../../nunit.key")]
+-[assembly: AssemblyKeyFile("..\\..\\..\\..\\nunit.snk")]
++[assembly: AssemblyKeyFile("../../../../nunit.snk")]
  [assembly: AssemblyKeyName("")]
- #endif
---- nunit-2.2.0.orig/nunit.build
-+++ nunit-2.2.0/nunit.build
-@@ -42,8 +42,8 @@
-   -->
+diff -ur nunit-2.2.6/src/GuiComponents/UiKit/AssemblyInfo.cs nunit-2.2.6-new/src/GuiComponents/UiKit/AssemblyInfo.cs
+--- nunit-2.2.6/src/GuiComponents/UiKit/AssemblyInfo.cs	2005-12-09 07:54:44.000000000 +1300
++++ nunit-2.2.6-new/src/GuiComponents/UiKit/AssemblyInfo.cs	2006-01-24 12:39:34.000000000 +1300
+@@ -55,5 +55,5 @@
+ //       documentation for more information on this.
+ //
+ [assembly: AssemblyDelaySign(false)]
+-[assembly: AssemblyKeyFile("..\\..\\..\\..\\nunit.snk")]
++[assembly: AssemblyKeyFile("../../../../nunit.snk")]
+ [assembly: AssemblyKeyName("")]
+diff -ur nunit-2.2.6/src/GuiRunner/nunit-gui/AssemblyInfo.cs nunit-2.2.6-new/src/GuiRunner/nunit-gui/AssemblyInfo.cs
+--- nunit-2.2.6/src/GuiRunner/nunit-gui/AssemblyInfo.cs	2005-12-09 07:54:44.000000000 +1300
++++ nunit-2.2.6-new/src/GuiRunner/nunit-gui/AssemblyInfo.cs	2006-01-24 12:39:34.000000000 +1300
+@@ -55,5 +55,5 @@
+ //       documentation for more information on this.
+ //
+ [assembly: AssemblyDelaySign(false)]
+-[assembly: AssemblyKeyFile("..\\..\\..\\..\\nunit.snk")]
++[assembly: AssemblyKeyFile("../../../../nunit.snk")]
+ [assembly: AssemblyKeyName("")]
+diff -ur nunit-2.2.6/src/nunit.build nunit-2.2.6-new/src/nunit.build
+--- nunit-2.2.6/src/nunit.build	2006-01-22 12:55:26.000000000 +1300
++++ nunit-2.2.6-new/src/nunit.build	2006-01-24 12:39:34.000000000 +1300
+@@ -58,7 +58,7 @@
+     <nant buildfile="ConsoleRunner/ConsoleRunner.build" target="clean"/>
+     <nant buildfile="NUnitTestServer/NUnitTestServer.build" target="clean"/>
+     <nant buildfile="NUnitMocks/NunitMocks.build" target="clean"/>
+-    <nant buildfile="NUnitExtensions\NUnitExtensions.build" target="clean"/>
++    <nant buildfile="NUnitExtensions/NUnitExtensions.build" target="clean"/>
+     <nant buildfile="GuiComponents/GuiComponents.build" target="clean"/>
+     <nant buildfile="GuiRunner/GuiRunner.build" target="clean"/>
+     <nant buildfile="tests/tests.build" target="clean"/>
+@@ -208,44 +208,44 @@
  
- <!-- Global settings and defaults -->
--    <property name="project.build.dir" value="${nant.project.basedir}\build"/>
--    <property name="project.package.dir" value="${nant.project.basedir}\package"/>
-+    <property name="project.build.dir" value="${nant.project.basedir}/build"/>
-+    <property name="project.package.dir" value="${nant.project.basedir}/package"/>
+     <!-- Build NUnit components assemblies -->
+     <nant target="build"
+-      buildfile="NUnitFramework\NUnitFramework.build"/>
++      buildfile="NUnitFramework/NUnitFramework.build"/>
+     <nant target="build"
+-      buildfile="ClientUtilities\ClientUtilities.build"/>
++      buildfile="ClientUtilities/ClientUtilities.build"/>
+     <nant target="build"
+-      buildfile="ConsoleRunner\ConsoleRunner.build"/>
++      buildfile="ConsoleRunner/ConsoleRunner.build"/>
+     <nant target="build"
+-      buildfile="NUnitMocks\NUnitMocks.build"/>
++      buildfile="NUnitMocks/NUnitMocks.build"/>
+     <nant target="build"
+-      buildfile="NUnitExtensions\NUnitExtensions.build"/>
++      buildfile="NUnitExtensions/NUnitExtensions.build"/>
  
- <!-- List supported frameworks and flag which ones are available -->
-     <property name="frameworks" value="net-1.0,net-1.1,mono-1.0"/>
-@@ -240,12 +240,12 @@
-         <copy file="nunit.key" todir="${project.build.dir}"/>
+     <nant target="build" if="${build.win32}"
+-      buildfile="NUnitTestServer\NUnitTestServer.build"/>
++      buildfile="NUnitTestServer/NUnitTestServer.build"/>
+     <nant target="build" if="${build.win32}"
+-      buildfile="GuiComponents\GuiComponents.build"/>
++      buildfile="GuiComponents/GuiComponents.build"/>
+     <nant target="build" if="${build.win32}"
+-      buildfile="GuiRunner\GuiRunner.build"/>
++      buildfile="GuiRunner/GuiRunner.build"/>
  
-         <!-- Build everything except the samples -->
--        <nant buildfile="framework\nunit.framework.build" target="build"/>
--        <nant buildfile="core\nunit.core.build" target="build"/>
--        <nant buildfile="extensions\nunit.extensions.build" target="build"/>
--        <nant buildfile="util\nunit.util.build" target="build"/>
--        <nant buildfile="nunit-console\nunit-console.build" target="build"/>
--        <nant buildfile="mocks\nunit.mocks.build" target="build"/>
-+        <nant buildfile="framework/nunit.framework.build" target="build"/>
-+        <nant buildfile="core/nunit.core.build" target="build"/>
-+        <nant buildfile="extensions/nunit.extensions.build" target="build"/>
-+        <nant buildfile="util/nunit.util.build" target="build"/>
-+        <nant buildfile="nunit-console/nunit-console.build" target="build"/>
-+        <nant buildfile="mocks/nunit.mocks.build" target="build"/>
+ 	<!-- Build the Test Utilities and dummy projects -->
+-    <nant buildfile="tests\tests.build" target="build"/>
++    <nant buildfile="tests/tests.build" target="build"/>
  
-         <!-- Build Win32-only projects -->
-         <if test="${build.win32}">
-@@ -261,7 +261,7 @@
+     <!-- Build the NUnit tests -->
+     <nant target="build-tests"
+-      buildfile="NUnitFramework\NUnitFramework.build"/>
++      buildfile="NUnitFramework/NUnitFramework.build"/>
+     <nant target="build-tests"
+-      buildfile="ClientUtilities\ClientUtilities.build"/>
++      buildfile="ClientUtilities/ClientUtilities.build"/>
+     <nant target="build-tests"
+-      buildfile="ConsoleRunner\ConsoleRunner.build"/>
++      buildfile="ConsoleRunner/ConsoleRunner.build"/>
+     <nant target="build-tests"
+-      buildfile="NUnitMocks\NUnitMocks.build"/>
++      buildfile="NUnitMocks/NUnitMocks.build"/>
+     <nant target="build-tests"
+-      buildfile="NUnitExtensions\NUnitExtensions.build"/>
++      buildfile="NUnitExtensions/NUnitExtensions.build"/>
  
-     <!-- Build sample programs -->
-     <target name="samples" depends="build" description="Build sample programs">
--        <nant buildfile="samples\samples.build" target="build"/>
-+        <nant buildfile="samples/samples.build" target="build"/>
-     </target>
+     <nant target="build-tests" if="${build.win32}"
+-      buildfile="NUnitTestServer\NUnitTestServer.build"/>
++      buildfile="NUnitTestServer/NUnitTestServer.build"/>
+     <nant target="build-tests" if="${build.win32}"
+-      buildfile="GuiComponents\GuiComponents.build"/>
++      buildfile="GuiComponents/GuiComponents.build"/>
+     <nant target="build-tests" if="${build.win32}"
+-      buildfile="GuiRunner\GuiRunner.build"/>
++      buildfile="GuiRunner/GuiRunner.build"/>
  
-     <target name="build-msi" depends="set-build-dir,set-package-config"
-@@ -620,4 +620,4 @@
-         <echo>  VS 2003:      ${vs.2003.path}</echo>
-     </target>
+     <!-- Create NUnit and config files for running tests -->
+     <copy file="NUnitBinTests.nunit" if="${build.win32}"
+@@ -417,13 +417,13 @@
+   <target name="package-resources" depends="clean-package-dir">
+ 
+     <nant target="package-resources"
+-      buildfile="GuiRunner\nunit-gui\nunit-gui.build"/>
++      buildfile="GuiRunner/nunit-gui/nunit-gui.build"/>
+ 
+     <nant target="package-resources"
+-      buildfile="GuiComponents\UiKit\nunit.uikit.build"/>
++      buildfile="GuiComponents/UiKit/nunit.uikit.build"/>
+ 
+     <copy todir="${package.working.dir}">
+-      <fileset basedir="..\tools\localization">
++      <fileset basedir="../tools/localization">
+         <include name="*.*"/>
+       </fileset>
+     </copy>
+@@ -458,7 +458,7 @@
+   <target name="package-msi" depends="build-msi,set-package-config"
+     description="Build msi file and deploy it to the package dir">
+ 
+-    <copy file="install\${build.config}\${msi.file.name}" tofile="${project.package.dir}/${msi.file.name}"/>        
++    <copy file="install/${build.config}/${msi.file.name}" tofile="${project.package.dir}/${msi.file.name}"/>        
+ 
+   </target>
+ 
+@@ -550,7 +550,7 @@
+     <nant buildfile="ConsoleRunner/ConsoleRunner.build" target="package"/>
+     <nant buildfile="NUnitTestServer/NUnitTestServer.build" target="package"/>
+     <nant buildfile="NUnitMocks/NunitMocks.build" target="package"/>
+-    <nant buildfile="NUnitExtensions\NUnitExtensions.build" target="package"/>
++    <nant buildfile="NUnitExtensions/NUnitExtensions.build" target="package"/>
+     <nant buildfile="GuiComponents/GuiComponents.build" target="package"/>
+     <nant buildfile="GuiRunner/GuiRunner.build" target="package"/>
+     <nant buildfile="tests/tests.build" target="package"/>
+@@ -563,4 +563,4 @@
+     <echo message="The assembly nunit.framework was added to the GAC"/>
+   </target>
  
 -</project>
 \ No newline at end of file
 +</project>
+diff -ur nunit-2.2.6/src/NUnitFramework/core/AssemblyInfo.cs nunit-2.2.6-new/src/NUnitFramework/core/AssemblyInfo.cs
+--- nunit-2.2.6/src/NUnitFramework/core/AssemblyInfo.cs	2005-12-09 07:54:44.000000000 +1300
++++ nunit-2.2.6-new/src/NUnitFramework/core/AssemblyInfo.cs	2006-01-24 12:39:34.000000000 +1300
+@@ -28,5 +28,5 @@
+ //       documentation for more information on this.
+ //
+ [assembly: AssemblyDelaySign(false)]
+-[assembly: AssemblyKeyFile("..\\..\\..\\..\\nunit.snk")]
++[assembly: AssemblyKeyFile("../../../../nunit.snk")]
+ [assembly: AssemblyKeyName("")]
+diff -ur nunit-2.2.6/src/NUnitFramework/framework/AssemblyInfo.cs nunit-2.2.6-new/src/NUnitFramework/framework/AssemblyInfo.cs
+--- nunit-2.2.6/src/NUnitFramework/framework/AssemblyInfo.cs	2005-12-09 07:54:44.000000000 +1300
++++ nunit-2.2.6-new/src/NUnitFramework/framework/AssemblyInfo.cs	2006-01-24 12:37:50.000000000 +1300
+@@ -28,5 +28,5 @@
+ //       documentation for more information on this.
+ //
+ [assembly: AssemblyDelaySign(false)]
+-[assembly: AssemblyKeyFile("..\\..\\..\\..\\nunit.snk")]
++[assembly: AssemblyKeyFile("../../../../nunit.snk")]
+ [assembly: AssemblyKeyName("")]

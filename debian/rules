@@ -2,7 +2,7 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-BUILDDIR = build/mono-1.0/release
+BUILDDIR = src/build/mono/1.0/release
 export MONO_SHARED_DIR=$(CURDIR)
 NANT = nant
 
@@ -12,14 +12,14 @@ include /usr/share/dpatch/dpatch.make
 build: patch build-stamp
 build-stamp:
 	dh_testdir
-	$(NANT) /f:nunit.build mono-1.0 release build
+	$(NANT) /f:src/nunit.build mono-1.0 release build
 	touch build-stamp
 
 clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -rf build
-	-$(NANT) /f:nunit.build mono-1.0 clean-all
+	-$(NANT) /f:src/nunit.build mono-1.0 clean-all
 	rm -f build-stamp
 	rm -rf .wapi
 	dh_clean
@@ -29,10 +29,10 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/bin/nunit.framework.dll 
-	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
-	dh_install -p nunit-console $(BUILDDIR)/bin/nunit-console.exe* /usr/lib/nunit/
-	dh_install -p libnunit-cil $(BUILDDIR)/bin/*.dll /usr/lib/nunit/
+	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/nunit.framework.dll 
+	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/nunit.core.dll
+	dh_install -p nunit-console $(BUILDDIR)/nunit-console.exe* /usr/lib/nunit/
+	dh_install -p libnunit-cil $(BUILDDIR)/*.dll /usr/lib/nunit/
 	mkdir -p debian/nunit-console/usr/bin
 	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
 	chmod 755 debian/nunit-console/usr/bin/nunit-console
@@ -46,7 +46,7 @@ binary-indep: install
 	dh_link -i
 	dh_install -i
 	dh_installchangelogs -i doc/ChangeLog.txt
-	dh_installdocs -i doc/ReleaseNotes.txt
+	dh_installdocs
 	dh_installexamples -i 
 	dh_installmenu -i
 	dh_installman -i debian/nunit-console.1

@@ -1,3 +1,9 @@
+nunit (2.2.6-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Jelmer Vernooij <jelmer@samba.org>  Tue, 24 Jan 2006 12:09:05 +1300
+
 nunit (2.2.0-1) unstable; urgency=low
 
   * Initial Release.
