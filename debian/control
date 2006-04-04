@@ -16,9 +16,10 @@ Description: Unit test framework for .NET
  .
  This package contains the console front-end.
 
-Package: libnunit-cil
+Package: libnunit2.2.6-cil
 Architecture: all
 Depends: ${cli:Depends}
+Conflicts: libnunit2.2-cil
 Suggests: libnunit-doc
 Description: Unit test framework for .NET
  NUnit is a unit testing framework for all .NET languages. It serves the
@@ -39,7 +40,7 @@ Description: Unit test framework for .NET
 
 Package: nunit
 Architecture: all
-Depends: libnunit-doc, nunit-console, libnunit-cil
+Depends: libnunit-doc, nunit-console, libnunit2.2.6-cil
 Description: Unit test framework for .NET
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
