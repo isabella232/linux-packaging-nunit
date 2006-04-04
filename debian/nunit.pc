@@ -6,4 +6,4 @@ libdir=${exec_prefix}/lib
 Name: NUnit
 Description: Testing framework for .NET
 Version: 2.2.0
-Libs: -r:${libdir}/nunit/nunit.core.dll -r:${libdir}/nunit/nunit.util.dll -r:${libdir}/nunit/nunit.framework.dll
+Libs: -r:${libdir}/cli/nunit-2.2.6/nunit.core.dll -r:${libdir}/cli/nunit-2.2.6/nunit.util.dll -r:${libdir}/cli/nunit-2.2.6/nunit.framework.dll
