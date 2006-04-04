@@ -1,4 +1,4 @@
-nunit (2.2.0-2) unstable; urgency=low
+nunit2.2 (2.2.0-2) unstable; urgency=low
 
   * Prepare compatibility package for other packages depending on 
   the 2.2.0 API.

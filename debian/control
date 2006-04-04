@@ -1,4 +1,4 @@
-Source: nunit
+Source: nunit2.2
 Section: devel
 Priority: optional
 Maintainer: Jelmer Vernooij <jelmer@samba.org>
