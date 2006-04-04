@@ -31,6 +31,7 @@ install: build
 	dh_installdirs
 	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.framework.dll 
 	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.core.dll
+	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.util.dll
 	dh_install -p nunit-console $(BUILDDIR)/nunit-console*.dll $(BUILDDIR)/nunit-console.exe* /usr/lib/nunit/
 	dh_install -p libnunit2.2.6-cil $(BUILDDIR)/nunit.core.dll \
 		$(BUILDDIR)/nunit.core.extensions.dll \
