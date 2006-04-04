@@ -32,7 +32,7 @@ install: build
 	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.framework.dll 
 	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.core.dll
 	dh_install -p nunit-console $(BUILDDIR)/nunit-console.exe* /usr/lib/nunit/
-	dh_install -p libnunit2.2.6-cil $(BUILDDIR)/*.dll /usr/lib/nunit/
+	dh_install -p libnunit2.2.6-cil $(BUILDDIR)/*.dll /usr/lib/cil/nunit-2.2.6
 	mkdir -p debian/nunit-console/usr/bin
 	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
 	chmod 755 debian/nunit-console/usr/bin/nunit-console
