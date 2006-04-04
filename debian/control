@@ -8,6 +8,8 @@ Standards-Version: 3.6.2.1
 Package: libnunit2.2-cil
 Architecture: all
 Depends: ${cli:Depends}
+Conflicts: libnunit-cil
+Replaces: libnunit-cil
 Suggests: libnunit-doc
 Description: Unit test framework for .NET
  NUnit is a unit testing framework for all .NET languages. It serves the
