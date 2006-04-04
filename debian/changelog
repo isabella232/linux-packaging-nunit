@@ -1,3 +1,10 @@
+nunit (2.2.0-2) unstable; urgency=low
+
+  * Prepare compatibility package for other packages depending on 
+  the 2.2.0 API.
+
+ -- Jelmer Vernooij <jelmer@samba.org>  Tue,  4 Apr 2006 21:45:10 +0200
+
 nunit (2.2.0-1) unstable; urgency=low
 
   * Initial Release.

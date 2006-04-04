@@ -5,18 +5,7 @@ Maintainer: Jelmer Vernooij <jelmer@samba.org>
 Build-Depends-Indep: debhelper (>= 4.0.0), mono-mcs (>= 1.0) | c-sharp-compiler, cli-common (>= 0.2.0), libmono-dev (>= 1.0), nant (>= 0.84), mono-gac (>= 1.1.6), dpatch
 Standards-Version: 3.6.2.1
 
-Package: nunit-console
-Architecture: all
-Depends: ${cli:Depends}
-Description: Unit test framework for .NET
- NUnit is a unit testing framework for all .NET languages. It serves the
- same purpose as JUnit does in the Java world. It supports test
- categories, testing for exceptions and writing test results in plain
- text or XML.
- .
- This package contains the console front-end.
-
-Package: libnunit-cil
+Package: libnunit2.2-cil
 Architecture: all
 Depends: ${cli:Depends}
 Suggests: libnunit-doc
@@ -25,25 +14,3 @@ Description: Unit test framework for .NET
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
  text or XML.
-
-Package: libnunit-doc
-Architecture: all
-Depends: ${cli:Depends}
-Description: Unit test framework for .NET
- NUnit is a unit testing framework for all .NET languages. It serves the
- same purpose as JUnit does in the Java world. It supports test
- categories, testing for exceptions and writing test results in plain
- text or XML.
- .
- This package contains the API documentation and examples.
-
-Package: nunit
-Architecture: all
-Depends: libnunit-doc, nunit-console, libnunit-cil
-Description: Unit test framework for .NET
- NUnit is a unit testing framework for all .NET languages. It serves the
- same purpose as JUnit does in the Java world. It supports test
- categories, testing for exceptions and writing test results in plain
- text or XML.
- .
- This is a dummy package that depends on the other nunit packages.

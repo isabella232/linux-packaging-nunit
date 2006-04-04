@@ -35,13 +35,9 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/bin/nunit.framework.dll 
-	gacutil -root debian/libnunit-cil/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
-	dh_install -p nunit-console $(BUILDDIR)/bin/nunit-console.exe* /usr/lib/nunit/
-	dh_install -p libnunit-cil $(BUILDDIR)/bin/*.dll /usr/lib/nunit/
-	mkdir -p debian/nunit-console/usr/bin
-	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
-	chmod 755 debian/nunit-console/usr/bin/nunit-console
+	gacutil -root debian/libnunit2.2-cil/usr/lib -i $(BUILDDIR)/bin/nunit.framework.dll 
+	gacutil -root debian/libnunit2.2-cil/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
+	dh_install -p libnunit2.2-cil $(BUILDDIR)/bin/*.dll /usr/lib/nunit/
 
 	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
 	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
@@ -55,7 +51,6 @@ binary-indep: install
 	dh_installdocs -i doc/ReleaseNotes.txt
 	dh_installexamples -i 
 	dh_installmenu -i
-	dh_installman -i debian/nunit-console.1
 	dh_strip -i
 	dh_compress -i
 	dh_fixperms -i
