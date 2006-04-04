@@ -1,1 +1,1 @@
-debian/nunit-2.2.pc /usr/lib/pkgconfig
+debian/nunit.pc /usr/lib/pkgconfig
