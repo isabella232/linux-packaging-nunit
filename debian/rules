@@ -37,7 +37,7 @@ install: build
 	dh_installdirs
 	gacutil -root debian/libnunit2.2-cil/usr/lib -i $(BUILDDIR)/bin/nunit.framework.dll 
 	gacutil -root debian/libnunit2.2-cil/usr/lib -i $(BUILDDIR)/bin/nunit.core.dll
-	dh_install -p libnunit2.2-cil $(BUILDDIR)/bin/*.dll /usr/lib/cil/nunit-2.2/
+	dh_install -p libnunit2.2-cil $(BUILDDIR)/bin/*.dll /usr/lib/cli/nunit-2.2/
 
 	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
 	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
