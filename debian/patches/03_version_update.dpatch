@@ -1,0 +1,200 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 03_version_update.dpatch by Jelmer Vernooij <jelmer@samba.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix dir seperator for POSIX
+
+@DPATCH@
+
+diff -ur nunit-2.2.8/core/AssemblyInfo.cs nunit-2.2.8-new/core/AssemblyInfo.cs
+--- nunit-2.2.8/core/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/core/AssemblyInfo.cs	2006-04-28 19:32:58.000000000 +0200
+@@ -28,7 +28,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/extensions/AssemblyInfo.cs nunit-2.2.8-new/extensions/AssemblyInfo.cs
+--- nunit-2.2.8/extensions/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/extensions/AssemblyInfo.cs	2006-04-28 19:33:16.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/framework/AssemblyInfo.cs nunit-2.2.8-new/framework/AssemblyInfo.cs
+--- nunit-2.2.8/framework/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/framework/AssemblyInfo.cs	2006-04-28 19:33:18.000000000 +0200
+@@ -28,7 +28,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/nunit-console/AssemblyInfo.cs nunit-2.2.8-new/nunit-console/AssemblyInfo.cs
+--- nunit-2.2.8/nunit-console/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/nunit-console/AssemblyInfo.cs	2006-04-28 19:33:23.000000000 +0200
+@@ -55,7 +55,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/nunit-gui/AssemblyInfo.cs nunit-2.2.8-new/nunit-gui/AssemblyInfo.cs
+--- nunit-2.2.8/nunit-gui/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/nunit-gui/AssemblyInfo.cs	2006-04-28 19:33:28.000000000 +0200
+@@ -55,7 +55,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/nunit.build nunit-2.2.8-new/nunit.build
+--- nunit-2.2.8/nunit.build	2004-08-08 13:38:30.000000000 +0200
++++ nunit-2.2.8-new/nunit.build	2006-04-28 19:31:54.000000000 +0200
+@@ -64,7 +64,7 @@
+ </if>
+ 
+ <!-- Set up version for packaging (override as needed) -->
+-    <property name="package.version" value="2.2.0"/>
++    <property name="package.version" value="2.2.8"/>
+ <!-- Root of the package file name -->
+     <property name="package.name" value="${nant.project.name}-${package.version}"/>
+ <!-- Package directory - will effect top level directory name in zips -->
+diff -ur nunit-2.2.8/samples/csharp/AssemblyInfo.cs nunit-2.2.8-new/samples/csharp/AssemblyInfo.cs
+--- nunit-2.2.8/samples/csharp/AssemblyInfo.cs	2004-08-06 18:31:46.000000000 +0200
++++ nunit-2.2.8-new/samples/csharp/AssemblyInfo.cs	2006-04-28 19:33:32.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/samples/money/AssemblyInfo.cs nunit-2.2.8-new/samples/money/AssemblyInfo.cs
+--- nunit-2.2.8/samples/money/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/samples/money/AssemblyInfo.cs	2006-04-28 19:33:36.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/samples/money-port/AssemblyInfo.cs nunit-2.2.8-new/samples/money-port/AssemblyInfo.cs
+--- nunit-2.2.8/samples/money-port/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/samples/money-port/AssemblyInfo.cs	2006-04-28 19:33:34.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/tests/AssemblyInfo.cs nunit-2.2.8-new/tests/AssemblyInfo.cs
+--- nunit-2.2.8/tests/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/tests/AssemblyInfo.cs	2006-04-28 19:33:39.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/tests/mock-assembly/AssemblyInfo.cs nunit-2.2.8-new/tests/mock-assembly/AssemblyInfo.cs
+--- nunit-2.2.8/tests/mock-assembly/AssemblyInfo.cs	2004-08-06 18:32:22.000000000 +0200
++++ nunit-2.2.8-new/tests/mock-assembly/AssemblyInfo.cs	2006-04-28 19:33:41.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/tests/nonamespace-assembly/AssemblyInfo.cs nunit-2.2.8-new/tests/nonamespace-assembly/AssemblyInfo.cs
+--- nunit-2.2.8/tests/nonamespace-assembly/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/tests/nonamespace-assembly/AssemblyInfo.cs	2006-04-28 19:33:44.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/tests/notestfixtures-assembly/AssemblyInfo.cs nunit-2.2.8-new/tests/notestfixtures-assembly/AssemblyInfo.cs
+--- nunit-2.2.8/tests/notestfixtures-assembly/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/tests/notestfixtures-assembly/AssemblyInfo.cs	2006-04-28 19:33:46.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/tests/timing-tests/AssemblyInfo.cs nunit-2.2.8-new/tests/timing-tests/AssemblyInfo.cs
+--- nunit-2.2.8/tests/timing-tests/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/tests/timing-tests/AssemblyInfo.cs	2006-04-28 19:33:48.000000000 +0200
+@@ -26,7 +26,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/uikit/AssemblyInfo.cs nunit-2.2.8-new/uikit/AssemblyInfo.cs
+--- nunit-2.2.8/uikit/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/uikit/AssemblyInfo.cs	2006-04-28 19:33:52.000000000 +0200
+@@ -55,7 +55,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 
+diff -ur nunit-2.2.8/util/AssemblyInfo.cs nunit-2.2.8-new/util/AssemblyInfo.cs
+--- nunit-2.2.8/util/AssemblyInfo.cs	2004-08-06 18:35:12.000000000 +0200
++++ nunit-2.2.8-new/util/AssemblyInfo.cs	2006-04-28 19:33:57.000000000 +0200
+@@ -55,7 +55,7 @@
+ // You can specify all the values or you can default the Revision and Build Numbers 
+ // by using the '*' as shown below:
+ 
+-[assembly: AssemblyVersion("2.2.0.0")]
++[assembly: AssemblyVersion("2.2.8.0")]
+ 
+ //
+ // In order to sign your assembly you must specify a key to use. Refer to the 

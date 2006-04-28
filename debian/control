@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Maintainer: Jelmer Vernooij <jelmer@samba.org>
 Build-Depends: debhelper (>= 4.0.0), dpatch
-Build-Depends-Indep: mono-mcs (>= 1.0) | c-sharp-compiler, cli-common (>= 0.4.0), libmono-dev (>= 1.0), nant (>= 0.84), mono-gac (>= 1.1.6)
+Build-Depends-Indep: mono-mcs (>= 1.0) | c-sharp-compiler, cli-common-dev (>= 0.4.0), libmono-dev (>= 1.0), nant (>= 0.84), mono-gac (>= 1.1.6)
 Standards-Version: 3.6.2.1
 
 Package: nunit-console
