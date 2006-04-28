@@ -2,8 +2,9 @@ nunit (2.2.8-1) unstable; urgency=low
 
   * New upstream release.
   * Fix debian/watch file.
+  * Make nunit-console conflict with libnunit-cil. (closes: #362619)
 
- -- Jelmer Vernooij <jelmer@samba.org>  Fri, 28 Apr 2006 18:20:22 +0200
+ -- Jelmer Vernooij <jelmer@samba.org>  Fri, 28 Apr 2006 18:25:59 +0200
 
 nunit (2.2.7-1) unstable; urgency=low
 
