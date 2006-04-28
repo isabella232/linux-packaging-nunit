@@ -1,2 +1,2 @@
-version=2
-http://nunit.org/download.html http://www.nunit.org/downloads/NUnit-([\d.]+)-src\.zip
+version=3
+http://sf.net/nunit/NUnit-([\d.]+)-src.zip
