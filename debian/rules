@@ -2,7 +2,7 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-BUILDDIR = build/mono-1.0/release/bin
+BUILDDIR = src/build/mono/1.0/release
 export MONO_SHARED_DIR=$(CURDIR)
 NANT = nant
 
@@ -12,14 +12,14 @@ include /usr/share/dpatch/dpatch.make
 build: patch build-stamp
 build-stamp:
 	dh_testdir
-	$(NANT) /f:nunit.build mono-1.0 release build
+	$(NANT) /f:src/nunit.build mono-1.0 release build
 	touch build-stamp
 
 clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -rf build
-	-$(NANT) /f:nunit.build mono-1.0 clean-all
+	-$(NANT) /f:src/nunit.build mono-1.0 clean-all
 	rm -f build-stamp
 	rm -rf .wapi
 	dh_clean
@@ -34,7 +34,7 @@ install: build
 	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.util.dll
 	dh_install -p nunit-console $(BUILDDIR)/nunit-console*.dll $(BUILDDIR)/nunit-console.exe* /usr/lib/nunit/
 	dh_install -p libnunit2.2.6-cil $(BUILDDIR)/nunit.core.dll \
-		$(BUILDDIR)/nunit.extensions.dll \
+		$(BUILDDIR)/nunit.core.extensions.dll \
 		$(BUILDDIR)/nunit.framework.dll \
 		$(BUILDDIR)/nunit.mocks.dll \
 		$(BUILDDIR)/nunit.util.dll \
