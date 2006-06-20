@@ -1,3 +1,9 @@
+nunit (2.2.8-2) unstable; urgency=low
+
+  * Build mono-2.0 binaries.
+
+ -- Jelmer Vernooij <jelmer@samba.org>  Tue, 20 Jun 2006 13:25:49 +0200
+
 nunit (2.2.8-1) unstable; urgency=low
 
   * New upstream release.

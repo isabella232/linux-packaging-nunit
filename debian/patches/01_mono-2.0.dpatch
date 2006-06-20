@@ -1,0 +1,64 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 02_mono-2.0.dpatch by Jelmer Vernooij <jelmer@samba.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix dir seperator for POSIX
+
+@DPATCH@
+
+diff -ur orig/src/nunit.build nunit-2.2.8/src/nunit.build
+--- orig/src/nunit.build	2006-02-11 14:22:42.000000000 +0100
++++ nunit-2.2.8/src/nunit.build	2006-06-20 12:57:23.000000000 +0200
+@@ -24,6 +24,7 @@
+         net-1.1   Microsoft .NET version 1.1
+         net-2.0   Microsoft .NET version 2.0
+         mono-1.0  Mono version 1.0 (or installed version)
++		mono-2.0  Mono for .NET Framework 2.0
+     
+         Debug and release versions of each of these may be built
+ 
+diff -ur orig/src/nunit.build.include nunit-2.2.8/src/nunit.build.include
+--- orig/src/nunit.build.include	2006-04-21 16:29:58.000000000 +0200
++++ nunit-2.2.8/src/nunit.build.include	2006-06-20 12:58:14.000000000 +0200
+@@ -39,6 +39,10 @@
+     <call target="set-mono-1.0-runtime-config"/>
+   </target>
+ 
++  <target name="mono-2.0" description="Set runtime to Mono">
++    <call target="set-mono-2.0-runtime-config"/>
++  </target>
++
+   <!-- Init global settings -->
+   <target name="init-global-settings">
+ 
+@@ -72,7 +76,7 @@
+     <!-- Frameworks supported by this build script. The first
+          installed framework found is the default for builds. --> 
+     <property name="supported.frameworks" 
+-      value="net-1.1,net-1.0,net-2.0,mono-1.0"/>
++      value="net-1.1,net-1.0,net-2.0,mono-1.0,mono-2.0"/>
+   
+     <!-- Visual Studio locations -->
+     <if test="${platform::is-win32()}">
+@@ -239,6 +243,21 @@
+     <property name="msi.runtime.suffix" value="-mono"/>
+   </target>
+ 
++  <target name="set-mono-2.0-runtime-config">
++    <fail unless="${framework::sdk-exists( 'mono-2.0' )}"
++      message="The Mono 2.0 SDK is not configured or not installed"/>
++
++    <property name="runtime.platform" value="mono"/>
++    <property name="runtime.version" value="2.0"/>
++    <property name="runtime.config" value="mono-2.0"/>
++    <property name="build.mono" value="true"/>
++    <property name="build.win32" value="false"/>
++    <property name="nant.settings.currentframework" 
++      value="mono-2.0"/>
++    <property name="zip.runtime.suffix" value="-mono"/>
++    <property name="msi.runtime.suffix" value="-mono"/>
++  </target>
++
+   <!-- Set up the build directory -->
+   <target name="set-build-dir"
+     depends="set-build-config,set-runtime-config">
