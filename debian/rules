@@ -37,6 +37,7 @@ install: build
 	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.core.dll
 	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR)/nunit.util.dll
 	dh_install -p nunit-console $(BUILDDIR)/nunit-console*.dll $(BUILDDIR)/nunit-console.exe* /usr/lib/nunit/
+	dh_install -p nunit-gui $(BUILDDIR)/nunit-gui*.dll $(BUILDDIR)/nunit-gui.exe* /usr/lib/nunit/
 	dh_install -p libnunit2.2.6-cil $(BUILDDIR)/nunit.core.dll \
 		$(BUILDDIR)/nunit.core.extensions.dll \
 		$(BUILDDIR)/nunit.framework.dll \
@@ -51,6 +52,10 @@ install: build
 
 	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
 	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
+
+	# Compatibility with 2.2.7
+	al -link:policy.nunit.2.2.7.config -out:policy.2.2.7.nunit.dll -keyfile:src/nunit.snk
+	gacutil /i policy.2.2.7.nunit.dll
 
 binary-indep: install
 	dh_testdir -i

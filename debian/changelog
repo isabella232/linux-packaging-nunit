@@ -1,8 +1,10 @@
 nunit (2.2.8-2) unstable; urgency=low
 
   * Build mono-2.0 binaries.
+  * Add policy file to indicate compatibility with 2.2.7.
+  * Add binary package nunit-gui.
 
- -- Jelmer Vernooij <jelmer@samba.org>  Tue, 20 Jun 2006 13:25:49 +0200
+ -- Jelmer Vernooij <jelmer@samba.org>  Tue, 20 Jun 2006 13:50:41 +0200
 
 nunit (2.2.8-1) unstable; urgency=low
 

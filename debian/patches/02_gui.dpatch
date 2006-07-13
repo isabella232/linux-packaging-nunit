@@ -1,0 +1,62 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 03_gui.dpatch by Jelmer Vernooij <jelmer@samba.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: Fix dir seperator for POSIX
+
+@DPATCH@
+
+diff -ur nunit-2.2.8/src/GuiComponents/UiKit/nunit.uikit.build nunit-2.2.8-orig/src/GuiComponents/UiKit/nunit.uikit.build
+--- nunit-2.2.8/src/GuiComponents/UiKit/nunit.uikit.build	2006-02-23 19:21:22.000000000 +0100
++++ nunit-2.2.8-orig/src/GuiComponents/UiKit/nunit.uikit.build	2006-07-13 19:15:59.000000000 +0200
+@@ -20,6 +20,9 @@
+       <references basedir="${current.build.dir}">
+         <include name="nunit.core.dll"/>
+         <include name="nunit.util.dll"/>
++		<include name="System.Windows.Forms.dll"/>
++		<include name="System.Data.dll"/>
++		<include name="System.Drawing.dll"/>
+       </references>
+     </csc>
+   </target>
+diff -ur nunit-2.2.8/src/GuiRunner/nunit-gui/nunit-gui.build nunit-2.2.8-orig/src/GuiRunner/nunit-gui/nunit-gui.build
+--- nunit-2.2.8/src/GuiRunner/nunit-gui/nunit-gui.build	2005-12-09 08:43:52.000000000 +0100
++++ nunit-2.2.8-orig/src/GuiRunner/nunit-gui/nunit-gui.build	2006-07-13 19:16:18.000000000 +0200
+@@ -23,6 +23,8 @@
+         <include name="nunit.uikit.dll"/>
+         <include name="nunit.core.dll"/>
+         <include name="nunit.framework.dll"/>
++		<include name="System.Windows.Forms.dll"/>
++		<include name="System.Drawing.dll"/>
+       </references>
+     </csc>
+   </target>
+diff -ur nunit-2.2.8/src/nunit.build nunit-2.2.8-orig/src/nunit.build
+--- nunit-2.2.8/src/nunit.build	2006-02-11 14:22:42.000000000 +0100
++++ nunit-2.2.8-orig/src/nunit.build	2006-07-13 19:15:26.000000000 +0200
+@@ -212,11 +212,11 @@
+     <nant target="build"
+       buildfile="NUnitExtensions/NUnitExtensions.build"/>
+ 
+-    <nant target="build" if="${build.win32}"
++    <nant target="build" 
+       buildfile="NUnitTestServer/NUnitTestServer.build"/>
+-    <nant target="build" if="${build.win32}"
++    <nant target="build" 
+       buildfile="GuiComponents/GuiComponents.build"/>
+-    <nant target="build" if="${build.win32}"
++    <nant target="build" 
+       buildfile="GuiRunner/GuiRunner.build"/>
+ 
+ 	<!-- Build the Test Utilities and dummy projects -->
+diff -ur nunit-2.2.8/src/NUnitTestServer/nunit-server/nunit-server.build nunit-2.2.8-remoting/src/NUnitTestServer/nunit-server/nunit-server.build
+--- nunit-2.2.8/src/NUnitTestServer/nunit-server/nunit-server.build	2005-12-09 08:37:04.000000000 +0100
++++ nunit-2.2.8-remoting/src/NUnitTestServer/nunit-server/nunit-server.build	2006-07-13 19:27:18.000000000 +0200
+@@ -16,6 +16,7 @@
+       </sources>
+       <references basedir="${current.build.dir}">
+         <include name="nunit.core.dll"/>
++		<include name="System.Runtime.Remoting.dll"/>
+       </references>
+     </csc>
+   </target>
