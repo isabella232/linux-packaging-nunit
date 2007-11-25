@@ -5,6 +5,7 @@ Maintainer: Jelmer Vernooij <jelmer@samba.org>
 Homepage: http://www.nunit.org/
 Build-Depends: debhelper (>= 4.0.0), dpatch, cli-common-dev (>= 0.4.4)
 Build-Depends-Indep: mono-mcs (>= 1.0) | c-sharp-compiler, c-sharp-2.0-compiler, cli-common-dev (>= 0.4.0), libmono-dev (>= 1.0), nant (>= 0.84), mono-gac (>= 1.1.6), libmono-winforms1.0-cil, libmono-winforms2.0-cil
+Vcs-Svn: svn://svn.debian.org/svn/pkg-mono/non-group/nunit/trunk
 Standards-Version: 3.6.2.1
 
 Package: nunit-console

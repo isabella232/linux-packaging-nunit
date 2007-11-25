@@ -1,7 +1,7 @@
 unit (2.2.10-1) UNRELEASED; urgency=low
 
   * New upstream release.
-  * Set homepage field.
+  * Set homepage and Vcs-Svn fields.
 
  -- Jelmer Vernooij <jelmer@samba.org>  Sun, 25 Nov 2007 16:24:30 +0000
 
