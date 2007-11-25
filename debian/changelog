@@ -1,8 +1,9 @@
-nunit (2.2.10-1) unstable; urgency=low
+unit (2.2.10-1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * Set homepage field.
 
- -- Jelmer Vernooij <jelmer@samba.org>  Tue, 27 Mar 2007 23:43:31 +0200
+ -- Jelmer Vernooij <jelmer@samba.org>  Sun, 25 Nov 2007 16:24:30 +0000
 
 nunit (2.2.9-1) unstable; urgency=low
 
