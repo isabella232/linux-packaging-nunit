@@ -2,8 +2,10 @@ unit (2.2.10-1) UNRELEASED; urgency=low
 
   * New upstream release.
   * Set homepage and Vcs-Svn fields.
+  * Change maintainer to Debian CLI Libraries Team. 
+  * Allow Debian Maintainer uploads.
 
- -- Jelmer Vernooij <jelmer@samba.org>  Sun, 25 Nov 2007 16:24:30 +0000
+ -- Jelmer Vernooij <jelmer@samba.org>  Sat, 12 Jan 2008 00:00:21 +0100
 
 nunit (2.2.9-1) unstable; urgency=low
 
