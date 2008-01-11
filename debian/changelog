@@ -1,4 +1,4 @@
-unit (2.2.10-1) UNRELEASED; urgency=low
+nunit (2.2.10-1) UNRELEASED; urgency=low
 
   * New upstream release.
   * Set homepage and Vcs-Svn fields.
