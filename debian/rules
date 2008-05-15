@@ -27,23 +27,31 @@ clean: unpatch
 	rm -rf .wapi
 	dh_clean
 
+upstream_version=$(shell uscan --dehs | sed -n 's/.*<upstream-version>\(.*\)<\/upstream-version>.*/\1/p')
+
+get-orig-source::
+	mkdir nunit-$(upstream_version)
+	cd nunit-$(upstream_version) && unzip ../../NUnit-$(upstream_version)-src.zip
+	tar cfz ../nunit_$(upstream_version).orig.tar.gz nunit-$(upstream_version)
+	rm -rf nunit-$(upstream_version)
+
 install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
 	# mono-1.0
-	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR1)/nunit.framework.dll 
-	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR1)/nunit.core.dll
-	gacutil -root debian/libnunit2.2.6-cil/usr/lib -i $(BUILDDIR1)/nunit.util.dll
+	gacutil -root debian/libnunit2.4-cil/usr/lib -i $(BUILDDIR1)/nunit.framework.dll 
+	gacutil -root debian/libnunit2.4-cil/usr/lib -i $(BUILDDIR1)/nunit.core.dll
+	gacutil -root debian/libnunit2.4-cil/usr/lib -i $(BUILDDIR1)/nunit.util.dll
 	dh_install -p nunit-console $(BUILDDIR1)/nunit-console*.dll $(BUILDDIR1)/nunit-console.exe* /usr/lib/nunit/
 	dh_install -p nunit-gui $(BUILDDIR1)/nunit-gui*.dll $(BUILDDIR1)/nunit-gui.exe* /usr/lib/nunit/
-	dh_install -p libnunit2.2.6-cil $(BUILDDIR1)/nunit.core.dll \
+	dh_install -p libnunit2.4-cil $(BUILDDIR1)/nunit.core.dll \
 		$(BUILDDIR1)/nunit.core.extensions.dll \
 		$(BUILDDIR1)/nunit.framework.dll \
 		$(BUILDDIR1)/nunit.mocks.dll \
 		$(BUILDDIR1)/nunit.util.dll \
-		/usr/lib/cli/nunit-2.2.6
+		/usr/lib/cli/nunit-2.4
 	# mono-2.0
 	# FIXME
 	mkdir -p debian/nunit-console/usr/bin

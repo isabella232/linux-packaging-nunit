@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 4.0.0), dpatch, cli-common-dev (>= 0.4.4)
 Build-Depends-Indep: mono-mcs (>= 1.0) | c-sharp-compiler, c-sharp-2.0-compiler, cli-common-dev (>= 0.4.0), libmono-dev (>= 1.0), nant (>= 0.84), mono-gac (>= 1.1.6), libmono-winforms1.0-cil, libmono-winforms2.0-cil
 Vcs-Svn: svn://svn.debian.org/svn/pkg-cli-libs/packages/nunit/trunk
 Standards-Version: 3.7.3
-XS-DM-Upload-Allowed: yes
+DM-Upload-Allowed: yes
 
 Package: nunit-console
 Architecture: all
@@ -34,7 +34,7 @@ Description: Unit test framework for .NET
  .
  This package contains the graphical front-end.
 
-Package: libnunit2.2.6-cil
+Package: libnunit2.4-cil
 Architecture: all
 Depends: ${cli:Depends}
 Conflicts: libnunit-cil
@@ -58,7 +58,7 @@ Description: Unit test framework for .NET
 
 Package: nunit
 Architecture: all
-Depends: libnunit-doc, nunit-console, nunit-gui, libnunit2.2.6-cil
+Depends: libnunit-doc, nunit-console, nunit-gui, libnunit2.4-cil
 Description: Unit test framework for .NET
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
