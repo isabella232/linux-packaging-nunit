@@ -21,8 +21,8 @@ clean: unpatch
 	dh_testdir
 	dh_testroot
 	rm -rf build
-	-$(NANT) /f:src/nunit.build mono-1.0 clean-all
-	-$(NANT) /f:src/nunit.build mono-2.0 clean-all
+	$(NANT) /f:src/nunit.build mono-1.0 clean-all
+	$(NANT) /f:src/nunit.build mono-2.0 clean-all
 	rm -f build-stamp
 	rm -rf .wapi
 	dh_clean
@@ -32,6 +32,9 @@ upstream_version=$(shell uscan --dehs | sed -n 's/.*<upstream-version>\(.*\)<\/u
 get-orig-source::
 	mkdir nunit-$(upstream_version)
 	cd nunit-$(upstream_version) && unzip ../../NUnit-$(upstream_version)-src.zip
+	rm -rf nunit-$(upstream_version)/build
+	cd nunit-$(upstream_version) && $(NANT) /f:src/nunit.build mono-1.0 clean-all
+	cd nunit-$(upstream_version) && $(NANT) /f:src/nunit.build mono-2.0 clean-all
 	tar cfz ../nunit_$(upstream_version).orig.tar.gz nunit-$(upstream_version)
 	rm -rf nunit-$(upstream_version)
 
