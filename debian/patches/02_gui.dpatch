@@ -2,32 +2,27 @@
 ## 03_gui.dpatch by Jelmer Vernooij <jelmer@samba.org>
 ##
 ## All lines beginning with `## DP:' are a description of the patch.
-## DP: Fix dir seperator for POSIX
+## DP: Disable UI building
 
 @DPATCH@
-
-diff -ur nunit-2.2.8/src/GuiComponents/UiKit/nunit.uikit.build nunit-2.2.8-orig/src/GuiComponents/UiKit/nunit.uikit.build
---- nunit-2.2.8/src/GuiComponents/UiKit/nunit.uikit.build	2006-02-23 19:21:22.000000000 +0100
-+++ nunit-2.2.8-orig/src/GuiComponents/UiKit/nunit.uikit.build	2006-07-13 19:15:59.000000000 +0200
-@@ -20,6 +20,9 @@
-       <references basedir="${current.build.dir}">
-         <include name="nunit.core.dll"/>
-         <include name="nunit.util.dll"/>
-+		<include name="System.Windows.Forms.dll"/>
-+		<include name="System.Data.dll"/>
-+		<include name="System.Drawing.dll"/>
-       </references>
-     </csc>
-   </target>
-diff -ur nunit-2.2.8/src/GuiRunner/nunit-gui/nunit-gui.build nunit-2.2.8-orig/src/GuiRunner/nunit-gui/nunit-gui.build
---- nunit-2.2.8/src/GuiRunner/nunit-gui/nunit-gui.build	2005-12-09 08:43:52.000000000 +0100
-+++ nunit-2.2.8-orig/src/GuiRunner/nunit-gui/nunit-gui.build	2006-07-13 19:16:18.000000000 +0200
-@@ -23,6 +23,8 @@
-         <include name="nunit.uikit.dll"/>
-         <include name="nunit.core.dll"/>
-         <include name="nunit.framework.dll"/>
-+		<include name="System.Windows.Forms.dll"/>
-+		<include name="System.Drawing.dll"/>
-       </references>
-     </csc>
-   </target>
+diff -ur nunit-2.4.7/src/nunit.build.include nunit-2.4.7-noui/src/nunit.build.include
+--- nunit-2.4.7/src/nunit.build.include	2008-03-30 08:44:12.000000000 +0200
++++ nunit-2.4.7-noui/src/nunit.build.include	2008-05-27 01:29:58.000000000 +0200
+@@ -368,7 +368,7 @@
+     <property name="runtime.defines" value="MONO,MONO_1_0"/>
+     <property name="build.mono" value="true"/>
+     <property name="build.win32" value="false"/>
+-    <property name="build.gui" value="true"/>
++    <property name="build.gui" value="false"/>
+     <property name="build.x86" value="false"/>
+     <property name="nant.settings.currentframework" 
+       value="mono-1.0"/>
+@@ -389,7 +389,7 @@
+     <property name="runtime.defines" value="MONO,MONO_2_0"/>
+     <property name="build.mono" value="true"/>
+     <property name="build.win32" value="false"/>
+-    <property name="build.gui" value="true"/>
++    <property name="build.gui" value="false"/>
+     <property name="build.x86" value="true"/>
+     <property name="nant.settings.currentframework" 
+       value="mono-2.0"/>
