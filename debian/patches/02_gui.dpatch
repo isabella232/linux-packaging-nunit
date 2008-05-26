@@ -31,32 +31,3 @@ diff -ur nunit-2.2.8/src/GuiRunner/nunit-gui/nunit-gui.build nunit-2.2.8-orig/sr
        </references>
      </csc>
    </target>
-diff -ur nunit-2.2.8/src/nunit.build nunit-2.2.8-orig/src/nunit.build
---- nunit-2.2.8/src/nunit.build	2006-02-11 14:22:42.000000000 +0100
-+++ nunit-2.2.8-orig/src/nunit.build	2006-07-13 19:15:26.000000000 +0200
-@@ -212,11 +212,11 @@
-     <nant target="build"
-       buildfile="NUnitExtensions/NUnitExtensions.build"/>
- 
--    <nant target="build" if="${build.win32}"
-+    <nant target="build" 
-       buildfile="NUnitTestServer/NUnitTestServer.build"/>
--    <nant target="build" if="${build.win32}"
-+    <nant target="build" 
-       buildfile="GuiComponents/GuiComponents.build"/>
--    <nant target="build" if="${build.win32}"
-+    <nant target="build" 
-       buildfile="GuiRunner/GuiRunner.build"/>
- 
- 	<!-- Build the Test Utilities and dummy projects -->
-diff -ur nunit-2.2.8/src/NUnitTestServer/nunit-server/nunit-server.build nunit-2.2.8-remoting/src/NUnitTestServer/nunit-server/nunit-server.build
---- nunit-2.2.8/src/NUnitTestServer/nunit-server/nunit-server.build	2005-12-09 08:37:04.000000000 +0100
-+++ nunit-2.2.8-remoting/src/NUnitTestServer/nunit-server/nunit-server.build	2006-07-13 19:27:18.000000000 +0200
-@@ -16,6 +16,7 @@
-       </sources>
-       <references basedir="${current.build.dir}">
-         <include name="nunit.core.dll"/>
-+		<include name="System.Runtime.Remoting.dll"/>
-       </references>
-     </csc>
-   </target>
