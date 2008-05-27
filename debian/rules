@@ -2,8 +2,8 @@
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
-BUILDDIR1 = src/build/mono/1.0/release
-BUILDDIR2 = src/build/mono/2.0/release
+BUILDDIR1 = build/linux/mono/1.0/release
+BUILDDIR2 = build/linux/mono/2.0/release
 export MONO_SHARED_DIR=$(CURDIR)
 NANT = nant
 
@@ -43,10 +43,8 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
+	rm -f doc/files/Thumbs.db
 	# mono-1.0
-	gacutil -root debian/libnunit2.4-cil/usr/lib -i $(BUILDDIR1)/nunit.framework.dll 
-	gacutil -root debian/libnunit2.4-cil/usr/lib -i $(BUILDDIR1)/nunit.core.dll
-	gacutil -root debian/libnunit2.4-cil/usr/lib -i $(BUILDDIR1)/nunit.util.dll
 	dh_install -p nunit-console $(BUILDDIR1)/nunit-console*.dll $(BUILDDIR1)/nunit-console.exe* /usr/lib/nunit/
 	dh_install -p nunit-gui $(BUILDDIR1)/nunit-gui*.dll $(BUILDDIR1)/nunit-gui.exe* /usr/lib/nunit/
 	dh_install -p libnunit2.4-cil $(BUILDDIR1)/nunit.core.dll \
@@ -55,25 +53,19 @@ install: build
 		$(BUILDDIR1)/nunit.mocks.dll \
 		$(BUILDDIR1)/nunit.util.dll \
 		/usr/lib/cli/nunit-2.4
-	# mono-2.0
-	# FIXME
-	mkdir -p debian/nunit-console/usr/bin
+	dh_installcligac
 	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
 	chmod 755 debian/nunit-console/usr/bin/nunit-console
 
 	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
 	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
 
-	# Compatibility with 2.2.7
-	al -link:policy.nunit.2.2.7.config -out:policy.2.2.7.nunit.dll -keyfile:src/nunit.snk
-	gacutil /i policy.2.2.7.nunit.dll
-
 binary-indep: install
 	dh_testdir -i
 	dh_testroot -i
 	dh_link -i
 	dh_install -i
-	dh_installchangelogs -i doc/ChangeLog.txt
+	dh_installchangelogs -i 
 	dh_installdocs
 	dh_installexamples -i 
 	dh_installmenu -i
