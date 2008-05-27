@@ -1,5 +1,6 @@
 /usr/lib/cli/nunit-2.4/nunit.core.dll
 /usr/lib/cli/nunit-2.4/nunit.core.extensions.dll
+/usr/lib/cli/nunit-2.4/nunit.core.interfaces.dll
 /usr/lib/cli/nunit-2.4/nunit.framework.dll
 /usr/lib/cli/nunit-2.4/nunit.mocks.dll
 /usr/lib/cli/nunit-2.4/nunit.util.dll
