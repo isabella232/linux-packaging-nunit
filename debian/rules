@@ -1,34 +1,54 @@
 #!/usr/bin/make -f
-
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
-BUILDDIR1 = build/linux/mono/1.0/release
-BUILDDIR2 = build/linux/mono/2.0/release
-export MONO_SHARED_DIR=$(CURDIR)
+export DH_VERBOSE=1
+# nant has race conditions on SMP systems and causes hangs or failures
+export MONO_NO_SMP=1
+BUILD_DIR = build/linux/mono/2.0/release
 NANT = nant
+DEB_CLI_ABI_VERSION = 2.4
+DEB_CLI_API_VERSION = 2.4.7
 
-# Include dpatch stuff.
+include /usr/share/cli-common/cli.make
 include /usr/share/dpatch/dpatch.make
 
-build: patch build-stamp
+build: patch-stamp build-stamp
 build-stamp:
-	dh_testdir
-	$(NANT) /f:src/nunit.build mono-1.0 release build
-	$(NANT) /f:src/nunit.build mono-2.0 release build
+	dh build --before build
+	$(NANT) -f:src/nunit.build mono-2.0 release build
+	for lib in nunit.core nunit.framework; do \
+	  rm -rf $(BUILD_DIR)/monodocer; \
+	  monodocer \
+	    -importslashdoc:$(BUILD_DIR)/$$lib.xml \
+	    --assembly:$(BUILD_DIR)/$$lib.dll \
+	    --path:$(BUILD_DIR)/monodocer; \
+	  mdassembler \
+	    --out $(BUILD_DIR)/$$lib \
+	    --ecma $(BUILD_DIR)/monodocer; \
+	done
 	touch build-stamp
 
+install: build
+	dh $@ --before dh_install
+	rm -f doc/files/Thumbs.db
+	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
+	chmod 755 debian/nunit-console/usr/bin/nunit-console
+	dh $@ --remaining
+
+binary: binary-indep
+binary-indep: install
+	dh $@ --before dh_makeclilibs
+	dh_makeclilibs -i -m $(DEB_CLI_API_VERSION)
+	dh $@ --after dh_makeclilibs
+
 clean: unpatch
-	dh_testdir
-	dh_testroot
 	rm -rf build
-	$(NANT) /f:src/nunit.build mono-1.0 clean-all
-	$(NANT) /f:src/nunit.build mono-2.0 clean-all
 	rm -f build-stamp
-	rm -rf .wapi
-	dh_clean
+	$(NANT) /f:src/nunit.build mono-2.0 clean-all
+	dh $@
+
+%:
+	dh $@
 
 upstream_version=$(shell uscan --dehs | sed -n 's/.*<upstream-version>\(.*\)<\/upstream-version>.*/\1/p')
-
 get-orig-source::
 	mkdir nunit-$(upstream_version)
 	cd nunit-$(upstream_version) && unzip ../../NUnit-$(upstream_version)-src.zip
@@ -37,49 +57,3 @@ get-orig-source::
 	cd nunit-$(upstream_version) && $(NANT) /f:src/nunit.build mono-2.0 clean-all
 	tar cfz ../nunit_$(upstream_version).orig.tar.gz nunit-$(upstream_version)
 	rm -rf nunit-$(upstream_version)
-
-install: build
-	dh_testdir
-	dh_testroot
-	dh_clean -k 
-	dh_installdirs
-	rm -f doc/files/Thumbs.db
-	# mono-1.0
-	dh_install -p nunit-console $(BUILDDIR1)/nunit-console*.dll $(BUILDDIR1)/nunit-console.exe* /usr/lib/nunit/
-	dh_install -p nunit-gui $(BUILDDIR1)/nunit-gui*.dll $(BUILDDIR1)/nunit-gui.exe* /usr/lib/nunit/
-	dh_install -p libnunit2.4-cil $(BUILDDIR1)/nunit.core.dll \
-		$(BUILDDIR1)/nunit.core.interfaces.dll \
-		$(BUILDDIR1)/nunit.core.extensions.dll \
-		$(BUILDDIR1)/nunit.framework.dll \
-		$(BUILDDIR1)/nunit.mocks.dll \
-		$(BUILDDIR1)/nunit.util.dll \
-		/usr/lib/cli/nunit-2.4
-	dh_installcligac
-	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
-	chmod 755 debian/nunit-console/usr/bin/nunit-console
-
-	-cd $(CURDIR)/debian && find -type f -name "*.exe" -exec chmod +x {} \;
-	-cd $(CURDIR)/debian && find -type f -name "*.dll" -exec chmod -x {} \;
-
-binary-indep: install
-	dh_testdir -i
-	dh_testroot -i
-	dh_link -i
-	dh_install -i
-	dh_installchangelogs -i 
-	dh_installdocs
-	dh_installexamples -i 
-	dh_installmenu -i
-	dh_installman -i debian/nunit-console.1
-	dh_strip -i
-	dh_compress -i
-	dh_fixperms -i
-	dh_installdeb -i
-	dh_makeclilibs -i
-	dh_clideps -i -d
-	dh_gencontrol -i
-	dh_md5sums -i
-	dh_builddeb -i
-
-binary: binary-indep
-.PHONY: clean build binary-indep binary install

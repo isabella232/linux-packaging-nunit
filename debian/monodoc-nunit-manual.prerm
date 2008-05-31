@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+# Remove the node entry
+grep -v nunit /usr/lib/monodoc/monodoc.xml \
+            > /usr/lib/monodoc/monodoc.xml.new
+mv /usr/lib/monodoc/monodoc.xml.new \
+   /usr/lib/monodoc/monodoc.xml
+
+#DEBHELPER#

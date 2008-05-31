@@ -1,11 +1,49 @@
-nunit (2.4.7-1) unstable; urgency=low
+nunit (2.4.7+dfsg-1) unstable; urgency=low
 
+  [ Jelmer Vernooij ]
   * New upstream release.
   * Set homepage and Vcs-Svn fields.
   * Change maintainer to Debian CLI Libraries Team. (Closes: #458551)
   * Allow Debian Maintainer uploads.
 
- -- Jelmer Vernooij <jelmer@samba.org>  Sat, 12 Jan 2008 00:00:21 +0100
+  [ Mirco Bauer ]
+  * The "get sexy and ready for lenny" release
+  * DFSG version of nunit 2.4.7
+    (deleted all pre-compiled binaries from the tarball)
+    + For the record here a list of the deleted files:
+      tools/fit/fit.dll
+      tools/fit/runFile.exe
+  * debian/control:
+    + Updated cli-common-dev build-dependency to >= 0.5.7
+      (needed for cli.make)
+    + Added new package monodoc-nunit-manual.
+    + Added dpatch to build-dependencies.
+    + Fixed usage of the ".NET" term in package descriptions.
+  * debian/rules:
+    + Include /usr/share/cli-common/cli.make
+    + Migrated to debhelper v7 minimalistic style.
+    + Bumped clilibs to 2.4.7
+  * debian/nunit-console.install
+    debian/nunit-console.manpages
+    debian/nunit-gui.install:
+    + Converted some debian/rules calls to debhelper files.
+  * debian/monodoc-nunit-manual.install
+    debian/monodoc-nunit-manual.postinst
+    debian/monodoc-nunit-manual.prerm:
+    + New package.
+  *  debian/nunit.core.source
+     debian/nunit.framework.source:
+     + Files needed by monodoc.
+  * debian/patches/03_disable_building_fit_fixtures.dpatch:
+    + DFSG version of nunit doesn't contain the FIT library, thus we have to
+      disable the fit test-fixtures.
+  * debian/patches/05_build_xml_doc_for_nunit.core.dpatch:
+    + Enable creating XML documentation for the nunit.core library
+      (needed for monodoc API docs).
+  * debian/patches/04_enable_building_gui_runner.dpatch:
+    + Build nunit GUI runner for Mono.
+
+ -- Mirco Bauer <meebey@debian.org>  Fri, 30 May 2008 21:55:27 +0200
 
 nunit (2.2.9-1) unstable; urgency=low
 

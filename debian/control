@@ -2,35 +2,43 @@ Source: nunit
 Section: devel
 Priority: optional
 Maintainer: Debian CLI Libraries Team <pkg-cli-libs-team@lists.alioth.debian.org>
-Uploaders: Jelmer Vernooij <jelmer@samba.org>
-Homepage: http://www.nunit.org/
-Build-Depends: debhelper (>= 4.0.0), dpatch, cli-common-dev (>= 0.4.4)
-Build-Depends-Indep: mono-mcs (>= 1.0) | c-sharp-compiler, c-sharp-2.0-compiler, nant (>= 0.84), mono-gac (>= 1.1.6), libmono-winforms1.0-cil, libmono-winforms2.0-cil
-Vcs-Svn: svn://svn.debian.org/svn/pkg-cli-libs/packages/nunit/trunk
-Standards-Version: 3.7.3
+Uploaders: Jelmer Vernooij <jelmer@samba.org>, Mirco Bauer <meebey@debian.org>
 DM-Upload-Allowed: yes
+Build-Depends: debhelper (>= 7), dpatch, cli-common-dev (>= 0.5.7)
+Build-Depends-Indep: mono-gmcs (>= 1.1.8) | c-sharp-2.0-compiler,
+ nant (>= 0.84),
+ mono-gac (>= 1.1.6),
+ libmono-winforms2.0-cil
+Standards-Version: 3.7.3
+Homepage: http://www.nunit.org/
+Vcs-Svn: svn://svn.debian.org/svn/pkg-cli-libs/packages/nunit/trunk
+Vcs-Browser: svn://svn.debian.org/wsvn/pkg-cli-libs/packages/nunit/trunk/
 
 Package: nunit-console
 Architecture: all
 Depends: ${cli:Depends}
-Conflicts: libnunit-cil
-Description: Unit test framework for .NET
+Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
  text or XML.
+ .
+ NUnit targets the CLI (Common Language Infrastructure) and supports Mono and
+ the Microsoft .NET Framework.
  .
  This package contains the console front-end.
 
 Package: nunit-gui
 Architecture: all
 Depends: ${cli:Depends}
-Conflicts: libnunit-cil
-Description: Unit test framework for .NET
+Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
  text or XML.
+ .
+ NUnit targets the CLI (Common Language Infrastructure) and supports Mono and
+ the Microsoft .NET Framework.
  .
  This package contains the graphical front-end.
 
@@ -38,8 +46,8 @@ Package: libnunit2.4-cil
 Architecture: all
 Depends: ${cli:Depends}
 Conflicts: libnunit-cil
-Suggests: libnunit-doc
-Description: Unit test framework for .NET
+Suggests: libnunit-doc, monodoc-nunit-manual
+Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
@@ -49,21 +57,38 @@ Package: libnunit-doc
 Section: doc
 Architecture: all
 Depends: ${cli:Depends}
-Description: Unit test framework for .NET
+Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
  text or XML.
  .
+ NUnit targets the CLI (Common Language Infrastructure) and supports Mono and
+ the Microsoft .NET Framework.
+ .
  This package contains the API documentation and examples.
+
+Package: monodoc-nunit-manual
+Architecture: all
+Section: doc
+Depends: monodoc-manual
+Description: compiled XML documentation for NUnit
+ The MonoDoc Project is the documentation framework of the Mono project which
+ provides detailed API documentation for all Mono components and the Mono CLI
+ implementation.
+ .
+ This packages contains the compiled XML documentation for NUnit.
 
 Package: nunit
 Architecture: all
 Depends: libnunit-doc, nunit-console, nunit-gui, libnunit2.4-cil
-Description: Unit test framework for .NET
+Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
  text or XML.
  .
- This is a dummy package that depends on the other nunit packages.
+ NUnit targets the CLI (Common Language Infrastructure) and supports Mono and
+ the Microsoft .NET Framework.
+ .
+ This is a dummy package that depends on all nunit packages.

@@ -1,1 +1,4 @@
-02_gui.dpatch
+02_gui
+03_disable_building_fit_fixtures
+04_enable_building_gui_runner
+05_build_xml_doc_for_nunit.core

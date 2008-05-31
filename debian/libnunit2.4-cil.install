@@ -1,1 +1,7 @@
-debian/nunit-2.4.pc /usr/lib/pkgconfig
+build/linux/mono/2.0/release/nunit.core.dll		/usr/lib/cli/nunit-2.4/
+build/linux/mono/2.0/release/nunit.core.interfaces.dll	/usr/lib/cli/nunit-2.4/
+build/linux/mono/2.0/release/nunit.core.extensions.dll	/usr/lib/cli/nunit-2.4/
+build/linux/mono/2.0/release/nunit.framework.dll	/usr/lib/cli/nunit-2.4/
+build/linux/mono/2.0/release/nunit.mocks.dll		/usr/lib/cli/nunit-2.4/
+build/linux/mono/2.0/release/nunit.util.dll		/usr/lib/cli/nunit-2.4/
+debian/nunit-2.4.pc					/usr/lib/pkgconfig/

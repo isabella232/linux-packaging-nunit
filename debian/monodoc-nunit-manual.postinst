@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+	# Add the nunit node entry
+	grep -v nunit /usr/lib/monodoc/monodoc.xml \
+	    | sed 's@  <node label="Various" name="various">@  <node label="Various" name="various">\n    <node label="NUnit" name="nunit"/>@' \
+	    > /usr/lib/monodoc/monodoc.xml.new
+	mv -f /usr/lib/monodoc/monodoc.xml.new \
+	      /usr/lib/monodoc/monodoc.xml
+	
+	# Rebuild the index
+	if [ -x /usr/bin/monodoc ]; then
+		echo "generating monodoc search index..."
+		/usr/bin/monodoc --make-index > /dev/null
+	fi
+fi
+
+#DEBHELPER#

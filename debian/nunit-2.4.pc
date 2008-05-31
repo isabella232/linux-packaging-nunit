@@ -1,9 +1,9 @@
 prefix=/usr
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
-
+pkglibdir=${libdir}/
 
 Name: NUnit
-Description: Testing framework for .NET
+Description: Testing framework for CLI
 Version: 2.4.7
-Libs: -r:${libdir}/cli/nunit-2.4/nunit.core.dll -r:${libdir}/cli/nunit-2.4/nunit.util.dll -r:${libdir}/cli/nunit-2.4/nunit.framework.dll
+Libs: -r:${pkglibdir}/nunit.core.dll -r:${pkglibdir}/nunit.util.dll -r:$${pkglibdir}/nunit.framework.dll
