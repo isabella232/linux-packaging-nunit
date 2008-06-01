@@ -8,6 +8,7 @@ Build-Depends: debhelper (>= 7), dpatch, cli-common-dev (>= 0.5.7)
 Build-Depends-Indep: mono-gmcs (>= 1.1.8) | c-sharp-2.0-compiler,
  nant (>= 0.84),
  mono-gac (>= 1.1.6),
+ libmono-system-runtime2.0-cil,
  libmono-winforms2.0-cil
 Standards-Version: 3.7.3
 Homepage: http://www.nunit.org/

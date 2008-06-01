@@ -22,6 +22,7 @@ nunit (2.4.7+dfsg-1) unstable; urgency=low
     + Fixed usage of the ".NET" term in package descriptions.
     + Moved conflicts libununit-cil to replaces, as it only overwrites the
       pkg-config file.
+    + Added libmono-system-runtime2.0-cil to build dependencies.
   * debian/compat:
     + Bumped to 7
   * debian/rules:
@@ -37,8 +38,8 @@ nunit (2.4.7+dfsg-1) unstable; urgency=low
     debian/monodoc-nunit-manual.postinst
     debian/monodoc-nunit-manual.prerm:
     + New package.
-  *  debian/nunit.core.source
-     debian/nunit.framework.source:
+  * debian/nunit.core.source
+    debian/nunit.framework.source:
      + Files needed by monodoc.
   * debian/libnunit2.4-cil.links:
      + Added nunit.pc -> nunit-2.4.pc symlink.
@@ -51,7 +52,7 @@ nunit (2.4.7+dfsg-1) unstable; urgency=low
   * debian/patches/04_enable_building_gui_runner.dpatch:
     + Build nunit GUI runner for Mono.
 
- -- Mirco Bauer <meebey@debian.org>  Sun, 01 Jun 2008 12:42:24 +0200
+ -- Mirco Bauer <meebey@debian.org>  Sun, 01 Jun 2008 13:00:34 +0200
 
 nunit (2.2.9-1) unstable; urgency=low
 
