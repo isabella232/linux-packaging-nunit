@@ -22,7 +22,8 @@ nunit (2.4.7+dfsg-1) unstable; urgency=low
     + Fixed usage of the ".NET" term in package descriptions.
     + Moved conflicts libununit-cil to replaces, as it only overwrites the
       pkg-config file.
-    + Added libmono-system-runtime2.0-cil to build dependencies.
+    + Added mono-2.0-devel, monodoc-base and libmono-system-runtime2.0-cil to
+      build dependencies.
   * debian/compat:
     + Bumped to 7
   * debian/rules:
