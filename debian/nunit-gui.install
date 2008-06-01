@@ -1,2 +1,3 @@
 build/linux/mono/2.0/release/nunit.exe*			/usr/lib/nunit/
 build/linux/mono/2.0/release/nunit-gui-runner.dll*	/usr/lib/nunit/
+build/linux/mono/2.0/release/nunit.uikit.dll*		/usr/lib/nunit/

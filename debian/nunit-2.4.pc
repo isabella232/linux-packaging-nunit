@@ -1,7 +1,7 @@
 prefix=/usr
 exec_prefix=${prefix}
 libdir=${exec_prefix}/lib
-pkglibdir=${libdir}/
+pkglibdir=${libdir}/cli/nunit-2.4
 
 Name: NUnit
 Description: Testing framework for CLI

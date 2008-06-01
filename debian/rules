@@ -29,8 +29,8 @@ build-stamp:
 install: build
 	dh $@ --before dh_install
 	rm -f doc/files/Thumbs.db
-	cp debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
-	chmod 755 debian/nunit-console/usr/bin/nunit-console
+	install -D -m 755 debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
+	install -D -m 755 debian/nunit-gui.sh debian/nunit-gui/usr/bin/nunit-gui
 	dh $@ --remaining
 
 binary: binary-indep

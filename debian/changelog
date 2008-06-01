@@ -18,7 +18,12 @@ nunit (2.4.7+dfsg-1) unstable; urgency=low
       (needed for cli.make)
     + Added new package monodoc-nunit-manual.
     + Added dpatch to build-dependencies.
+    + Added myself to uploaders.
     + Fixed usage of the ".NET" term in package descriptions.
+    + Moved conflicts libununit-cil to replaces, as it only overwrites the
+      pkg-config file.
+  * debian/compat:
+    + Bumped to 7
   * debian/rules:
     + Include /usr/share/cli-common/cli.make
     + Migrated to debhelper v7 minimalistic style.
@@ -34,6 +39,8 @@ nunit (2.4.7+dfsg-1) unstable; urgency=low
   *  debian/nunit.core.source
      debian/nunit.framework.source:
      + Files needed by monodoc.
+  * debian/libnunit2.4-cil.links:
+     + Added nunit.pc -> nunit-2.4.pc symlink.
   * debian/patches/03_disable_building_fit_fixtures.dpatch:
     + DFSG version of nunit doesn't contain the FIT library, thus we have to
       disable the fit test-fixtures.
@@ -43,7 +50,7 @@ nunit (2.4.7+dfsg-1) unstable; urgency=low
   * debian/patches/04_enable_building_gui_runner.dpatch:
     + Build nunit GUI runner for Mono.
 
- -- Mirco Bauer <meebey@debian.org>  Fri, 30 May 2008 21:55:27 +0200
+ -- Mirco Bauer <meebey@debian.org>  Sun, 01 Jun 2008 02:03:34 +0200
 
 nunit (2.2.9-1) unstable; urgency=low
 

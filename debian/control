@@ -45,7 +45,7 @@ Description: Unit test framework for CLI
 Package: libnunit2.4-cil
 Architecture: all
 Depends: ${cli:Depends}
-Conflicts: libnunit-cil
+Replaces: libnunit-cil, libnunit2.2.6-cil
 Suggests: libnunit-doc, monodoc-nunit-manual
 Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
