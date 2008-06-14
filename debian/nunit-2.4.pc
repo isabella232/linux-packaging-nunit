@@ -6,4 +6,4 @@ pkglibdir=${libdir}/cli/nunit-2.4
 Name: NUnit
 Description: Testing framework for CLI
 Version: 2.4.7
-Libs: -r:${pkglibdir}/nunit.core.dll -r:${pkglibdir}/nunit.util.dll -r:${pkglibdir}/nunit.framework.dll
+Libs: -r:${pkglibdir}/nunit.core.dll -r:${pkglibdir}/nunit.util.dll -r:${pkglibdir}/nunit.framework.dll -r:${pkglibdir}/nunit.core.interfaces.dll

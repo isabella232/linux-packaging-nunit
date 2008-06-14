@@ -3,6 +3,7 @@ nunit (2.4.7+dfsg-2) unstable; urgency=low
   * Fix typo in nunit-2.4.pc.
   * Bump policy version to 3.8.0.
   * Mangle version in debian/watch to cope with dfsg in version string.
+  * Add nunit interfaces dll to pkg-config file.
 
  -- Jelmer Vernooij <jelmer@samba.org>  Sat, 14 Jun 2008 15:34:16 +0200
 
