@@ -12,7 +12,7 @@ Build-Depends-Indep: mono-gmcs (>= 1.1.8) | c-sharp-2.0-compiler,
  monodoc-base,
  libmono-system-runtime2.0-cil,
  libmono-winforms2.0-cil
-Standards-Version: 3.7.3
+Standards-Version: 3.8.0
 Homepage: http://www.nunit.org/
 Vcs-Svn: svn://svn.debian.org/svn/pkg-cli-libs/packages/nunit/trunk
 Vcs-Browser: svn://svn.debian.org/wsvn/pkg-cli-libs/packages/nunit/trunk/

@@ -1,2 +1,3 @@
 version=3
-http://sf.net/nunit/NUnit-([\d.]+)-src.zip
+opts=dversionmangle=s/\+dfsg$// \
+	 http://sf.net/nunit/NUnit-([\d.]+)-src.zip
