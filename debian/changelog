@@ -1,3 +1,10 @@
+nunit (2.4.7+dfsg-3) UNRELEASED; urgency=low
+
+  * Update for Mono 2.0 transition, as much as nant allows such things
+  * Add myself to Uploaders
+
+ -- Jo Shields <directhex@apebox.org>  Mon, 02 Mar 2009 16:15:51 +0000
+
 nunit (2.4.7+dfsg-2) unstable; urgency=low
 
   * Fix typo in nunit-2.4.pc.

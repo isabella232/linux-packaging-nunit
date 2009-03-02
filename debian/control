@@ -2,13 +2,11 @@ Source: nunit
 Section: devel
 Priority: optional
 Maintainer: Debian CLI Libraries Team <pkg-cli-libs-team@lists.alioth.debian.org>
-Uploaders: Jelmer Vernooij <jelmer@samba.org>, Mirco Bauer <meebey@debian.org>
+Uploaders: Jelmer Vernooij <jelmer@samba.org>, Mirco Bauer <meebey@debian.org>, Jo Shields <directhex@apebox.org>
 DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7), dpatch, cli-common-dev (>= 0.5.7)
-Build-Depends-Indep: mono-gmcs (>= 1.1.8) | c-sharp-2.0-compiler,
+Build-Depends-Indep: mono-devel (>= 2.0.1),
  nant (>= 0.84),
- mono-gac (>= 1.1.6),
- mono-2.0-devel,
  monodoc-base,
  libmono-system-runtime2.0-cil,
  libmono-winforms2.0-cil
