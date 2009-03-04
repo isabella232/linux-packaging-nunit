@@ -1,10 +1,9 @@
-nunit (2.4.7+dfsg-3) UNRELEASED; urgency=low
+nunit (2.4.7+dfsg-3) unstable; urgency=low
 
   [ Jo Shields ]
   * Update for Mono 2.0 transition, as much as nant allows such things
 
   [ Mirco Bauer ]
-  * Upload to unstable.
   * debian/control:
     + Removed mono-devel build-dep as nant takes care of that.
     + Bumped versioned build-dep of nant to >= 0.85.dfsg1-7, to ensure we get
