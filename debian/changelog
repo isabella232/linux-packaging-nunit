@@ -6,7 +6,7 @@ nunit (2.4.7+dfsg-3) unstable; urgency=low
   [ Mirco Bauer ]
   * debian/control:
     + Removed mono-devel build-dep as nant takes care of that.
-    + Bumped versioned build-dep of nant to >= 0.85.dfsg1-7, to ensure we get
+    + Bumped versioned build-dep of nant to >= 0.85.dfsg1-6, to ensure we get
       a transitioned version.
 
  -- Jo Shields <directhex@apebox.org>  Wed, 04 Mar 2009 21:35:55 +0100
