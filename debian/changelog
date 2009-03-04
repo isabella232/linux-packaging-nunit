@@ -1,9 +1,16 @@
 nunit (2.4.7+dfsg-3) UNRELEASED; urgency=low
 
+  [ Jo Shields ]
   * Update for Mono 2.0 transition, as much as nant allows such things
-  * Add myself to Uploaders
 
- -- Jo Shields <directhex@apebox.org>  Mon, 02 Mar 2009 16:15:51 +0000
+  [ Mirco Bauer ]
+  * Upload to unstable.
+  * debian/control:
+    + Removed mono-devel build-dep as nant takes care of that.
+    + Bumped versioned build-dep of nant to >= 0.85.dfsg1-7, to ensure we get
+      a transitioned version.
+
+ -- Jo Shields <directhex@apebox.org>  Wed, 04 Mar 2009 21:35:55 +0100
 
 nunit (2.4.7+dfsg-2) unstable; urgency=low
 
