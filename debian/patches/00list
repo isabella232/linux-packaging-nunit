@@ -2,3 +2,5 @@
 03_disable_building_fit_fixtures
 04_enable_building_gui_runner
 05_build_xml_doc_for_nunit.core
+06_use_default_encoding
+07_disable_trace_listener

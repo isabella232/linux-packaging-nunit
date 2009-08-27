@@ -1,0 +1,16 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 06_use_default_encoding.dpatch by Mirco Bauer <meebey@debian.org>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad nunit-2.4.7~/src/ConsoleRunner/nunit-console-exe/App.config nunit-2.4.7/src/ConsoleRunner/nunit-console-exe/App.config
+--- nunit-2.4.7~/src/ConsoleRunner/nunit-console-exe/App.config	2008-03-20 09:40:42.000000000 +0100
++++ nunit-2.4.7/src/ConsoleRunner/nunit-console-exe/App.config	2009-08-27 23:02:25.000000000 +0200
+@@ -1,4 +1,4 @@
+-<?xml version="1.0" encoding="Windows-1252"?>
++<?xml version="1.0"?>
+ <configuration>
+ 
+ 	<!-- Do not remove. Sets up configsectionhandler section for log4net -->

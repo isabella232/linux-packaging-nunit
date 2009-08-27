@@ -16,13 +16,13 @@ build-stamp:
 	$(NANT) -f:src/nunit.build mono-2.0 release build
 	for lib in nunit.core nunit.framework; do \
 	  rm -rf $(BUILD_DIR)/monodocer; \
-	  monodocer \
-	    -importslashdoc:$(BUILD_DIR)/$$lib.xml \
-	    --assembly:$(BUILD_DIR)/$$lib.dll \
-	    --path:$(BUILD_DIR)/monodocer; \
-	  mdassembler \
-	    --out $(BUILD_DIR)/$$lib \
-	    --ecma $(BUILD_DIR)/monodocer; \
+	  mdoc update \
+	    -i $(BUILD_DIR)/$$lib.xml \
+	    -o $(BUILD_DIR)/monodocer \
+	    $(BUILD_DIR)/$$lib.dll; \
+	  mdoc assemble \
+	    -o $(BUILD_DIR)/$$lib \
+	    $(BUILD_DIR)/monodocer; \
 	done
 	touch build-stamp
 

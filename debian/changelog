@@ -1,3 +1,14 @@
+nunit (2.4.7+dfsg-4) unstable; urgency=medium
+
+  * debian/patches/06_use_default_encoding.dpatch:
+    + Don't explicitely set an encoding. (Closes: #530460)
+  * debian/patches/07_disable_trace_listener.dpatch:
+    + Disable the trace listener. (Closes: #500952)
+  * debian/rules:
+    + Updated monodoc commands with mdoc. (Closes: #531906)
+
+ -- Mirco Bauer <meebey@debian.org>  Thu, 27 Aug 2009 23:12:18 +0200
+
 nunit (2.4.7+dfsg-3) unstable; urgency=low
 
   [ Jo Shields ]
