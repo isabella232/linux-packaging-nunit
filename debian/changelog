@@ -1,3 +1,19 @@
+nunit (2.4.7+dfsg-5) UNRELEASED; urgency=low
+
+  * debian/control,
+    debian/nunit.pc,
+    debian/libnunit2.4-cil.install,
+    debian/libnunit-cil-dev.install:
+    + Add new unversioned -dev package containing pkg-config file
+  * debian/control:
+    + No-change bump to Standards 3.8.3
+  * debian/libnunit2.4-cil.install,
+    debian/libnunit2.4-cil.installcligac,
+    debian/nunit.pc:
+    + CLI Policy 0.7 install location
+
+ -- Jo Shields <directhex@apebox.org>  Fri, 20 Nov 2009 16:19:12 +0000
+
 nunit (2.4.7+dfsg-4) unstable; urgency=medium
 
   * debian/patches/06_use_default_encoding.dpatch:

@@ -9,7 +9,7 @@ Build-Depends-Indep: nant (>= 0.85.dfsg1-6),
  monodoc-base,
  libmono-system-runtime2.0-cil,
  libmono-winforms2.0-cil
-Standards-Version: 3.8.0
+Standards-Version: 3.8.3
 Homepage: http://www.nunit.org/
 Vcs-Svn: svn://svn.debian.org/svn/pkg-cli-libs/packages/nunit/trunk
 Vcs-Browser: svn://svn.debian.org/wsvn/pkg-cli-libs/packages/nunit/trunk/
@@ -44,7 +44,7 @@ Description: Unit test framework for CLI
 
 Package: libnunit2.4-cil
 Architecture: all
-Depends: ${cli:Depends}
+Depends: ${cli:Depends}, ${misc:Depends}
 Replaces: libnunit-cil, libnunit2.2.6-cil
 Suggests: libnunit-doc, monodoc-nunit-manual
 Description: Unit test framework for CLI
@@ -52,6 +52,21 @@ Description: Unit test framework for CLI
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
  text or XML.
+ .
+ This package contains the NUnit assemblies
+
+Package: libnunit-cil-dev
+Architecture: all
+Depends: libnunit2.4-cil (= ${binary:Version}), ${misc:Depends}
+Replaces: libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil (<< 2.4.7+dfsg-5)
+Description: Unit test framework for CLI
+ NUnit is a unit testing framework for all .NET languages. It serves the
+ same purpose as JUnit does in the Java world. It supports test
+ categories, testing for exceptions and writing test results in plain
+ text or XML.
+ .
+ This package contains development files for the Nunit library, and should
+ be used for compilation
 
 Package: libnunit-doc
 Section: doc
