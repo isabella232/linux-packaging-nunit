@@ -1,4 +1,4 @@
-nunit (2.4.7+dfsg-5) UNRELEASED; urgency=low
+nunit (2.4.7+dfsg-5) unstable; urgency=low
 
   * debian/control,
     debian/nunit.pc,
