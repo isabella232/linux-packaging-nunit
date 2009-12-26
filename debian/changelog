@@ -7,6 +7,8 @@ nunit (2.4.7+dfsg-5) UNRELEASED; urgency=low
     + Add new unversioned -dev package containing pkg-config file
   * debian/control:
     + No-change bump to Standards 3.8.3
+    + Remove individual library build-depends, and add a build-depend
+      on mono-devel 2.4.3 to ensure they're all present
   * debian/libnunit2.4-cil.install,
     debian/libnunit2.4-cil.installcligac,
     debian/nunit.pc:

@@ -7,8 +7,7 @@ DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7), dpatch, cli-common-dev (>= 0.5.7)
 Build-Depends-Indep: nant (>= 0.85.dfsg1-6),
  monodoc-base,
- libmono-system-runtime2.0-cil,
- libmono-winforms2.0-cil
+ mono-devel (>= 2.4.3)
 Standards-Version: 3.8.3
 Homepage: http://www.nunit.org/
 Vcs-Svn: svn://svn.debian.org/svn/pkg-cli-libs/packages/nunit/trunk
