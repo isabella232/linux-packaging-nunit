@@ -2,7 +2,7 @@ Source: nunit
 Section: devel
 Priority: optional
 Maintainer: Debian CLI Libraries Team <pkg-cli-libs-team@lists.alioth.debian.org>
-Uploaders: Jelmer Vernooij <jelmer@samba.org>, Mirco Bauer <meebey@debian.org>
+Uploaders: Mirco Bauer <meebey@debian.org>
 DM-Upload-Allowed: yes
 Build-Depends: debhelper (>= 7), dpatch, cli-common-dev (>= 0.5.7)
 Build-Depends-Indep: nant (>= 0.85.dfsg1-6),
