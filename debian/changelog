@@ -1,8 +1,14 @@
 nunit (2.4.7+dfsg-6) UNRELEASED; urgency=low
 
+  [ Jelmer Vernooij ]
   * Remove myself from uploaders.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Mon, 24 May 2010 04:46:45 +0200
+  [ Jo Shields ]
+  * debian/monodoc-nunit-manual.postinst,
+    debian/monodoc-nunit-manual.prerm:
+    + Delete, since this is handled by triggers now (Closes: #591600)
+
+ -- Jo Shields <directhex@apebox.org>  Wed, 18 Aug 2010 22:35:48 +0100
 
 nunit (2.4.7+dfsg-5) unstable; urgency=low
 
