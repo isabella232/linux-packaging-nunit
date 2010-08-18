@@ -1,4 +1,4 @@
-nunit (2.4.7+dfsg-6) UNRELEASED; urgency=low
+nunit (2.4.7+dfsg-6) unstable; urgency=medium
 
   [ Jelmer Vernooij ]
   * Remove myself from uploaders.
