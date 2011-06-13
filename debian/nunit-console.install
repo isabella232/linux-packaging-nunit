@@ -1,2 +1,2 @@
-build/linux/mono/2.0/release/nunit-console.exe*		/usr/lib/nunit/
-build/linux/mono/2.0/release/nunit-console-runner.dll*	/usr/lib/nunit/
+bin/Release/nunit-console.exe                  /usr/lib/nunit/
+bin/Release/lib/nunit-console-runner.dll       /usr/lib/nunit/

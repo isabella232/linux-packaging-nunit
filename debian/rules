@@ -1,52 +1,31 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
-# nant has race conditions on SMP systems and causes hangs or failures
-export MONO_NO_SMP=1
-BUILD_DIR = build/linux/mono/2.0/release
-NANT = nant
-DEB_CLI_ABI_VERSION = 2.4
-DEB_CLI_API_VERSION = 2.4.7
 
 include /usr/share/cli-common/cli.make
-include /usr/share/dpatch/dpatch.make
-
-build: patch-stamp build-stamp
-build-stamp:
-	dh build --before build
-	$(NANT) -f:src/nunit.build mono-2.0 release build
-	for lib in nunit.core nunit.framework; do \
-	  rm -rf $(BUILD_DIR)/monodocer; \
-	  mdoc update \
-	    -i $(BUILD_DIR)/$$lib.xml \
-	    -o $(BUILD_DIR)/monodocer \
-	    $(BUILD_DIR)/$$lib.dll; \
-	  mdoc assemble \
-	    -o $(BUILD_DIR)/$$lib \
-	    $(BUILD_DIR)/monodocer; \
-	done
-	touch build-stamp
-
-install: build
-	dh $@ --before dh_install
-	rm -f doc/files/Thumbs.db
-	install -D -m 755 debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
-	install -D -m 755 debian/nunit-gui.sh debian/nunit-gui/usr/bin/nunit-gui
-	dh $@ --remaining
-
-binary: binary-indep
-binary-indep: install
-	dh $@ --before dh_makeclilibs
-	dh_makeclilibs -i -m $(DEB_CLI_API_VERSION)
-	dh $@ --after dh_makeclilibs
-
-clean: unpatch
-	rm -rf build
-	rm -f build-stamp
-	$(NANT) /f:src/nunit.build mono-2.0 clean-all
-	dh $@
 
 %:
-	dh $@
+	dh $@ --with-cli
+
+override_dh_auto_build:
+	xbuild /property:Configuration=Release ./src/NUnitCore/core/nunit.core.dll.csproj
+	xbuild /property:Configuration=Release ./src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj
+	xbuild /property:Configuration=Release ./src/NUnitFramework/framework/nunit.framework.dll.csproj
+	xbuild /property:Configuration=Release ./src/NUnitMocks/mocks/nunit.mocks.csproj
+	xbuild /property:Configuration=Release ./src/ClientUtilities/util/nunit.util.dll.csproj
+
+	xbuild /property:Configuration=Release ./src/ConsoleRunner/nunit-console/nunit-console.csproj
+	xbuild /property:Configuration=Release ./src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj
+
+	xbuild /property:Configuration=Release ./src/GuiRunner/nunit-gui/nunit-gui.csproj
+	xbuild /property:Configuration=Release ./src/GuiComponents/UiKit/nunit.uikit.dll.csproj
+	xbuild /property:Configuration=Release ./src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
+
+override_dh_install:
+	install -D -m 755 debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
+	install -D -m 755 debian/nunit-gui.sh debian/nunit-gui/usr/bin/nunit-gui
+	dh_install
+	cp -a src/ConsoleRunner/nunit-console-exe/Ship.config debian/nunit-console/usr/lib/nunit/nunit-console.exe.config
+	cp -a src/GuiRunner/nunit-gui-exe/Ship.config debian/nunit-gui/usr/lib/nunit/nunit.exe.config
 
 upstream_version=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-\+]+)+(\+dfsg)*.*,\1,p')
 get-orig-source::
