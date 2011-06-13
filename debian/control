@@ -4,10 +4,8 @@ Priority: optional
 Maintainer: Debian CLI Libraries Team <pkg-cli-libs-team@lists.alioth.debian.org>
 Uploaders: Mirco Bauer <meebey@debian.org>
 DM-Upload-Allowed: yes
-Build-Depends: debhelper (>= 7), dpatch, cli-common-dev (>= 0.5.7)
-Build-Depends-Indep: nant (>= 0.85.dfsg1-6),
- monodoc-base,
- mono-devel (>= 2.4.3)
+Build-Depends: cli-common-dev (>= 0.5.7), debhelper (>= 7), dpatch
+Build-Depends-Indep: mono-devel (>= 2.4.3), monodoc-base, nant (>= 0.85.dfsg1-6)
 Standards-Version: 3.8.3
 Homepage: http://www.nunit.org/
 Vcs-Git: git://git.debian.org/pkg-cli-libs/packages/nunit.git
@@ -95,7 +93,7 @@ Description: compiled XML documentation for NUnit
 
 Package: nunit
 Architecture: all
-Depends: libnunit-doc, nunit-console, nunit-gui, libnunit2.4-cil
+Depends: libnunit-doc, libnunit2.4-cil, nunit-console, nunit-gui
 Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
