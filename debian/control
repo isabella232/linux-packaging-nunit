@@ -10,8 +10,8 @@ Build-Depends-Indep: nant (>= 0.85.dfsg1-6),
  mono-devel (>= 2.4.3)
 Standards-Version: 3.8.3
 Homepage: http://www.nunit.org/
-Vcs-Svn: svn://svn.debian.org/svn/pkg-cli-libs/packages/nunit/trunk
-Vcs-Browser: svn://svn.debian.org/wsvn/pkg-cli-libs/packages/nunit/trunk/
+Vcs-Git: git://git.debian.org/pkg-cli-libs/packages/nunit.git
+Vcs-Browser: http://git.debian.org/?p=pkg-cli-libs/packages/nunit.git
 
 Package: nunit-console
 Architecture: all
