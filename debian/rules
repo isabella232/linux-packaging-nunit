@@ -42,6 +42,10 @@ override_dh_install:
 override_dh_make_clilibs:
 	dh_makeclilibs -m $(DEB_CLI_API_VERSION)
 
+override_dh_fixperms:
+	dh_fixperms
+	find debian/ -name "*.dll" | xargs chmod -x
+
 upstream_version=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-\+]+)+(\+dfsg)*.*,\1,p')
 get-orig-source::
 	uscan --force-download --destdir=. --download-version=$(upstream_version)
