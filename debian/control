@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Debian CLI Libraries Team <pkg-cli-libs-team@lists.alioth.debian.org>
 Uploaders: Mirco Bauer <meebey@debian.org>
 DM-Upload-Allowed: yes
-Build-Depends: cli-common-dev (>= 0.5.7), debhelper (>= 7)
+Build-Depends: cli-common-dev (>= 0.5.7), debhelper (>= 7.0.50~)
 Build-Depends-Indep: mono-devel (>= 2.4.3), mono-xbuild, monodoc-base
 Standards-Version: 3.8.3
 Homepage: http://www.nunit.org/
