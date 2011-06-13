@@ -1,18 +1,14 @@
-#! /bin/sh /usr/share/dpatch/dpatch-run
-## 05_build_xml_doc_for_nunit.core.dpatch by Mirco Bauer <meebey@debian.org>
-##
-## All lines beginning with `## DP:' are a description of the patch.
-## DP: No description.
-
-@DPATCH@
-diff -urNad nunit-2.4.7~/src/NUnitCore/core/nunit.core.build nunit-2.4.7/src/NUnitCore/core/nunit.core.build
---- nunit-2.4.7~/src/NUnitCore/core/nunit.core.build	2008-03-12 21:55:50.000000000 +0100
-+++ nunit-2.4.7/src/NUnitCore/core/nunit.core.build	2008-06-01 00:49:29.000000000 +0200
-@@ -4,6 +4,7 @@
-   <target name="build">
-     <csc target="library" 
-         output="${current.build.dir}/nunit.core.dll"
-+        doc="${current.build.dir}/nunit.core.xml"
-         debug="${build.debug}" 
-         define="${build.defines}">
-       <sources>
+Index: nunit/src/NUnitCore/core/nunit.core.dll.csproj
+===================================================================
+--- nunit.orig/src/NUnitCore/core/nunit.core.dll.csproj	2011-06-13 17:50:54.704059339 +0200
++++ nunit/src/NUnitCore/core/nunit.core.dll.csproj	2011-06-13 17:50:54.724059339 +0200
+@@ -62,8 +62,7 @@
+     <ConfigurationOverrideFile>
+     </ConfigurationOverrideFile>
+     <DefineConstants>TRACE;NET_2_0</DefineConstants>
+-    <DocumentationFile>
+-    </DocumentationFile>
++    <DocumentationFile>..\..\bin\Release\lib\nunit.core.xml</DocumentationFile>
+     <FileAlignment>4096</FileAlignment>
+     <NoWarn>1699</NoWarn>
+     <Optimize>true</Optimize>
