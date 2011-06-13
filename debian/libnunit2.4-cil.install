@@ -1,6 +1,5 @@
-build/linux/mono/2.0/release/nunit.core.dll		/usr/lib/cli/nunit.core-2.4/
-build/linux/mono/2.0/release/nunit.core.interfaces.dll	/usr/lib/cli/nunit.core.interfaces-2.4/
-build/linux/mono/2.0/release/nunit.core.extensions.dll	/usr/lib/cli/nunit.core.extensions-2.4/
-build/linux/mono/2.0/release/nunit.framework.dll	/usr/lib/cli/nunit.framework-2.4/
-build/linux/mono/2.0/release/nunit.mocks.dll		/usr/lib/cli/nunit.mocks-2.4/
-build/linux/mono/2.0/release/nunit.util.dll		/usr/lib/cli/nunit.util-2.4/
+bin/Release/lib/nunit.core.dll              /usr/lib/cli/nunit.core-2.5/
+bin/Release/lib/nunit.core.interfaces.dll   /usr/lib/cli/nunit.core-2.5/
+bin/Release/framework/nunit.framework.dll   /usr/lib/cli/nunit.core-2.5/
+bin/Release/framework/nunit.mocks.dll       /usr/lib/cli/nunit.core-2.5/
+bin/Release/lib/nunit.util.dll              /usr/lib/cli/nunit.core-2.5/
