@@ -48,12 +48,12 @@ clean: unpatch
 %:
 	dh $@
 
-upstream_version=$(shell uscan --dehs | sed -n 's/.*<upstream-version>\(.*\)<\/upstream-version>.*/\1/p')
+upstream_version=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-\+]+)+(\+dfsg)*.*,\1,p')
 get-orig-source::
-	mkdir nunit-$(upstream_version)
-	cd nunit-$(upstream_version) && unzip ../../NUnit-$(upstream_version)-src.zip
-	rm -rf nunit-$(upstream_version)/build
-	cd nunit-$(upstream_version) && $(NANT) /f:src/nunit.build mono-1.0 clean-all
-	cd nunit-$(upstream_version) && $(NANT) /f:src/nunit.build mono-2.0 clean-all
-	tar cfz ../nunit_$(upstream_version).orig.tar.gz nunit-$(upstream_version)
-	rm -rf nunit-$(upstream_version)
+	uscan --force-download --destdir=. --download-version=$(upstream_version)
+	rm -rf nunit-$(upstream_version)/
+	unzip NUnit-$(upstream_version)-src.zip
+	find NUnit-$(upstream_version)/ -name "*.exe" -delete
+	find NUnit-$(upstream_version)/ -name "*.dll" -delete
+	tar cfz nunit_$(upstream_version)+dfsg.orig.tar.gz NUnit-$(upstream_version)/
+	rm -rf NUnit-$(upstream_version)/
