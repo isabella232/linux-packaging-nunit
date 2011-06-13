@@ -1,14 +1,11 @@
 <?xml version="1.0"?>
 <project name="NUnit.Util.Tests" default="build">
 
-  <target name="build">
-    <csc target="library" 
-       output="${current.build.dir}/nunit.util.tests.dll"
-       debug="${build.debug}" define="${build.defines}">
-      <sources>
+  <patternset id="source-files">
         <include name="AssemblyListTests.cs"/>
         <include name="CategoryParseTests.cs"/>
         <include name="CategoryManagerTest.cs"/>
+        <include name="DomainManagerTests.cs"/>
         <include name="EventDispatcherTests.cs"/>
         <include name="FileWatcherTest.cs"/>
         <include name="MemorySettingsStorageTests.cs"/>
@@ -20,12 +17,12 @@
         <include name="NUnitRegistryTests.cs"/>
         <include name="PathUtilTests.cs"/>
         <include name="ProcessRunnerTests.cs"/>
-        <include name="ProjectConfigCollectionTests.cs"/>
         <include name="ProjectConfigTests.cs"/>
         <include name="RecentFileEntryTests.cs"/>
         <include name="RecentFilesTests.cs"/>
         <include name="RegistrySettingsStorageTests.cs"/>
         <include name="RemoteTestResultTest.cs"/>
+        <include name="RuntimeFrameworkSelectorTests.cs"/>
         <include name="ServerUtilityTests.cs"/>
         <include name="ServiceManagerSetUpFixture.cs"/>
         <include name="SettingsGroupTests.cs"/>
@@ -35,35 +32,55 @@
         <include name="TestDomainFixture.cs"/>
         <include name="TestDomainTests_Multiple.cs"/>
         <include name="TestEventCatcher.cs"/>
+        <include name="TestLoaderWatcherTests.cs"/>
         <include name="TestLoaderAssemblyTests.cs"/>
+        <include name="TestRunnerFactoryTests.cs"/>
         <include name="TestServerTests.cs"/>
+        <include name="VisualStudioConverterTests.cs"/>
         <include name="VSProjectTests.cs"/>
-        <include name="XmlResultVisitorTest.cs"/>
-        <include name="../../CommonAssemblyInfo.cs"/>
+        <include name="XmlResultWriterTest.cs"/>
+  </patternset>
+
+  <patternset id="resource-files">
+    <include name="resources/*"/>
+  </patternset>
+
+  <target name="build">
+
+    <csc target="library" 
+       output="${current.test.dir}/nunit.util.tests.dll"
+       debug="${build.debug}" define="${build.defines}">
+      <sources>
+        <patternset refid="source-files"/>
+        <include name="../../GeneratedAssemblyInfo.cs"/>
       </sources>
       <resources prefix="NUnit.Util.Tests.resources">
-        <include name="resources/*"/>
+        <patternset refid="resource-files"/>
       </resources>
-      <references basedir="${current.build.dir}">
+      <references>
         <include name="System.Runtime.Remoting.dll"/>
-        <include name="nunit.framework.dll"/>
-        <include name="nunit.core.interfaces.dll"/>
-        <include name="nunit.core.dll"/>
-        <include name="nunit.util.dll"/>
-        <include name="nunit.mocks.dll"/>
-        <include name="nunit-server.dll"/>
-        <include name="nunit.core.tests.dll"/>
-        <include name="test-utilities.dll"/>
-        <include name="mock-assembly.dll"/>
-        <include name="nonamespace-assembly.dll"/>
-        <include name="notestfixtures-assembly.dll"/>
+        <include name="${current.framework.dir}/nunit.framework.dll"/>
+        <include name="${current.framework.dir}/nunit.mocks.dll"/>
+        <include name="${current.lib.dir}/nunit.core.interfaces.dll"/>
+        <include name="${current.lib.dir}/nunit.core.dll"/>
+        <include name="${current.lib.dir}/nunit.util.dll"/>
+        <include name="${current.lib.dir}/nunit-server.dll"/>
+        <include name="${current.test.dir}/nunit.core.tests.dll"/>
+        <include name="${current.test.dir}/test-utilities.dll"/>
+        <include name="${current.test.dir}/mock-assembly.dll"/>
+        <include name="${current.test.dir}/nonamespace-assembly.dll"/>
       </references>
     </csc>
   </target>
 
   <target name="package">
     <copy todir="${package.src.dir}/ClientUtilities/tests">
-      <fileset refid="source-files" />
+      <fileset>
+        <patternset refid="source-files"/>
+        <patternset refid="resource-files"/>
+        <include name="nunit.util.tests.csproj"/>
+        <include name="nunit.util.tests.build"/>
+      </fileset>
     </copy>
   </target>
 

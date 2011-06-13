@@ -1,31 +1,40 @@
 <?xml version="1.0"?>
 <project name="TestUtilities" default="build" basedir=".">
 
-  <target name="build">
-    <csc target="library" 
-        output="${current.build.dir}/test-utilities.dll" 
-        debug="${build.debug}" define="${build.defines}">
-      <sources>
+  <patternset id="source-files">
         <include name="FormTester.cs"/>
         <include name="MockTestEventSource.cs"/>
         <include name="TempResourceFile.cs"/>
+        <include name="TestAssert.cs"/>
         <include name="TestBuilder.cs"/>
         <include name="TestFinder.cs"/>
-        <include name="../../CommonAssemblyInfo.cs"/>
+  </patternset>
+
+  <target name="build">
+    <csc target="library" 
+        output="${current.test.dir}/test-utilities.dll" 
+        debug="${build.debug}" define="${build.defines}">
+      <sources>
+        <patternset refid="source-files"/>
+        <include name="../../GeneratedAssemblyInfo.cs"/>
       </sources>
-      <references basedir="${current.build.dir}">
+      <references>
         <include name="System.Windows.Forms.dll"/>
-        <include name="nunit.framework.dll"/>
-        <include name="nunit.core.interfaces.dll"/>
-        <include name="nunit.core.dll"/>
-        <include name="nunit.util.dll"/>
+        <include name="${current.framework.dir}/nunit.framework.dll"/>
+        <include name="${current.lib.dir}/nunit.core.interfaces.dll"/>
+        <include name="${current.lib.dir}/nunit.core.dll"/>
+        <include name="${current.lib.dir}/nunit.util.dll"/>
       </references>
     </csc>
   </target>
 
   <target name="package">
     <copy todir="${package.src.dir}/tests/test-utilities">
-      <fileset refid="source-files" />
+      <fileset>
+        <patternset refid="source-files"/>
+        <include name="test-utilities.csproj"/>
+        <include name="test-utilities.build"/>
+      </fileset>
     </copy>
   </target>
 

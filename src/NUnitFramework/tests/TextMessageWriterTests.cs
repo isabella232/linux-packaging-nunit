@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -72,7 +72,7 @@ namespace NUnit.Framework.Tests
             writer.WriteValue(0.33333333333333f);
             int digits = writer.ToString().Length - 3;   // 0.dddddddddf
             Expect(digits, EqualTo(9));
-			Expect(writer.ToString().Length, EqualTo(12));
+            Expect(writer.ToString().Length, EqualTo(12));
         }
 
         [Test]
@@ -107,7 +107,7 @@ namespace NUnit.Framework.Tests
 		public void DateTimeTest()
 		{
             writer.WriteValue(new DateTime(2007, 7, 4, 9, 15, 30, 123));
-			Expect(writer.ToString(), EqualTo("2007-07-04 09:15:30.123"));
+            Expect(writer.ToString(), EqualTo("2007-07-04 09:15:30.123"));
 		}
 
         [Test]
@@ -117,7 +117,7 @@ namespace NUnit.Framework.Tests
             string exp = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXY...";
 
             writer.DisplayStringDifferences(s72, "abcde", 5, false, true);
-            string message = writer.ToString();
+//            string message = writer.ToString();
             Expect(writer.ToString(), EqualTo(
                 TextMessageWriter.Pfx_Expected + Q(exp) + Environment.NewLine +
                 TextMessageWriter.Pfx_Actual + Q("abcde") + Environment.NewLine +
@@ -130,7 +130,7 @@ namespace NUnit.Framework.Tests
             string s72 = "abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
             writer.DisplayStringDifferences(s72, "abcde", 5, false, false);
-            string message = writer.ToString();
+//            string message = writer.ToString();
             Expect(writer.ToString(), EqualTo(
                 TextMessageWriter.Pfx_Expected + Q(s72) + Environment.NewLine +
                 TextMessageWriter.Pfx_Actual + Q("abcde") + Environment.NewLine +

@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -194,7 +194,23 @@ namespace NUnit.Framework.Tests
 
 			CollectionAssert.AreEqual(array1, array2, new AlwaysEqualComparer());
 		}
-	
+
+#if NET_2_0
+        [Test]
+        public void AreEqual_UsingIterator()
+        {
+            int[] array = new int[] { 1, 2, 3 };
+
+            CollectionAssert.AreEqual(array, CountToThree());
+        }
+
+        IEnumerable CountToThree()
+        {
+            yield return 1;
+            yield return 2;
+            yield return 3;
+        }
+#endif
 		#endregion
 
 		#region AreEquivalent
@@ -576,14 +592,110 @@ namespace NUnit.Framework.Tests
 			CollectionAssert.IsNotSubsetOf(set1,set2);
 		}
 		#endregion
-	}
+
+        #region IsOrdered
+
+        [Test]
+        public void IsOrdered()
+        {
+            ArrayList al = new ArrayList();
+            al.Add("x");
+            al.Add("y");
+            al.Add("z");
+
+            CollectionAssert.IsOrdered(al);
+        }
+
+        [Test, ExpectedException(typeof(AssertionException))]
+        public void IsOrdered_Fails()
+        {
+            ArrayList al = new ArrayList();
+            al.Add("x");
+            al.Add("z");
+            al.Add("y");
+
+            expectedMessage =
+                "  Expected: collection ordered" + Environment.NewLine +
+                "  But was:  < \"x\", \"z\", \"y\" >" + Environment.NewLine;
+
+            CollectionAssert.IsOrdered(al);
+        }
+
+        [Test]
+        public void IsOrdered_Allows_adjacent_equal_values()
+        {
+            ArrayList al = new ArrayList();
+            al.Add("x");
+            al.Add("x");
+            al.Add("z");
+
+            CollectionAssert.IsOrdered(al);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentNullException),
+            ExpectedMessage = "index 1", MatchType = MessageMatch.Contains)]
+        public void IsOrdered_Handles_null()
+        {
+            ArrayList al = new ArrayList();
+            al.Add("x");
+            al.Add(null);
+            al.Add("z");
+
+            CollectionAssert.IsOrdered(al);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException))]
+        public void IsOrdered_ContainedTypesMustBeCompatible()
+        {
+            ArrayList al = new ArrayList();
+            al.Add(1);
+            al.Add("x");
+
+            CollectionAssert.IsOrdered(al);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException))]
+        public void IsOrdered_TypesMustImplementIComparable()
+        {
+            ArrayList al = new ArrayList();
+            al.Add(new object());
+            al.Add(new object());
+
+            CollectionAssert.IsOrdered(al);
+        }
+
+        [Test]
+        public void IsOrdered_Handles_custom_comparison()
+        {
+            ArrayList al = new ArrayList();
+            al.Add(new object());
+            al.Add(new object());
+
+            CollectionAssert.IsOrdered(al, new AlwaysEqualComparer());
+        }
+
+        [Test]
+        public void IsOrdered_Handles_custom_comparison2()
+        {
+            ArrayList al = new ArrayList();
+            al.Add(2);
+            al.Add(1);
+
+            CollectionAssert.IsOrdered(al, new TestComparer());
+        }
+
+        #endregion
+    }
 
 	public class TestComparer : IComparer
 	{
-		#region IComparer Members
-
+        public bool Called = false;
+        
+        #region IComparer Members
 		public int Compare(object x, object y)
 		{
+            Called = true;
+
 			if ( x == null && y == null )
 				return 0;
 
@@ -595,15 +707,17 @@ namespace NUnit.Framework.Tests
 
 			return -1;
 		}
-
 		#endregion
-
 	}
 
 	public class AlwaysEqualComparer : IComparer
 	{
+        public bool Called = false;
+
 		int IComparer.Compare(object x, object y)
 		{
+            Called = true;
+
 			// This comparer ALWAYS returns zero (equal)!
 			return 0;
 		}

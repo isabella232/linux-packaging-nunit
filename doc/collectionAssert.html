@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<!-- saved from url=(0014)about:internet --><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
 <html>
 <!-- Standard Head Part -->
 <head>
@@ -24,13 +24,14 @@
 
 <div id="content">
 
-<h2>CollectionAssert (NUnit 2.4)</h2>
+<h2>CollectionAssert (NUnit 2.4 / 2.5)</h2>
 <p>The CollectionAssert class provides a number of methods that are useful 
 when examining collections and their contents or for comparing two collections.</p>
 
-<p>The <b>AreEqual</b> overloads succeed if the two collections contain the same objects,
-in the same order. <b>AreEquivalent</b> tests whether the collections contain the same
-objects, without regard to order.</p>
+<p>The <b>AreEqual</b> overloads succeed if the corresponding elements of the two 
+collections are equal. <b>AreEquivalent</b> tests whether the collection contents
+are equal, but without regard to order. In both cases, elements are compared using 
+NUnit's default equality comparison.</p>
 
 <p>Beginning with NUnit 2.4.6, these methods may be used on any object that
 implements IEnumerable. Prior to 2.4.6, only true collections were supported.
@@ -112,37 +113,50 @@ CollectionAssert.IsEmpty( IEnumerable collection, string message,
 CollectionAssert.IsNotEmpty( IEnumerable collection );
 CollectionAssert.IsNotEmpty( IEnumerable collection, string message );
 CollectionAssert.IsNotEmpty( IEnumerable collection, string message,
-          params object[] args );</pre>
-</div>
+          params object[] args );
+</pre></div>
+		 
+<p>The following methods are available beginning with NUnit 2.5
+
+<div class="code" style="width: 38em"><pre>
+CollectionAssert.IsOrdered( IEnumerable collection );
+CollectionAssert.IsOrdered( IEnumerable collection, string message );
+CollectionAssert.IsOrdered( IEnumerable collection, string message,
+          params object[] args );
+		  
+CollectionAssert.IsOrdered( IEnumerable collection, IComparer comparer );
+CollectionAssert.IsOrdered( IEnumerable collection, IComparer comparer,
+          string message );
+CollectionAssert.IsOrdered( IEnumerable collection, IComparer comparer,
+          string message, params object[] args );
+</pre></div>
 
 </div>
 
 <!-- Submenu -->
 <div id="subnav">
 <ul>
-<li><a href="index.html">NUnit 2.4.7</a></li>
+<li><a href="index.html">NUnit 2.5.10</a></li>
 <ul>
 <li><a href="getStarted.html">Getting&nbsp;Started</a></li>
 <li><a href="assertions.html">Assertions</a></li>
 <ul>
-<li><a href="classicModel.html">Classic&nbsp;Model</a></li>
-<ul>
 <li><a href="equalityAsserts.html">Equality&nbsp;Asserts</a></li>
 <li><a href="identityAsserts.html">Identity&nbsp;Asserts</a></li>
-<li><a href="conditionAsserts.html">Condition&nbsp;Tests</a></li>
+<li><a href="conditionAsserts.html">Condition&nbsp;Asserts</a></li>
 <li><a href="comparisonAsserts.html">Comparison&nbsp;Asserts</a></li>
 <li><a href="typeAsserts.html">Type&nbsp;Asserts</a></li>
+<li><a href="exceptionAsserts.html">Exception&nbsp;Asserts</a></li>
 <li><a href="utilityAsserts.html">Utility&nbsp;Methods</a></li>
 <li><a href="stringAssert.html">String&nbsp;Assert</a></li>
 <li id="current"><a href="collectionAssert.html">Collection&nbsp;Assert</a></li>
 <li><a href="fileAssert.html">File&nbsp;Assert</a></li>
+<li><a href="directoryAssert.html">Directory&nbsp;Assert</a></li>
 </ul>
-<li><a href="constraintModel.html">Constraint&nbsp;Model</a></li>
-</ul>
+<li><a href="constraintModel.html">Constraints</a></li>
 <li><a href="attributes.html">Attributes</a></li>
-<li><a href="nunit-console.html">Console&nbsp;Runner</a></li>
-<li><a href="nunit-gui.html">Gui&nbsp;Runner</a></li>
-<li><a href="features.html">Other&nbsp;Features</a></li>
+<li><a href="runningTests.html">Running&nbsp;Tests</a></li>
+<li><a href="extensibility.html">Extensibility</a></li>
 <li><a href="releaseNotes.html">Release&nbsp;Notes</a></li>
 <li><a href="samples.html">Samples</a></li>
 <li><a href="license.html">License</a></li>
@@ -154,7 +168,7 @@ CollectionAssert.IsNotEmpty( IEnumerable collection, string message,
 
 <!-- Standard Footer for NUnit.org -->
 <div id="footer">
-  Copyright &copy; 2008 Charlie Poole. All Rights Reserved.
+  Copyright &copy; 2010 Charlie Poole. All Rights Reserved.
 </div>
 <!-- End of Footer -->
 

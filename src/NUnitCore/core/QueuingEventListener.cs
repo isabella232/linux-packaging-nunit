@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 using System;
 
@@ -64,7 +64,7 @@ namespace NUnit.Core
 		/// A test case finished
 		/// </summary>
 		/// <param name="result">Result of the test case</param>
-		public void TestFinished(TestCaseResult result)
+		public void TestFinished(TestResult result)
 		{
 			events.Enqueue( new TestFinishedEvent( result ) );
 		}
@@ -82,7 +82,7 @@ namespace NUnit.Core
 		/// A suite finished
 		/// </summary>
 		/// <param name="result">Result of the suite</param>
-		public void SuiteFinished(TestSuiteResult result)
+		public void SuiteFinished(TestResult result)
 		{
 			events.Enqueue( new SuiteFinishedEvent( result ) );
 		}

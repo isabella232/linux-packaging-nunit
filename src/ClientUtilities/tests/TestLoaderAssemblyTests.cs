@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -19,8 +19,8 @@ namespace NUnit.Util.Tests
 	[TestFixture]
 	public class TestLoaderAssemblyTests
 	{
-		private readonly string assembly = "mock-assembly.dll";
-		private readonly string badFile = "x.dll";
+		private readonly string assembly = MockAssembly.AssemblyPath;
+		private readonly string badFile = "/x.dll";
 
 		private TestLoader loader;
 		private TestEventCatcher catcher;
@@ -36,10 +36,6 @@ namespace NUnit.Util.Tests
 		public void SetUp()
 		{
 			loader = new TestLoader( );
-			loader.MergeAssemblies = false;
-			loader.AutoNamespaceSuites = true;
-			loader.MultiDomain = false;
-
 			catcher = new TestEventCatcher( loader.Events );
 		}
 
@@ -139,9 +135,9 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void AssemblyWithNoTests()
 		{
-			LoadTest( "notestfixtures-assembly.dll" );
+			LoadTest( "nunit.framework.dll" );
 			Assert.IsTrue( loader.IsProjectLoaded, "Project not loaded" );
-			Assert.IsTrue( loader.IsTestLoaded, "Test should be loaded" );
+			Assert.IsTrue( loader.IsTestLoaded, "Test not loaded" );
 			Assert.AreEqual( 4, catcher.Events.Count );
 			Assert.AreEqual( TestAction.TestLoaded, ((TestEventArgs)catcher.Events[3]).Action );
 		}
@@ -151,7 +147,7 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void RunTest()
 		{
-			loader.ReloadOnRun = false;
+            //loader.ReloadOnRun = false;
 			
 			LoadTest( assembly );
 			loader.RunTests();
@@ -160,11 +156,21 @@ namespace NUnit.Util.Tests
 				// TODO: Find a more robust way of handling this
 				Thread.Sleep( 500 );
 			}
-			while( loader.Running );
-			
-			Assert.AreEqual( 48, catcher.Events.Count );
-			Assert.AreEqual( TestAction.RunStarting, ((TestEventArgs)catcher.Events[4]).Action );
-			Assert.AreEqual( TestAction.RunFinished, ((TestEventArgs)catcher.Events[47]).Action );
+			while( !catcher.GotRunFinished );
+
+            Assert.AreEqual(TestAction.ProjectLoading, ((TestEventArgs)catcher.Events[0]).Action);
+            Assert.AreEqual(TestAction.ProjectLoaded, ((TestEventArgs)catcher.Events[1]).Action);
+            Assert.AreEqual(TestAction.TestLoading, ((TestEventArgs)catcher.Events[2]).Action);
+            Assert.AreEqual(TestAction.TestLoaded, ((TestEventArgs)catcher.Events[3]).Action);
+            Assert.AreEqual(TestAction.RunStarting, ((TestEventArgs)catcher.Events[4]).Action);
+
+            int eventCount = 4 /* for loading */+ 2 * (MockAssembly.Nodes - MockAssembly.Explicit);
+            if (eventCount != catcher.Events.Count)
+                foreach (TestEventArgs e in catcher.Events)
+                    Console.WriteLine(e.Action);
+            Assert.AreEqual(eventCount, catcher.Events.Count);
+
+            Assert.AreEqual(TestAction.RunFinished, ((TestEventArgs)catcher.Events[eventCount - 1]).Action);
 
 			int nTests = 0;
 			int nRun = 0;
@@ -179,8 +185,8 @@ namespace NUnit.Util.Tests
 						++nRun;
 				}
 			}
-			Assert.AreEqual( MockAssembly.Tests - MockAssembly.Explicit, nTests );
-			Assert.AreEqual( MockAssembly.Tests - MockAssembly.NotRun, nRun );
+			Assert.AreEqual( MockAssembly.ResultCount, nTests );
+			Assert.AreEqual( MockAssembly.TestsRun, nRun );
 		}
 	}
 }

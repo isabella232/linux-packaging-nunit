@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -152,7 +152,6 @@ namespace NUnit.UiKit
 			// ConfigurationEditor
 			// 
 			this.AcceptButton = this.closeButton;
-			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.CancelButton = this.closeButton;
 			this.ClientSize = new System.Drawing.Size(297, 267);
 			this.ControlBox = false;
@@ -178,9 +177,9 @@ namespace NUnit.UiKit
 		}
 		#endregion
 
-		#region UI Event Handlers
+        #region UI Event Handlers
 
-		private void ConfigurationEditor_Load(object sender, System.EventArgs e)
+        private void ConfigurationEditor_Load(object sender, System.EventArgs e)
 		{
 			FillListBox();
 			if ( configListBox.Items.Count > 0 )
@@ -219,7 +218,6 @@ namespace NUnit.UiKit
 		private void activeButton_Click(object sender, System.EventArgs e)
 		{
 			project.SetActiveConfig( selectedIndex );
-			//AppUI.TestLoader.LoadConfig( project.Configs[selectedIndex].Name );
 			FillListBox();
 		}
 

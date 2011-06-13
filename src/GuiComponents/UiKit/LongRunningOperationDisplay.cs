@@ -1,3 +1,8 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using System.Drawing;
 using System.Collections;
@@ -71,7 +76,7 @@ namespace NUnit.UiKit
 			// 
 			this.operation.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this.operation.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.operation.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.2F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
+			this.operation.Font = new System.Drawing.Font(FontFamily.GenericSansSerif, 10.2F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((System.Byte)(0)));
 			this.operation.Location = new System.Drawing.Point(0, 0);
 			this.operation.Name = "operation";
 			this.operation.Size = new System.Drawing.Size(320, 40);
@@ -80,7 +85,6 @@ namespace NUnit.UiKit
 			// 
 			// LongRunningOperationDisplay
 			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.BackColor = System.Drawing.Color.LightYellow;
 			this.ClientSize = new System.Drawing.Size(320, 40);
 			this.ControlBox = false;

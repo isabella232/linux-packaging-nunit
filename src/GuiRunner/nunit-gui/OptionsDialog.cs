@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 #define TREE_BASED
 using System;
@@ -24,10 +24,11 @@ namespace NUnit.Gui
 				new TreeSettingsPage("Gui.Tree Display"),
 				new TestResultSettingsPage("Gui.Test Results"),
 				new TextOutputSettingsPage("Gui.Text Output"),
-				new TestLoaderSettingsPage("Test Loader.General"),
+				new TestLoaderSettingsPage("Test Loader.Assembly Isolation"),
 				new AssemblyReloadSettingsPage("Test Loader.Assembly Reload"),
 				new AdvancedLoaderSettingsPage("Test Loader.Advanced"),
-				new VisualStudioSettingsPage("IDE Support.Visual Studio"));
+				new VisualStudioSettingsPage("IDE Support.Visual Studio"),
+                new InternalTraceSettingsPage("Advanced Settings.Internal Trace"));
 		}
 #else
 		public static void Display( Form owner )

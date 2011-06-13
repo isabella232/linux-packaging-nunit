@@ -1,12 +1,10 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
-using System.IO;
-using System.Text;
 using System.Collections;
 using System.Globalization;
 using NUnit.Framework.Constraints;
@@ -143,7 +141,7 @@ namespace NUnit.Framework
 		/// <param name="expected">The expected value</param>
 		/// <param name="actual">The actual value causing the failure</param>
 		/// <param name="tolerance">The tolerance within which the test was made</param>
-		public override void DisplayDifferences(object expected, object actual, object tolerance)
+		public override void DisplayDifferences(object expected, object actual, Tolerance tolerance)
 		{
 			WriteExpectedLine(expected, tolerance);
 			WriteActualLine(actual);
@@ -169,8 +167,8 @@ namespace NUnit.Framework
             if ( clipping )
                 MsgUtils.ClipExpectedAndActual(ref expected, ref actual, maxDisplayLength, mismatch);
 
-            expected = MsgUtils.ConvertWhitespace(expected);
-            actual = MsgUtils.ConvertWhitespace(actual);
+            expected = MsgUtils.EscapeControlChars(expected);
+            actual = MsgUtils.EscapeControlChars(actual);
 
             // The mismatch position may have changed due to clipping or white space conversion
             mismatch = MsgUtils.FindMismatchPosition(expected, actual, 0, ignoreCase);
@@ -428,15 +426,15 @@ namespace NUnit.Framework
 		/// </summary>
 		/// <param name="expected">The expected value</param>
 		/// <param name="tolerance">The tolerance within which the test was made</param>
-		private void WriteExpectedLine(object expected, object tolerance)
+		private void WriteExpectedLine(object expected, Tolerance tolerance)
 		{
 			Write(Pfx_Expected);
 			WriteExpectedValue(expected);
 
-            if (tolerance != null)
+            if (tolerance != null && !tolerance.IsEmpty)
             {
                 WriteConnector("+/-");
-                WriteExpectedValue(tolerance);
+                WriteExpectedValue(tolerance.Value);
             }
 
 			WriteLine();

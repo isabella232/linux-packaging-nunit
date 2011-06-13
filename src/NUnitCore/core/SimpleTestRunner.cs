@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 using System;
 using System.IO;
@@ -22,6 +22,8 @@ namespace NUnit.Core
 	/// </summary>
 	public class SimpleTestRunner : MarshalByRefObject, TestRunner
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(SimpleTestRunner));
+
 		#region Instance Variables
 
 		/// <summary>
@@ -102,6 +104,8 @@ namespace NUnit.Core
 		/// <returns>True on success, false on failure</returns>
 		public bool Load( TestPackage package )
 		{
+            log.Debug("Loading package " + package.Name);
+
 			this.builder = new TestSuiteBuilder();
 
 			this.test = builder.Build( package );
@@ -116,6 +120,7 @@ namespace NUnit.Core
 		/// </summary>
 		public void Unload()
 		{
+            log.Debug("Unloading");
 			this.test = null; // All for now
 		}
 		#endregion
@@ -137,6 +142,8 @@ namespace NUnit.Core
 		{
 			try
 			{
+                log.Debug("Starting test run");
+
 				// Take note of the fact that we are running
 				this.runThread = Thread.CurrentThread;
 
@@ -146,6 +153,7 @@ namespace NUnit.Core
 
 				// Signal that we are done
 				listener.RunFinished( testResult );
+                log.Debug("Test run complete");
 
 				// Return result array
 				return testResult;
@@ -214,5 +222,14 @@ namespace NUnit.Core
             return null;
         }
 	#endregion
-	}
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            Unload();
+        }
+
+        #endregion
+    }
 }

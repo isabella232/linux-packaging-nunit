@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.ConsoleRunner.Tests
@@ -91,14 +91,14 @@ namespace NUnit.ConsoleRunner.Tests
 			TestStringOption( "fixture" );
 			TestStringOption( "config" );
 			TestStringOption( "xml" );
-			TestStringOption( "transform" );
 			TestStringOption( "output" );
 			TestStringOption( "output", "out" );
 			TestStringOption( "err" );
-			TestStringOption( "include" );
+            TestStringOption("include");
 			TestStringOption( "exclude" );
 			TestEnumOption( "domain" );
-		}
+            TestEnumOption("trace");
+        }
 
 		[Test]
 		public void AssemblyName()
@@ -173,20 +173,11 @@ namespace NUnit.ConsoleRunner.Tests
 		}
 
 		[Test]
-		public void TransformParameter()
+		public void FileNameWithoutXmlParameterLooksLikeParameter()
 		{
-			ConsoleOptions options = new ConsoleOptions( "tests.dll", "-transform:Summary.xslt" );
-			Assert.IsTrue(options.ParameterCount == 1, "assembly should be set");
-			Assert.AreEqual("tests.dll", options.Parameters[0]);
-			Assert.AreEqual("Summary.xslt", options.transform);
-		}
-
-
-		[Test]
-		public void FileNameWithoutXmlParameterIsInvalid()
-		{
-			ConsoleOptions options = new ConsoleOptions( "tests.dll", ":result.xml" );
-			Assert.IsFalse(options.Validate());
+			ConsoleOptions options = new ConsoleOptions( "tests.dll", "result.xml" );
+			Assert.IsTrue(options.Validate());
+			Assert.AreEqual(2, options.Parameters.Count);
 		}
 
 		[Test]

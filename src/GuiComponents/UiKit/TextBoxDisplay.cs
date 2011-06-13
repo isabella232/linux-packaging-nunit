@@ -1,10 +1,12 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using System.Windows.Forms;
+using System.Drawing;
+using System.ComponentModel;
 using NUnit.Core;
 using NUnit.Util;
 
@@ -16,10 +18,13 @@ namespace NUnit.UiKit
 	/// </summary>
 	public class TextBoxDisplay : System.Windows.Forms.RichTextBox, TextDisplay, TestObserver
 	{
-		private ContextMenu contextMenu = new ContextMenu();
 		private MenuItem copyMenuItem;
 		private MenuItem selectAllMenuItem;
 		private MenuItem wordWrapMenuItem;
+		private MenuItem fontMenuItem;
+		private MenuItem increaseFontMenuItem;
+		private MenuItem decreaseFontMenuItem;
+		private MenuItem restoreFontMenuItem;
 
 		private TextDisplayContent content;
 
@@ -33,7 +38,12 @@ namespace NUnit.UiKit
 			this.copyMenuItem = new MenuItem( "&Copy", new EventHandler( copyMenuItem_Click ) );
 			this.selectAllMenuItem = new MenuItem( "Select &All", new EventHandler( selectAllMenuItem_Click ) );
 			this.wordWrapMenuItem = new MenuItem( "&Word Wrap", new EventHandler( wordWrapMenuItem_Click ) );
-			this.ContextMenu.MenuItems.AddRange( new MenuItem[] { copyMenuItem, selectAllMenuItem, wordWrapMenuItem } );
+			this.fontMenuItem = new MenuItem( "Font" );
+			this.increaseFontMenuItem = new MenuItem( "Increase", new EventHandler( increaseFontMenuItem_Click ) );
+			this.decreaseFontMenuItem = new MenuItem( "Decrease", new EventHandler( decreaseFontMenuItem_Click ) );
+			this.restoreFontMenuItem = new MenuItem( "Restore", new EventHandler( restoreFontMenuItem_Click ) );
+			this.fontMenuItem.MenuItems.AddRange( new MenuItem[] { increaseFontMenuItem, decreaseFontMenuItem, new MenuItem("-"), restoreFontMenuItem } );
+			this.ContextMenu.MenuItems.AddRange( new MenuItem[] { copyMenuItem, selectAllMenuItem, wordWrapMenuItem, fontMenuItem } );
 			this.ContextMenu.Popup += new EventHandler(ContextMenu_Popup);
 		}
 
@@ -52,6 +62,29 @@ namespace NUnit.UiKit
 			this.WordWrap = this.wordWrapMenuItem.Checked = !this.wordWrapMenuItem.Checked;
 		}
 
+		private void increaseFontMenuItem_Click(object sender, EventArgs e)
+		{
+			applyFont( new Font( this.Font.FontFamily, this.Font.SizeInPoints * 1.2f, this.Font.Style ) );
+		}
+
+		private void decreaseFontMenuItem_Click(object sender, EventArgs e)
+		{
+			applyFont( new Font( this.Font.FontFamily, this.Font.SizeInPoints / 1.2f, this.Font.Style ) );
+		}
+
+		private void restoreFontMenuItem_Click(object sender, EventArgs e)
+		{
+			applyFont( new Font( FontFamily.GenericMonospace, 8.0f ) );
+		}
+
+		private void applyFont( Font font )
+		{
+			this.Font = font;
+			TypeConverter converter = TypeDescriptor.GetConverter(typeof(Font));
+			Services.UserSettings.SaveSetting( "Gui.FixedFont", 
+                converter.ConvertToString( null, System.Globalization.CultureInfo.InvariantCulture, font ) );
+		}
+		
 		private void ContextMenu_Popup(object sender, EventArgs e)
 		{
 			this.copyMenuItem.Enabled = this.SelectedText != "";
@@ -107,6 +140,12 @@ namespace NUnit.UiKit
 					WriteLine(label);
 			}
 		}
+
+		protected override void OnFontChanged(EventArgs e)
+		{
+			// Do nothing - this control uses it's own font
+		}
+
 
 		#region TextDisplay Members
 		public TextDisplayContent Content

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 namespace NUnit.Core
 {
@@ -15,6 +15,8 @@ namespace NUnit.Core
 	/// </summary>
 	public class ThreadedTestRunner : ProxyTestRunner
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(ThreadedTestRunner));
+
 		#region Instance Variables
 		private TestRunnerThread testRunnerThread;
 		#endregion
@@ -38,21 +40,22 @@ namespace NUnit.Core
 
 		public override void BeginRun( EventListener listener )
 		{
-			testRunnerThread = new TestRunnerThread( this.TestRunner );
-
-			testRunnerThread.StartRun( listener );
+            log.Info("BeginRun");
+   			testRunnerThread = new TestRunnerThread( this.TestRunner );
+            testRunnerThread.StartRun( listener );
 		}
 
 		public override void BeginRun( EventListener listener, ITestFilter filter )
 		{
-			testRunnerThread = new TestRunnerThread( this.TestRunner );
-
+            log.Info("BeginRun");
+            testRunnerThread = new TestRunnerThread(this.TestRunner);
 			testRunnerThread.StartRun( listener, filter );
 		}
 
 		public override TestResult EndRun()
 		{
-			this.Wait();
+            log.Info("EndRun");
+            this.Wait();
 			return this.TestRunner.TestResult;
 		}
 

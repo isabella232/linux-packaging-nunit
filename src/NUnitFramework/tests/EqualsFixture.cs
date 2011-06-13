@@ -1,12 +1,13 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.IO;
 using System.Threading;
 
 namespace NUnit.Framework.Tests
@@ -263,17 +264,17 @@ namespace NUnit.Framework.Tests
 			System.UInt64  ui20 = 35; 
 			System.Int16   i21  = 35; 
 			System.UInt16  i22  = 35;
-		
-			Assert.AreEqual( 35, b1 );
-			Assert.AreEqual( 35, sb2 );
-			Assert.AreEqual( 35, d4 );
-			Assert.AreEqual( 35, d5 );
-			Assert.AreEqual( 35, f6 );
-			Assert.AreEqual( 35, i7 );
-			Assert.AreEqual( 35, u8 );
-			Assert.AreEqual( 35, l9 );
-			Assert.AreEqual( 35, s10 );
-			Assert.AreEqual( 35, us11 );
+
+            Assert.AreEqual(35, b1);
+            Assert.AreEqual(35, sb2);
+            Assert.AreEqual(35, d4);
+            Assert.AreEqual(35, d5);
+            Assert.AreEqual(35, f6);
+            Assert.AreEqual(35, i7);
+            Assert.AreEqual(35, u8);
+            Assert.AreEqual(35, l9);
+            Assert.AreEqual(35, s10);
+            Assert.AreEqual(35, us11);
 		
 			Assert.AreEqual( 35, b12  );
 			Assert.AreEqual( 35, sb13 );
@@ -286,7 +287,31 @@ namespace NUnit.Framework.Tests
 			Assert.AreEqual( 35, ui20 );
 			Assert.AreEqual( 35, i21  );
 			Assert.AreEqual( 35, i22  );
-		}
+
+#if NET_2_0
+            byte? b23 = 35;
+            sbyte? sb24 = 35;
+            decimal? d25 = 35;
+            double? d26 = 35;
+            float? f27 = 35;
+            int? i28 = 35;
+            uint? u29 = 35;
+            long? l30 = 35;
+            short? s31 = 35;
+            ushort? us32 = 35;
+
+            Assert.AreEqual(35, b23);
+            Assert.AreEqual(35, sb24);
+            Assert.AreEqual(35, d25);
+            Assert.AreEqual(35, d26);
+            Assert.AreEqual(35, f27);
+            Assert.AreEqual(35, i28);
+            Assert.AreEqual(35, u29);
+            Assert.AreEqual(35, l30);
+            Assert.AreEqual(35, s31);
+            Assert.AreEqual(35, us32);
+#endif
+        }
 
 		[Test]
 		public void EnumsEqual()
@@ -483,6 +508,34 @@ namespace NUnit.Framework.Tests
                 Assert.Fail("Should have thrown an AssertionException");
 
             Assert.That(message.IndexOf("+/-") == -1);
+        }
+
+        [Test]
+        public void DirectoryInfoEquality()
+        {
+            string path = Environment.CurrentDirectory;
+            DirectoryInfo dir1 = new DirectoryInfo(path);
+            DirectoryInfo dir2 = new DirectoryInfo(path);
+
+            Assert.AreEqual(dir1, dir2);
+        }
+
+        [Test]
+        public void DirectoryInfoEqualityIgnoresTrailingDirectorySeparator()
+        {
+            string path1 = Environment.CurrentDirectory;
+            string path2 = path1;
+            int length = path1.Length;
+
+            if (path1[length - 1] == Path.DirectorySeparatorChar)
+                path1 = path1.Substring(0, length - 1);
+            else
+                path1 += Path.DirectorySeparatorChar;
+
+            DirectoryInfo dir1 = new DirectoryInfo(path1);
+            DirectoryInfo dir2 = new DirectoryInfo(path2);
+
+            Assert.AreEqual(dir1, dir2);
         }
     }
 }

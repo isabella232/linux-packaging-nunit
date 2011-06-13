@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 
@@ -13,19 +13,44 @@ namespace NUnit.Core
 	public enum ResultState
 	{
         /// <summary>
+        /// The result is inconclusive
+        /// </summary>
+        Inconclusive = 0,
+
+        /// <summary>
+        /// The test was not runnable.
+        /// </summary>
+		NotRunnable = 1, 
+
+        /// <summary>
+        /// The test has been skipped. 
+        /// </summary>
+		Skipped = 2,
+
+        /// <summary>
+        /// The test has been ignored.
+        /// </summary>
+		Ignored = 3,
+
+        /// <summary>
         /// The test succeeded
         /// </summary>
-		Success,
+		Success = 4,
 
         /// <summary>
         /// The test failed
         /// </summary>
-		Failure,
+		Failure = 5,
 
         /// <summary>
         /// The test encountered an unexpected exception
         /// </summary>
-		Error
+		Error = 6,
+
+        /// <summary>
+        /// The test was cancelled by the user
+        /// </summary>
+        Cancelled =7
 	}
 
     /// <summary>
@@ -34,11 +59,6 @@ namespace NUnit.Core
     /// </summary>
     public enum FailureSite
     {
-		/// <summary>
-		/// The location of the failure is not known
-		/// </summary>
-		Unknown,
-
         /// <summary>
         /// Failure in the test itself
         /// </summary>

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -31,13 +31,13 @@ namespace NUnit.UiKit.Tests
 		{
 			AssertControlExists( "detailList", typeof( ListBox ) );
 			AssertControlExists( "tabSplitter", typeof( Splitter ) );
-			AssertControlExists( "stackTrace", typeof( CP.Windows.Forms.ExpandingTextBox ) );
+			AssertControlExists( "errorBrowser", typeof( NUnit.UiException.Controls.ErrorBrowser ) );
 		}
 
 		[Test]
 		public void ControlsArePositionedCorrectly()
 		{
-			AssertControlsAreStackedVertically( "detailList", "tabSplitter", "stackTrace" );
+			AssertControlsAreStackedVertically( "detailList", "tabSplitter", "errorBrowser" );
 		}
 	}
 }

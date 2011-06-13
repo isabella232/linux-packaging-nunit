@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -22,7 +22,7 @@ namespace NUnit.Core.Tests
 		{
 			string methodName = "TestVoid";
 			Test fixture = TestFixtureBuilder.BuildFrom( typeof( SignatureTestFixture ) );
-			Test foundTest = TestFinder.Find( methodName, fixture );
+			Test foundTest = TestFinder.Find( methodName, fixture, true );
 			Assert.IsNotNull( foundTest );
 			Assert.AreEqual( RunState.Runnable, foundTest.RunState );
 		}

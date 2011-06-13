@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -88,6 +88,23 @@ namespace NUnit.UiKit
 			OpenProject( owner, testFileName, null, null );
 		}
 
+//		public static void OpenResults( Form owner )
+//		{
+//			TestLoader loader = Services.TestLoader;
+//			
+//			OpenFileDialog dlg = new OpenFileDialog();
+//			System.ComponentModel.ISite site = owner == null ? null : owner.Site;
+//			if ( site != null ) dlg.Site = site;
+//			dlg.Title = "Open Test Results";
+//
+//			dlg.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+//			dlg.FilterIndex = 1;
+//			dlg.FileName = "";
+//
+//			if ( dlg.ShowDialog( owner ) == DialogResult.OK ) 
+//				OpenProject( owner, dlg.FileName );
+//		}
+
 		public static void AddToProject( Form owner )
 		{
 			AddToProject( owner, null );
@@ -121,52 +138,53 @@ namespace NUnit.UiKit
 
 			if ( dlg.ShowDialog( owner ) != DialogResult.OK )
 				return;
-			
-			if ( PathUtils.IsAssemblyFileType( dlg.FileName ) )
-				config.Assemblies.Add( dlg.FileName );
-			else if ( VSProject.IsProjectFile( dlg.FileName ) )
-			try
-			{
-				VSProject vsProject = new VSProject( dlg.FileName );
-				MessageBoxButtons buttons;
-				string msg;
-					
-				if ( configName != null && vsProject.Configs.Contains( configName ) )
-				{
-					msg = "The project being added may contain multiple configurations;\r\r" +
-						"Select\tYes to add all configurations found.\r" +
-						"\tNo to add only the " + configName + " configuration.\r" +
-						"\tCancel to exit without modifying the project.";
-					buttons = MessageBoxButtons.YesNoCancel;
-				}
-				else
-				{
-					msg = "The project being added may contain multiple configurations;\r\r" +
-						"Select\tOK to add all configurations found.\r" +
-						"\tCancel to exit without modifying the project.";
-					buttons = MessageBoxButtons.OKCancel;
-				}
-					
-				DialogResult result = UserMessage.Ask( msg, buttons );
-				if ( result == DialogResult.Yes || result == DialogResult.OK )
-				{
-					loader.TestProject.Add( vsProject );
-					if ( loader.IsTestLoaded )
-						loader.ReloadTest();
-					else
-						loader.LoadTest();
-				}
-				else if ( result == DialogResult.No )
-				{
-					foreach( string assembly in vsProject.Configs[configName].Assemblies )
-						config.Assemblies.Add( assembly );
-				}
-			}
-			catch( Exception ex )
-			{
-				UserMessage.DisplayFailure( ex.Message, "Invalid VS Project" );
-			}
-		}
+
+            if (PathUtils.IsAssemblyFileType(dlg.FileName))
+            {
+                config.Assemblies.Add(dlg.FileName);
+                return;
+            }
+            else if (VSProject.IsProjectFile(dlg.FileName))
+                try
+                {
+                    VSProject vsProject = new VSProject(dlg.FileName);
+                    MessageBoxButtons buttons;
+                    string msg;
+
+                    if (configName != null && vsProject.Configs.Contains(configName))
+                    {
+                        msg = "The project being added may contain multiple configurations;\r\r" +
+                            "Select\tYes to add all configurations found.\r" +
+                            "\tNo to add only the " + configName + " configuration.\r" +
+                            "\tCancel to exit without modifying the project.";
+                        buttons = MessageBoxButtons.YesNoCancel;
+                    }
+                    else
+                    {
+                        msg = "The project being added may contain multiple configurations;\r\r" +
+                            "Select\tOK to add all configurations found.\r" +
+                            "\tCancel to exit without modifying the project.";
+                        buttons = MessageBoxButtons.OKCancel;
+                    }
+
+                    DialogResult result = UserMessage.Ask(msg, buttons);
+                    if (result == DialogResult.Yes || result == DialogResult.OK)
+                    {
+                        loader.TestProject.Add(vsProject);
+                        return;
+                    }
+                    else if (result == DialogResult.No)
+                    {
+                        foreach (string assembly in vsProject.Configs[configName].Assemblies)
+                            config.Assemblies.Add(assembly);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    UserMessage.DisplayFailure(ex.Message, "Invalid VS Project");
+                }
+        }
 
 		public static void AddAssembly( Form owner )
 		{
@@ -187,8 +205,8 @@ namespace NUnit.UiKit
 			dlg.FilterIndex = 1;
 			dlg.FileName = "";
 
-			if ( dlg.ShowDialog( owner ) == DialogResult.OK )
-				config.Assemblies.Add( dlg.FileName );
+            if (dlg.ShowDialog(owner) == DialogResult.OK)
+                config.Assemblies.Add(dlg.FileName);
 		}
 
 		public static void AddVSProject( Form owner )
@@ -214,14 +232,13 @@ namespace NUnit.UiKit
 				{
 					VSProject vsProject = new VSProject( dlg.FileName );
 					loader.TestProject.Add( vsProject );
-					loader.LoadTest();
 				}
 				catch( Exception ex )
 				{
 					UserMessage.DisplayFailure( ex.Message, "Invalid VS Project" );
 				}
 			}
-		}
+        }
 
 		private static bool CanWriteProjectFile( string path )
 		{
@@ -234,7 +251,7 @@ namespace NUnit.UiKit
 			TestLoader loader = Services.TestLoader;
 
 			if ( Path.IsPathRooted( loader.TestProject.ProjectPath ) &&
-				 NUnitProject.IsProjectFile( loader.TestProject.ProjectPath ) &&
+				 NUnitProject.IsNUnitProjectFile( loader.TestProject.ProjectPath ) &&
 				 CanWriteProjectFile( loader.TestProject.ProjectPath ) )
 				loader.TestProject.Save();
 			else
@@ -273,7 +290,7 @@ namespace NUnit.UiKit
 			SaveFileDialog dlg = new SaveFileDialog();
 			dlg.Title = "New Test Project";
 			dlg.Filter = "NUnit Test Project (*.nunit)|*.nunit|All Files (*.*)|*.*";
-			dlg.FileName = NUnitProject.GenerateProjectName();
+			dlg.FileName = Services.ProjectService.GenerateProjectName();
 			dlg.DefaultExt = "nunit";
 			dlg.ValidateNames = true;
 			dlg.OverwritePrompt = true;
@@ -295,11 +312,12 @@ namespace NUnit.UiKit
 		private static DialogResult SaveProjectIfDirty( Form owner )
 		{
 			DialogResult result = DialogResult.OK;
-			TestLoader loader = Services.TestLoader;
+			NUnitProject project = Services.TestLoader.TestProject;
 
-			if( loader.TestProject.IsDirty )
+			if( project.IsDirty )
 			{
-				string msg = "Project has been changed. Do you want to save changes?";
+				string msg = string.Format(
+                    "Project {0} has been changed. Do you want to save changes?",project.Name);
 
 				result = UserMessage.Ask( msg, MessageBoxButtons.YesNoCancel );
 				if ( result == DialogResult.Yes )

@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -18,17 +18,18 @@ namespace NUnit.Util.Tests
 	{
 		private static TestDomain testDomain; 
 		private static ITest loadedTest;
+        private static readonly string mockDll = MockAssembly.AssemblyPath;
 
 		[TestFixtureSetUp]
-		public void MakeAppDomain()
+		public static void MakeAppDomain()
 		{
 			testDomain = new TestDomain();
-			testDomain.Load( new TestPackage( "mock-assembly.dll" ) );
+			testDomain.Load( new TestPackage(mockDll));
 			loadedTest = testDomain.Test;
 		}
 
 		[TestFixtureTearDown]
-		public void UnloadTestDomain()
+		public static void UnloadTestDomain()
 		{
             if ( testDomain != null )
                 testDomain.Unload();
@@ -48,15 +49,19 @@ namespace NUnit.Util.Tests
 		{
 			AppDomain domain = testDomain.AppDomain;
 			AppDomainSetup setup = testDomain.AppDomain.SetupInformation;
-			
-			Assert.AreEqual( "Tests", setup.ApplicationName, "ApplicationName" );
-			Assert.AreEqual( Environment.CurrentDirectory, setup.ApplicationBase, "ApplicationBase" );
-			Assert.AreEqual( "mock-assembly.dll.config", Path.GetFileName( setup.ConfigurationFile ), "ConfigurationFile" );
-			Assert.AreEqual( null, setup.PrivateBinPath, "PrivateBinPath" );
-			Assert.AreEqual( Environment.CurrentDirectory, setup.ShadowCopyDirectories, "ShadowCopyDirectories" );
 
-			Assert.AreEqual( Environment.CurrentDirectory, domain.BaseDirectory, "BaseDirectory" );
-			Assert.AreEqual( "domain-mock-assembly.dll", domain.FriendlyName, "FriendlyName" );
+            Assert.That(setup.ApplicationName, Is.StringStarting("Tests_"));
+			Assert.AreEqual( Path.GetDirectoryName(mockDll), setup.ApplicationBase, "ApplicationBase" );
+			Assert.That( 
+                Path.GetFileName( setup.ConfigurationFile ),
+                Is.EqualTo("mock-assembly.dll.config").IgnoreCase,
+                "ConfigurationFile");
+			Assert.AreEqual( null, setup.PrivateBinPath, "PrivateBinPath" );
+			Assert.AreEqual( Path.GetDirectoryName(mockDll), setup.ShadowCopyDirectories, "ShadowCopyDirectories" );
+
+			Assert.AreEqual( Path.GetDirectoryName(mockDll), domain.BaseDirectory, "BaseDirectory" );
+            Assert.That(domain.FriendlyName, 
+                Is.EqualTo("test-domain-mock-assembly.dll").IgnoreCase, "FriendlyName");
 			Assert.IsTrue( testDomain.AppDomain.ShadowCopyFiles, "ShadowCopyFiles" );
 		}	
 
@@ -65,12 +70,13 @@ namespace NUnit.Util.Tests
 		{
 			TestResult result = testDomain.Run( NullListener.NULL );
 			Assert.IsNotNull(result);
-			Assert.AreEqual(false, result.IsFailure, "Test run failed");
-			
-			ResultSummarizer summarizer = new ResultSummarizer(result);
-			Assert.AreEqual(MockAssembly.Tests - MockAssembly.NotRun, summarizer.ResultCount);
-			Assert.AreEqual(MockAssembly.Ignored, summarizer.TestsNotRun);
-		}
+
+            ResultSummarizer summarizer = new ResultSummarizer(result);
+            Assert.AreEqual(MockAssembly.TestsRun, summarizer.TestsRun, "TestsRun");
+            Assert.AreEqual(MockAssembly.Ignored, summarizer.Ignored, "Ignored");
+            Assert.AreEqual(MockAssembly.Errors, summarizer.Errors, "Errors");
+            Assert.AreEqual(MockAssembly.Failures, summarizer.Failures, "Failures");
+        }
 	}
 
 	[TestFixture]
@@ -87,6 +93,7 @@ namespace NUnit.Util.Tests
 	public class TestDomainTests
 	{ 
 		private TestDomain testDomain;
+        private static readonly string mockDll = MockAssembly.AssemblyPath;
 
 		[SetUp]
 		public void SetUp()
@@ -104,13 +111,13 @@ namespace NUnit.Util.Tests
 		[ExpectedException(typeof(FileNotFoundException))]
 		public void FileNotFound()
 		{
-			testDomain.Load( new TestPackage( "xxxx.dll" ) );
+			testDomain.Load( new TestPackage( "/xxxx.dll" ) );
 		}
 
 		[Test]
 		public void InvalidTestFixture()
 		{
-			TestPackage package = new TestPackage( "mock-assembly.dll" );
+			TestPackage package = new TestPackage(mockDll);
 			package.TestName = "NUnit.Tests.Assemblies.Bogus";
 			Assert.IsFalse( testDomain.Load( package ) );
 		}
@@ -120,8 +127,7 @@ namespace NUnit.Util.Tests
 		//[ExpectedException(typeof(BadImageFormatException))]
 		public void FileFoundButNotValidAssembly()
 		{
-			string badfile = "x.dll";
-			//FileInfo file = new FileInfo( badfile );
+			string badfile = Path.GetFullPath("x.dll");
 			try
 			{
 				StreamWriter sw = new StreamWriter( badfile );
@@ -144,23 +150,24 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void SpecificTestFixture()
 		{
-			TestPackage package = new TestPackage( "mock-assembly.dll" );
+			TestPackage package = new TestPackage(mockDll);
 			package.TestName = "NUnit.Tests.Assemblies.MockTestFixture";
 			testDomain.Load( package );
 
 			TestResult result = testDomain.Run( NullListener.NULL );
-			Assert.AreEqual(true, result.IsSuccess);
-			
-			ResultSummarizer summarizer = new ResultSummarizer(result);
-			Assert.AreEqual(MockTestFixture.Tests - MockTestFixture.NotRun, summarizer.ResultCount);
-			Assert.AreEqual(MockTestFixture.Ignored, summarizer.TestsNotRun);
-		}
+
+            ResultSummarizer summarizer = new ResultSummarizer(result);
+            Assert.AreEqual(MockTestFixture.TestsRun, summarizer.TestsRun, "TestsRun");
+            Assert.AreEqual(MockTestFixture.Ignored, summarizer.Ignored, "Ignored");
+            Assert.AreEqual(MockTestFixture.Errors, summarizer.Errors, "Errors");
+            Assert.AreEqual(MockTestFixture.Failures, summarizer.Failures, "Failures");
+        }
 
 		[Test]
 		public void ConfigFileOverrideIsHonored()
 		{
 			TestPackage package = new TestPackage( "MyProject.nunit" );
-			package.Assemblies.Add( "mock-assembly.dll" );
+			package.Assemblies.Add(mockDll);
 			package.ConfigurationFile = "override.config";
 
 			testDomain.Load( package );
@@ -173,7 +180,7 @@ namespace NUnit.Util.Tests
 		public void BasePathOverrideIsHonored()
 		{
 			TestPackage package = new TestPackage( "MyProject.nunit" );
-			package.Assemblies.Add( "mock-assembly.dll" );
+			package.Assemblies.Add( MockAssembly.AssemblyPath );
 			package.BasePath = Path.GetDirectoryName( Environment.CurrentDirectory );
 			package.PrivateBinPath = Path.GetFileName( Environment.CurrentDirectory );
 
@@ -186,7 +193,7 @@ namespace NUnit.Util.Tests
 		public void BinPathOverrideIsHonored()
 		{
 			TestPackage package = new TestPackage( "MyProject.nunit" );
-			package.Assemblies.Add( "mock-assembly.dll" );
+			package.Assemblies.Add( MockAssembly.AssemblyPath );
 			package.PrivateBinPath = "dummy;junk";
 
 			testDomain.Load( package );
@@ -198,10 +205,10 @@ namespace NUnit.Util.Tests
 		// Turning off shadow copy only works when done for the primary app domain
 		// So this test can only work if it's already off
 		// This doesn't seem to be documented anywhere
-		[Test]
+		[Test, Platform(Exclude="mono-1.0", Reason="Test hangs under the 1.0 profile")]
 		public void TurnOffShadowCopy()
 		{
-			TestPackage package = new TestPackage( "mock-assembly.dll" );
+			TestPackage package = new TestPackage(mockDll);
 			package.Settings["ShadowCopyFiles"] = false;
 			testDomain.Load( package );
 			Assert.IsFalse( testDomain.AppDomain.ShadowCopyFiles );

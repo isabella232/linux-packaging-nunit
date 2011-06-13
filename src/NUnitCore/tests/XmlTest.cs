@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;	
@@ -97,15 +97,13 @@ namespace NUnit.Core.Tests
 
 		private void runSchemaValidatorTest(string reportFileName)
 		{
-			string testsDll = "mock-assembly.dll";
+            string testsDll = NUnit.Tests.Assemblies.MockAssembly.AssemblyPath;
 			TestSuiteBuilder builder = new TestSuiteBuilder();
 			Test suite = builder.Build( new TestPackage( testsDll ) );
 
-			TestResult result = suite.Run(NullListener.NULL);
+            TestResult result = suite.Run(NullListener.NULL, TestFilter.Empty);
 
-			XmlResultVisitor visitor = new XmlResultVisitor(reportFileName, result);
-			result.Accept(visitor);
-			visitor.Write();
+			new XmlResultWriter(reportFileName).SaveTestResult(result);
 
 			SchemaValidator validator = new SchemaValidator(reportFileName, schemaFile.Path);
 			Assert.IsTrue(validator.Validate(), "validate failed");
@@ -113,15 +111,13 @@ namespace NUnit.Core.Tests
 
 		private void runSchemaValidatorTest(TextWriter writer)
 		{
-			string testsDll = "mock-assembly.dll";
+            string testsDll = NUnit.Tests.Assemblies.MockAssembly.AssemblyPath;
 			TestSuiteBuilder builder = new TestSuiteBuilder();
 			Test suite = builder.Build( new TestPackage( testsDll ) );
 
-			TestResult result = suite.Run(NullListener.NULL);
+            TestResult result = suite.Run(NullListener.NULL, TestFilter.Empty);
 	
-			XmlResultVisitor visitor = new XmlResultVisitor(writer, result);
-			result.Accept(visitor);
-			visitor.Write();
+			new XmlResultWriter(writer).SaveTestResult(result);
 		}
 
 		private string tempFile;

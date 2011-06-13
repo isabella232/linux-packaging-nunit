@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -32,6 +32,8 @@ namespace NUnit.UiKit
 	/// </summary>
 	public class TestSuiteTreeView : TreeView
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(TestSuiteTreeView));
+
 		#region DisplayStyle Enumeraton
 
 		/// <summary>
@@ -48,9 +50,17 @@ namespace NUnit.UiKit
 
 		#endregion
 
-		#region Instance Variables
+        #region TreeStructureChangedException
+        private class TreeStructureChangedException : Exception
+        {
+            public TreeStructureChangedException(string message)
+                :base( message ) { }
+        }
+        #endregion
 
-		/// <summary>
+        #region Instance Variables
+
+        /// <summary>
 		/// Hashtable provides direct access to TestNodes
 		/// </summary>
 		private Hashtable treeMap = new Hashtable();
@@ -70,11 +80,6 @@ namespace NUnit.UiKit
 		/// Whether or not we track progress of tests visibly in the tree
 		/// </summary>
 		private bool displayProgress = true;
-
-		/// <summary>
-		/// Whether to clear test results when tests change
-		/// </summary>
-		private bool clearResultsOnChange;
 
 		/// <summary>
 		/// The properties dialog if displayed
@@ -115,46 +120,61 @@ namespace NUnit.UiKit
 			this.ContextMenu.Popup += new System.EventHandler( ContextMenu_Popup );
 
 			// See if there are any overriding images in the directory;
-			string imageDir = Path.GetDirectoryName( PathUtils.GetAssemblyPath( Assembly.GetExecutingAssembly() ) );
-			
-			string successFile = Path.Combine( imageDir, "Success.jpg" );
-			if ( File.Exists( successFile ) )
-				treeImages.Images[TestSuiteTreeNode.SuccessIndex] = Image.FromFile( successFile );
-
-			string failureFile = Path.Combine( imageDir, "Failure.jpg" );
-			if ( File.Exists( failureFile ) )
-				treeImages.Images[TestSuiteTreeNode.FailureIndex] = Image.FromFile( failureFile );
-			
-			string ignoredFile = Path.Combine( imageDir, "Ignored.jpg" );
-			if ( File.Exists( ignoredFile ) )
-				treeImages.Images[TestSuiteTreeNode.IgnoredIndex] = Image.FromFile( ignoredFile );
-
-			if ( !this.DesignMode )
-				this.clearResultsOnChange = 
-					Services.UserSettings.GetSetting( "Options.TestLoader.ClearResultsOnReload", false );
+            LoadAlternateImages();
 		}
+
+        private void LoadAlternateImages()
+        {
+            string[] imageNames = { "Skipped", "Failure", "Success", "Ignored", "Inconclusive" };
+
+            for (int index = 0; index < imageNames.Length; index++)
+                LoadAlternateImage(index, imageNames[index]);
+        }
+
+        private void LoadAlternateImage(int index, string name)
+        {
+            string imageDir = Path.GetDirectoryName(PathUtils.GetAssemblyPath(Assembly.GetExecutingAssembly()));
+
+            string[] extensions = { ".png", ".jpg" };
+
+            foreach (string ext in extensions)
+            {
+                string filePath = Path.Combine(imageDir, name + ext);
+                if (File.Exists(filePath))
+                {
+                    treeImages.Images[index] = Image.FromFile(filePath);
+                    break;
+                }
+            }
+        }
 
 		private void InitializeComponent()
 		{
-			this.components = new System.ComponentModel.Container();
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(TestSuiteTreeView));
-			this.treeImages = new System.Windows.Forms.ImageList(this.components);
-			// 
-			// treeImages
-			// 
-			this.treeImages.ColorDepth = System.Windows.Forms.ColorDepth.Depth24Bit;
-			this.treeImages.ImageSize = new System.Drawing.Size(16, 16);
-			this.treeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("treeImages.ImageStream")));
-			this.treeImages.TransparentColor = System.Drawing.Color.White;
-			// 
-			// TestSuiteTreeView
-			// 
-			this.ImageIndex = 0;
-			this.ImageList = this.treeImages;
-			this.SelectedImageIndex = 0;
-			this.DoubleClick += new System.EventHandler(this.TestSuiteTreeView_DoubleClick);
-			this.DragEnter += new System.Windows.Forms.DragEventHandler(this.TestSuiteTreeView_DragEnter);
-			this.DragDrop += new System.Windows.Forms.DragEventHandler(this.TestSuiteTreeView_DragDrop);
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TestSuiteTreeView));
+            this.treeImages = new System.Windows.Forms.ImageList(this.components);
+            this.SuspendLayout();
+            // 
+            // treeImages
+            // 
+            this.treeImages.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("treeImages.ImageStream")));
+            this.treeImages.TransparentColor = System.Drawing.Color.White;
+            this.treeImages.Images.SetKeyName(0, "Skipped.png");
+            this.treeImages.Images.SetKeyName(1, "Failure.png");
+            this.treeImages.Images.SetKeyName(2, "Success.png");
+            this.treeImages.Images.SetKeyName(3, "Ignored.png");
+            this.treeImages.Images.SetKeyName(4, "Inconclusive.png");
+            // 
+            // TestSuiteTreeView
+            // 
+            this.ImageIndex = 0;
+            this.ImageList = this.treeImages;
+            this.SelectedImageIndex = 0;
+            this.DoubleClick += new System.EventHandler(this.TestSuiteTreeView_DoubleClick);
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.TestSuiteTreeView_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.TestSuiteTreeView_DragEnter);
+            this.ResumeLayout(false);
+
 		}
 
 		public void Initialize( ITestLoader loader, ITestEvents events )
@@ -189,7 +209,7 @@ namespace NUnit.UiKit
 		}
 
 		/// <summary>
-		/// Property determining whether tree should redraw nodes
+		/// Property determining whether tree should reDraw nodes
 		/// as tests are complete in order to show progress.
 		/// </summary>
 		[Category( "Behavior" ), DefaultValue( true )]
@@ -200,40 +220,40 @@ namespace NUnit.UiKit
 			set { displayProgress = value; }
 		}
 
-		[Category( "Appearance" ), DefaultValue( false )]
-		[Description("Indicates whether checkboxes are displayed beside test nodes")]
-		public new bool CheckBoxes
-		{
-			get { return base.CheckBoxes; }
-			set 
-			{ 
-				if ( base.CheckBoxes != value )
-				{
+        [Category( "Appearance" ), DefaultValue( false )]
+        [Description("Indicates whether checkboxes are displayed beside test nodes")]
+        public new bool CheckBoxes
+        {
+            get { return base.CheckBoxes; }
+            set 
+            { 
+                if ( base.CheckBoxes != value )
+                {
                     VisualState visualState = !value && this.TopNode != null
                         ? new VisualState(this)
                         : null;
 
-					base.CheckBoxes = value;
+                    base.CheckBoxes = value;
 
-					if ( CheckBoxesChanged != null )
-						CheckBoxesChanged(this, new EventArgs());
+                    if ( CheckBoxesChanged != null )
+                        CheckBoxesChanged(this, new EventArgs());
 
-					if ( visualState != null )
-					{
-						try
-						{
+                    if (visualState != null)
+                    {
+                        try
+                        {
                             suppressEvents = true;
                             visualState.ShowCheckBoxes = this.CheckBoxes;
-                            visualState.Restore(this);
-						}
-						finally
-						{
-							suppressEvents = false;
-						}
-					}
-				}
-			}
-		}
+                            RestoreVisualState( visualState );
+                        }
+                        finally
+                        {
+                            suppressEvents = false;
+                        }
+                    }
+                }
+            }
+        }
 
 		/// <summary>
 		/// The currently selected test.
@@ -360,8 +380,8 @@ namespace NUnit.UiKit
 			if ( test != null )
 			{
 				Invoke( new LoadHandler( Reload ), new object[]{ test } );
-				if ( clearResultsOnChange )
-					ClearResults();
+				if ( Services.UserSettings.GetSetting( "Options.TestLoader.ClearResultsOnReload", false ) )
+					ClearAllResults();
 			}
 		}
 
@@ -388,7 +408,13 @@ namespace NUnit.UiKit
 		private void OnRunStarting( object sender, TestEventArgs e )
 		{
 			CheckPropertiesDialog();
-			ClearResults();
+#if ACCUMULATE_RESULTS
+			if ( runningTests != null )
+				foreach( ITest test in runningTests )
+					this[test].ClearResults();
+#else
+			ClearAllResults();
+#endif
 			runCommandEnabled = false;
 		}
 
@@ -414,7 +440,6 @@ namespace NUnit.UiKit
 		#region Context Menu
 		/// <summary>
 		/// Handles right mouse button down by
-		/// 
 		/// remembering the proper context item
 		/// and implements multiple select with the left button.
 		/// </summary>
@@ -427,19 +452,19 @@ namespace NUnit.UiKit
 				TreeNode theNode = GetNodeAt( e.X, e.Y );
 				contextNode = theNode as TestSuiteTreeNode;
 			}
-			//			else if (e.Button == MouseButtons.Left )
-			//			{
-			//				if ( Control.ModifierKeys == Keys.Control )
-			//				{
-			//					TestSuiteTreeNode theNode = GetNodeAt( e.X, e.Y ) as TestSuiteTreeNode;
-			//					if ( theNode != null )
-			//						theNode.Selected = true;
-			//				}
-			//				else
-			//				{
-			//					ClearSelected();
-			//				}
-			//			}
+//			else if (e.Button == MouseButtons.Left )
+//			{
+//				if ( Control.ModifierKeys == Keys.Control )
+//				{
+//					TestSuiteTreeNode theNode = GetNodeAt( e.X, e.Y ) as TestSuiteTreeNode;
+//					if ( theNode != null )
+//						theNode.IsSelected = true;
+//				}
+//				else
+//				{
+//					ClearSelected();
+//				}
+//			}
 
 			base.OnMouseDown( e );
 		}
@@ -472,7 +497,10 @@ namespace NUnit.UiKit
 				this.ContextMenu.MenuItems.Add( runAllMenuItem );
 
 				MenuItem runFailedMenuItem = new MenuItem( "Run &Failed", new EventHandler( runFailedMenuItem_Click ) );
-				runFailedMenuItem.Enabled = runCommandEnabled && loader.TestResult != null && loader.TestResult.IsFailure;
+                TestResult result = loader.TestResult;
+			    runFailedMenuItem.Enabled = runCommandEnabled && result != null &&
+			        (result.ResultState == ResultState.Failure || 
+                     result.ResultState == ResultState.Error);
 
 				this.ContextMenu.MenuItems.Add( runFailedMenuItem );
 
@@ -648,10 +676,10 @@ namespace NUnit.UiKit
 			if ( fileNames.Length == 1 )
 			{
 				string fileName = fileNames[0];
-				bool isProject = Services.UserSettings.GetSetting( "Options.TestLoader.VisualStudioSupport", false ) 
-					? NUnitProject.CanLoadAsProject( fileName )
-					: NUnitProject.IsProjectFile( fileName );
-
+				bool isProject = NUnitProject.IsNUnitProjectFile( fileName );
+				if ( Services.UserSettings.GetSetting( "Options.TestLoader.VisualStudioSupport", false ) )
+					isProject |= Services.ProjectService.CanConvertFrom( fileName );
+				
 				return isProject || PathUtils.IsAssemblyFileType( fileName );
 			}
 
@@ -735,7 +763,7 @@ namespace NUnit.UiKit
 		/// <summary>
 		/// Clear all the results in the tree.
 		/// </summary>
-		public void ClearResults()
+		public void ClearAllResults()
 		{
 			foreach ( TestSuiteTreeNode rootNode in Nodes )
 				rootNode.ClearResults();
@@ -762,6 +790,7 @@ namespace NUnit.UiKit
 				{
 					EndUpdate();
 					contextNode = null;
+                    this.Select();
 				}
 
 				if ( Services.UserSettings.GetSetting( "Gui.TestTree.SaveVisualState", true ) && loader != null)
@@ -799,7 +828,32 @@ namespace NUnit.UiKit
 		/// <param name="test">Test suite to be loaded</param>
 		public void Reload( TestNode test )
 		{
-			UpdateNode( (TestSuiteTreeNode) Nodes[0], test );
+            bool reloadOK = false;
+            try
+            {
+                string selectedName = ((TestSuiteTreeNode)SelectedNode).Test.TestName.FullName;
+
+                UpdateNode((TestSuiteTreeNode)Nodes[0], test, new ArrayList());
+
+                TreeNode selectedNode = this.FindNodeByName(selectedName);
+                if (selectedNode != null)
+                {
+                    SelectedNode = selectedNode;
+                    selectedNode.EnsureVisible();
+                }
+
+                reloadOK = true;
+            }
+            catch (TreeStructureChangedException)
+            {
+            }
+
+            // The tree has changed, probably due to settings
+            // changes, so just load it cleanly.
+            if ( !reloadOK )
+                Load(test);
+
+            this.Focus();
 		}
 
 		/// <summary>
@@ -884,8 +938,8 @@ namespace NUnit.UiKit
 				propertiesDialog = new TestPropertiesDialog( node );
 				propertiesDialog.Owner = owner;
 				propertiesDialog.StartPosition = FormStartPosition.Manual;
-				propertiesDialog.Left = owner.Left + ( owner.Width - propertiesDialog.Width ) / 2;
-				propertiesDialog.Top = owner.Top + ( owner.Height - propertiesDialog.Height ) / 2;
+				propertiesDialog.Left = Math.Max(0, owner.Left + ( owner.Width - propertiesDialog.Width ) / 2);
+				propertiesDialog.Top = Math.Max(0, owner.Top + ( owner.Height - propertiesDialog.Height ) / 2);
 				propertiesDialog.Show();
 				propertiesDialog.Closed += new EventHandler( OnPropertiesDialogClosed );
 			}
@@ -1011,10 +1065,9 @@ namespace NUnit.UiKit
 
 			nodes.Add( node );
 			
-			TestSuiteResult suiteResult = rootResult as TestSuiteResult;
-			if ( suiteResult != null )
+			if ( rootResult.HasResults )
 			{
-				foreach( TestResult result in suiteResult.Results )
+				foreach( TestResult result in rootResult.Results )
 					AddTreeNodes( node.Nodes, result, highlight );
 			}
 
@@ -1028,12 +1081,12 @@ namespace NUnit.UiKit
 			string key = node.Test.TestName.UniqueName;
 
 			if ( treeMap.ContainsKey( key ) )
-				Trace.WriteLine( "Duplicate entry: " + key );
+				log.Error( "Duplicate entry: " + key );
 				//				UserMessage.Display( string.Format( 
 				//					"The test {0} is duplicated\r\rResults will not be displayed correctly in the tree.", node.Test.FullName ), "Duplicate Test" );
 			else
 			{
-				//Trace.WriteLine( "Added to map: " + node.Test.UniqueName );
+				log.Debug( "Added to map: " + node.Test.TestName.UniqueName );
 				treeMap.Add( key, node );
 			}
 		}
@@ -1077,10 +1130,10 @@ namespace NUnit.UiKit
 		/// <param name="node">Node to be updated</param>
 		/// <param name="test">Test to plug into node</param>
 		/// <returns>True if a child node was added or deleted</returns>
-		private bool UpdateNode( TestSuiteTreeNode node, TestNode test )
+		private bool UpdateNode( TestSuiteTreeNode node, TestNode test, IList deletedNodes )
 		{
 			if ( node.Test.TestName.FullName != test.TestName.FullName )
-				throw( new ArgumentException( 
+				throw( new TreeStructureChangedException( 
 					string.Format( "Attempting to update {0} with {1}", node.Test.TestName.FullName, test.TestName.FullName ) ) );
 
 			treeMap.Remove( node.Test.TestName.UniqueName );
@@ -1090,7 +1143,7 @@ namespace NUnit.UiKit
 			if ( !test.IsSuite )
 				return false;
 
-			bool showChildren = UpdateNodes( node.Nodes, test.Tests );
+			bool showChildren = UpdateNodes( node.Nodes, test.Tests, deletedNodes );
 
 			if ( showChildren ) node.Expand();
 
@@ -1105,26 +1158,35 @@ namespace NUnit.UiKit
 		/// </summary>
 		/// <param name="nodes">List of nodes to be matched</param>
 		/// <param name="tests">List of tests to be matched</param>
+        /// <param name="deletedNodes">List of nodes previously removed,
+        /// in case they show up lower in the tree.</param>
 		/// <returns>True if the parent should expand to show that something was added or deleted</returns>
-		private bool UpdateNodes( IList nodes, IList tests )
+		private bool UpdateNodes( IList nodes, IList tests, IList deletedNodes )
 		{
-			// As of NUnit 2.3.6006, the newly reloaded tests 
-			// are guaranteed to be in the same order as the
-			// originally loaded tests. Hence, we can merge
-			// the two lists. However, we can only use an
-			// equality comparison, since we don't know what
-			// determines the order. Hence the two passes.
+			// For NUnit 2.4 and the original release of 2.5, the newly
+            // reloaded tests were guaranteed to be in the same order as 
+            // the originally loaded tests, so we simply merged the two
+            // lists. Beginning with NUnit 2.5.1, this is no longer 
+            // guaranteed - parameterized tests may be re-ordered within 
+            // their containing suite. Therefore, we no longer rely on 
+            // ordering of tests within a suite.
 
 			bool showChanges = false;
 
-			// Pass1: delete nodes as needed
+            // We use two passes to keep the code as simple as possible
+            //
+			// Pass1: delete nodes that are not in the list of tests.
+            // Some of these nodes may reappear lower in the tree,
+            // if we are switching from fixture display to tree display,
+            // so we save them for checking later.
 			int nodeIndex = nodes.Count;
 			while( --nodeIndex >= 0 )
 			{
 				TestSuiteTreeNode node = (TestSuiteTreeNode)nodes[nodeIndex];
-				if ( NodeWasDeleted( node, tests ) )
+				if ( !IsTestInList( node.Test, tests ) )
 				{
-					Trace.WriteLine( "Deleting " + node.Test.TestName.Name );
+					log.Debug( "Deleting " + node.Test.TestName.Name );
+                    deletedNodes.Add(node);
 					RemoveNode( node );
 					showChanges = true;
 				}
@@ -1139,21 +1201,58 @@ namespace NUnit.UiKit
 				TestSuiteTreeNode node = nodeIndex < nodes.Count ? (TestSuiteTreeNode)nodes[nodeIndex] : null;
 
 				if ( node != null && node.Test.TestName.FullName == test.TestName.FullName )
-					UpdateNode( node, test );
+					UpdateNode( node, test, deletedNodes );
 				else
 				{
-					TestSuiteTreeNode newNode = new TestSuiteTreeNode( test );
-					AddToMap( newNode );
-					nodes.Insert( nodeIndex, newNode );
-			
-					if ( test.IsSuite )
-					{
-						foreach( TestNode childTest in test.Tests )
-							AddTreeNodes( newNode.Nodes, childTest, false );
-					}
+                    TestSuiteTreeNode newNode = null;
+                    for (int i = nodeIndex + 1; i < nodes.Count; i++)
+                    {
+                        TestSuiteTreeNode tryNode = (TestSuiteTreeNode)nodes[i];
+                        if (tryNode.Test.TestName.FullName == test.TestName.FullName)
+                        {
+                            // Exchange the two nodes
+                            nodes.Remove(tryNode);
+                            if (node != null) nodes.Remove(node);
 
-					showChanges = true;
-				}
+                            nodes.Insert(nodeIndex, tryNode);
+                            if ( node != null )nodes.Insert(i, node);
+
+                            UpdateNode(tryNode, test, deletedNodes);
+                            newNode = tryNode;
+                            break;
+                        }
+                    }
+
+                    // Create a new node or use a deleted node
+                    if (newNode == null)
+                    {
+                        // Check previously deleted nodes
+                        foreach (TestSuiteTreeNode deletedNode in deletedNodes)
+                            if (deletedNode.Test.TestName.FullName == test.TestName.FullName)
+                            {
+                                newNode = deletedNode;
+                                deletedNodes.Remove(deletedNode);
+                                break;
+                            }
+
+                        // If not found, it's completely new
+                        if (newNode == null)
+                            newNode = new TestSuiteTreeNode(test);
+
+                        AddToMap(newNode);
+                        nodes.Insert(nodeIndex, newNode);
+
+                        if (test.IsSuite)
+                        {
+                            if (UpdateNodes(newNode.Nodes, test.Tests, deletedNodes))
+                                newNode.Expand();
+                            //foreach( TestNode childTest in test.Tests )
+                            //    AddTreeNodes(newNode.Nodes, childTest, false);
+                        }
+
+                        showChanges = true;
+                    }
+                }
 
 				nodeIndex++;
 			}
@@ -1162,18 +1261,18 @@ namespace NUnit.UiKit
 		}
 
 		/// <summary>
-		/// Helper returns true if the node test is not in
-		/// the list of tests provided.
+		/// Helper returns true if the test provided as the first argument
+        /// is found in the list of tests provided as the second argument
 		/// </summary>
-		/// <param name="node">Node to examine</param>
-		/// <param name="tests">List of tests to match with node</param>
-		private bool NodeWasDeleted( TestSuiteTreeNode node, IList tests )
+		/// <param name="node">Test to examine</param>
+		/// <param name="tests">List of tests to match against</param>
+		private bool IsTestInList( ITest test, IList tests )
 		{
-			foreach ( TestNode test in tests )
-				if( Match( node, test ) )
-					return false;
+			foreach ( ITest candidate in tests )
+				if( candidate.TestName.FullName == test.TestName.FullName )
+					return true;
 
-			return true;
+			return false;
 		}
 
 		/// <summary>
@@ -1268,17 +1367,70 @@ namespace NUnit.UiKit
 			return treeMap[test.TestName.UniqueName] as TestSuiteTreeNode;
 		}
 
+        private TestSuiteTreeNode FindNodeByName( string fullName )
+        {
+            foreach( string uname in treeMap.Keys )
+            {
+                int rbrack = uname.IndexOf(']');
+                string name = rbrack >=0 ? uname.Substring(rbrack+1) : uname;
+                if ( name == fullName )
+                    return treeMap[uname] as TestSuiteTreeNode;
+            }
+
+            return null;
+        }
+
 		private void RestoreVisualState()
 		{
-			if ( loader != null )
-			{
-				string fileName = VisualState.GetVisualStateFileName(loader.TestFileName);
-				if ( File.Exists( fileName ) )
-				{
-					VisualState.LoadFrom(fileName).Restore(this);
-					this.Select();
-				}
-			}
+            if (loader != null)
+            {
+                string fileName = VisualState.GetVisualStateFileName(loader.TestFileName);
+                if (File.Exists(fileName))
+                {
+                    RestoreVisualState(VisualState.LoadFrom(fileName));
+                }
+            }
+        }
+
+        private void RestoreVisualState( VisualState visualState )
+        {
+            this.CheckBoxes = visualState.ShowCheckBoxes;
+
+            foreach (VisualTreeNode visualNode in visualState.Nodes)
+            {
+                TestSuiteTreeNode treeNode = this[visualNode.UniqueName];
+                if (treeNode != null)
+                {
+                    if (treeNode.IsExpanded != visualNode.Expanded)
+                        treeNode.Toggle();
+
+                    treeNode.Checked = visualNode.Checked;
+                }
+            }
+
+            if (visualState.SelectedNode != null)
+            {
+                TestSuiteTreeNode treeNode = this[visualState.SelectedNode];
+                if (treeNode != null)
+                    this.SelectedNode = treeNode;
+            }
+
+            if (visualState.TopNode != null)
+            {
+                TestSuiteTreeNode treeNode = this[visualState.TopNode];
+                if (treeNode != null)
+                    TryToSetTopNode(treeNode);
+            }
+
+            if (visualState.SelectedCategories != null)
+            {
+                TestFilter filter = new CategoryFilter(visualState.SelectedCategories.Split(new char[] { ',' }));
+                if (visualState.ExcludeCategories)
+                    filter = new NotFilter(filter);
+                this.CategoryFilter = filter;
+            }
+
+            this.Select();
 		}
 		#endregion
 
@@ -1298,7 +1450,9 @@ namespace NUnit.UiKit
 	{
 		public override void Visit(TestSuiteTreeNode node)
 		{
-			if (!node.Test.IsSuite && node.Result != null && node.Result.IsFailure)
+			if (!node.Test.IsSuite && node.Result != null && 
+                (node.Result.ResultState == ResultState.Failure || 
+                 node.Result.ResultState == ResultState.Error) )
 			{
 				node.Checked = true;
 				node.EnsureVisible();
@@ -1326,7 +1480,9 @@ namespace NUnit.UiKit
 
 		public override void Visit(TestSuiteTreeNode node)
 		{
-			if (!node.Test.IsSuite && node.Result != null && node.Result.IsFailure)
+			if (!node.Test.IsSuite && node.Result != null && 
+                    (node.Result.ResultState == ResultState.Failure || 
+                     node.Result.ResultState == ResultState.Error) )
 			{
 				tests.Add(node.Test);
 				filter.Add(node.Test.TestName);

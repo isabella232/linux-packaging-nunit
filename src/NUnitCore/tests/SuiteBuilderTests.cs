@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -9,22 +9,22 @@ using System.IO;
 using NUnit.Framework;
 using NUnit.Core;
 using NUnit.TestUtilities;
-using NUnit.TestData.SuiteBuilderTests;
 
 namespace NUnit.Core.Tests
 {
 	[TestFixture]
 	public class SuiteBuilderTests
 	{
-		private string testsDll = "nunit.core.tests.dll";
-		private string testData = "test-assembly.dll";
-		private string tempFile = "x.dll";
+        private string testsDll = AssemblyHelper.GetAssemblyPath(typeof(SuiteBuilderTests));
+		private string testData = AssemblyHelper.GetAssemblyPath(typeof(NUnit.TestData.EmptyFixture));
+		private string tempFile;
 		private TestSuiteBuilder builder;
 
 		[SetUp]
 		public void CreateBuilder()
 		{
 			builder = new TestSuiteBuilder();
+            tempFile = Path.ChangeExtension(Path.GetTempFileName(), ".dll");
 		}
 		[TearDown]
 		public void TearDown()
@@ -50,7 +50,7 @@ namespace NUnit.Core.Tests
 			Test suite = builder.Build( package );
 			Assert.IsNotNull(suite, "Unable to build suite" );
 			Assert.Greater( suite.Tests.Count, 1 );
-			Assert.AreEqual( "Test Fixture", ((ITest)suite.Tests[0]).TestType );
+			Assert.AreEqual( "TestFixture", ((ITest)suite.Tests[0]).TestType );
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ namespace NUnit.Core.Tests
 		public void DiscoverSuite()
 		{
 			TestPackage package = new TestPackage( testData );
-			package.TestName = "NUnit.TestData.SuiteBuilderTests.Suite";
+			package.TestName = "NUnit.TestData.LegacySuiteData.Suite";
 			Test suite = builder.Build( package );
 			Assert.IsNotNull(suite, "Could not discover suite attribute");
 		}
@@ -96,16 +96,17 @@ namespace NUnit.Core.Tests
 		public void WrongReturnTypeSuite()
 		{
 			TestPackage package = new TestPackage( testData );
-			package.TestName = "NUnit.TestData.SuiteBuilderTests.NonConformingSuite";
+			package.TestName = "NUnit.TestData.LegacySuiteData.NonConformingSuite";
 			Test suite = builder.Build( package );
 			Assert.AreEqual(RunState.NotRunnable, suite.RunState);
+            Assert.AreEqual("Suite property must return either TestSuite or IEnumerable", suite.IgnoreReason);
 		}
 
 		[Test]
 		[ExpectedException(typeof(FileNotFoundException))]
 		public void FileNotFound()
 		{
-			builder.Build( new TestPackage( "xxxx.dll" ) );
+			builder.Build( new TestPackage( "/xxxx.dll" ) );
 		}
 
 		// Gives FileNotFoundException on Mono

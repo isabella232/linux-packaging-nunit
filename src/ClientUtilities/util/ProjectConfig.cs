@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -57,6 +57,11 @@ namespace NUnit.Util
 		/// True if assembly paths should be added to bin path
 		/// </summary>
 		private BinPathType binPathType = BinPathType.Auto;
+        
+        /// <summary>
+        /// The CLR under which tests are to be run
+        /// </summary>
+        private RuntimeFramework runtimeFramework;
 
 		#endregion
 
@@ -71,11 +76,8 @@ namespace NUnit.Util
 
 		#region Properties and Events
 
-		public event EventHandler Changed;
-
 		public NUnitProject Project
 		{
-//			get { return project; }
 			set { project = value; }
 		}
 
@@ -86,8 +88,8 @@ namespace NUnit.Util
 			{
 				if ( name != value )
 				{
-					name = value; 
-					FireChangedEvent();
+					name = value;
+					NotifyProjectOfChange();
 				}
 			}
 		}
@@ -121,7 +123,7 @@ namespace NUnit.Util
 				if ( BasePath != value )
 				{
 					basePath = value;
-					FireChangedEvent();
+					NotifyProjectOfChange();
 				}
 			}
 		}
@@ -158,7 +160,7 @@ namespace NUnit.Util
 				if ( ConfigurationFile != value )
 				{
 					configFile = value;
-					FireChangedEvent();
+					NotifyProjectOfChange();
 				}
 			}
 		}
@@ -191,7 +193,7 @@ namespace NUnit.Util
 				{
 					binPath = value;
 					binPathType = binPath == null ? BinPathType.Auto : BinPathType.Manual;
-					FireChangedEvent();
+					NotifyProjectOfChange();
 				}
 			}
 		}
@@ -207,7 +209,7 @@ namespace NUnit.Util
 				if ( binPathType != value )
 				{
 					binPathType = value;
-					FireChangedEvent();
+					NotifyProjectOfChange();
 				}
 			}
 		}
@@ -219,6 +221,19 @@ namespace NUnit.Util
 		{
 			get { return assemblies; }
 		}
+
+        public RuntimeFramework RuntimeFramework
+        {
+            get { return runtimeFramework; }
+            set 
+			{
+				if ( runtimeFramework != value )
+				{
+					runtimeFramework = value; 
+					NotifyProjectOfChange();
+				}
+			}
+        }
 		#endregion
 
 		public TestPackage MakeTestPackage()
@@ -237,19 +252,31 @@ namespace NUnit.Util
 			}
 
 			package.AutoBinPath = this.BinPathType == BinPathType.Auto;
+            if (this.RuntimeFramework != null)
+                package.Settings["RuntimeFramework"] = this.RuntimeFramework;
+
+            if (project.ProcessModel != ProcessModel.Default)
+                package.Settings["ProcessModel"] = project.ProcessModel;
+
+            if (project.DomainUsage != DomainUsage.Default)
+                package.Settings["DomainUsage"] = project.DomainUsage;
 
 			return package;
 		}
 
 		private void assemblies_Changed( object sender, EventArgs e )
 		{
-			FireChangedEvent();
+			NotifyProjectOfChange();
 		}
 
-		private void FireChangedEvent()
-		{
-			if ( Changed != null )
-				Changed( this, EventArgs.Empty );
-		}
+        private void NotifyProjectOfChange()
+        {
+            if (project != null)
+            {
+                project.IsDirty = true;
+                if (ReferenceEquals(this, project.ActiveConfig))
+                    project.HasChangesRequiringReload = true;
+            }
+        }
 	}
 }

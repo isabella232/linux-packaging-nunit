@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2002-2003, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -21,9 +21,9 @@ namespace NUnit.UiKit.Tests
 	{
 		private StatusBar statusBar;
 		private MockTestEventSource mockEvents;
-		private string testsDll = "mock-assembly.dll";
-		TestNode suite;
-		int testCount;
+		private static string testsDll = MockAssembly.AssemblyPath;
+		TestSuite suite;
+	    int testCount = 0;
 
 		[SetUp]
 		public void Setup()
@@ -31,7 +31,7 @@ namespace NUnit.UiKit.Tests
 			statusBar = new StatusBar();
 
 			TestSuiteBuilder builder = new TestSuiteBuilder();
-			suite = new TestNode( builder.Build( new TestPackage( testsDll ) ) );
+			suite = builder.Build( new TestPackage( testsDll ) );
 
 			mockEvents = new MockTestEventSource( suite );
 		}
@@ -76,10 +76,14 @@ namespace NUnit.UiKit.Tests
 				PanelMessage( "Test Cases", MockAssembly.Tests ), 
 				statusBar.Panels[1].Text );
 			Assert.AreEqual( 
-				PanelMessage( "Tests Run", MockAssembly.Tests - MockAssembly.NotRun ),
+				PanelMessage( "Tests Run", MockAssembly.TestsRun ),
 				statusBar.Panels[2].Text );
-			Assert.AreEqual( "Failures : 0", statusBar.Panels[3].Text );
-			Assert.AreEqual( "Time : 0", statusBar.Panels[4].Text );
+			Assert.AreEqual( 
+				PanelMessage( "Errors", MockAssembly.Errors ),
+				statusBar.Panels[3].Text );
+			Assert.AreEqual( 
+				PanelMessage( "Failures", MockAssembly.Failures ),
+				statusBar.Panels[4].Text );
 		}
 
         // .NET 1.0 sometimes throws:
@@ -91,6 +95,7 @@ namespace NUnit.UiKit.Tests
 			statusBar.Subscribe( mockEvents );
 
 			testCount = 0;
+            testCount = 0;
 			mockEvents.TestFinished += new TestEventHandler( OnTestFinished );
 
 			mockEvents.SimulateTestRun();
@@ -99,10 +104,14 @@ namespace NUnit.UiKit.Tests
 				PanelMessage( "Test Cases", MockAssembly.Tests ), 
 				statusBar.Panels[1].Text );
 			Assert.AreEqual( 
-				PanelMessage( "Tests Run", MockAssembly.Tests - MockAssembly.NotRun ),
+				PanelMessage( "Tests Run", MockAssembly.TestsRun ),
 				statusBar.Panels[2].Text );
-			Assert.AreEqual( "Failures : 0", statusBar.Panels[3].Text );
-			Assert.AreEqual( "Time : 0", statusBar.Panels[4].Text );
+			Assert.AreEqual( 
+				PanelMessage( "Errors", MockAssembly.Errors ),
+				statusBar.Panels[3].Text );
+			Assert.AreEqual(
+				PanelMessage( "Failures", MockAssembly.Failures ),
+				statusBar.Panels[4].Text );
 		}
 
 		private void OnTestFinished( object sender, TestEventArgs e )
@@ -110,67 +119,21 @@ namespace NUnit.UiKit.Tests
 			Assert.AreEqual( 
 				PanelMessage( "Test Cases", MockAssembly.Tests ),
 				statusBar.Panels[1].Text );
-			Assert.AreEqual( "Failures : 0", statusBar.Panels[3].Text );
-			Assert.AreEqual( "Time : 0", statusBar.Panels[4].Text );
 
-			// Note: Assumes delegates are called in order of adding
-			switch( ++testCount )
-			{
-				case 1:
-					CheckTestDisplay( "NUnit.Tests.Assemblies.MockTestFixture.ExplicitlyRunTest", e, 0 );
-					break;
-				case 2:
-					CheckTestDisplay( "NUnit.Tests.Assemblies.MockTestFixture.MockTest1", e, 1 );
-					break;
-				case 3:
-					CheckTestDisplay( "NUnit.Tests.Assemblies.MockTestFixture.MockTest2", e, 2 );
-					break;
-				case 4:
-					CheckTestDisplay( "NUnit.Tests.Assemblies.MockTestFixture.MockTest3", e, 3 );
-					break;
-				case 5:
-					CheckTestDisplay( "NUnit.Tests.Assemblies.MockTestFixture.MockTest4", e, 3 );
-					break;
-				case 6:
-					CheckTestDisplay( "NUnit.Tests.Assemblies.MockTestFixture.MockTest5", e, 3 );
-					break;
-				case 7:
-					CheckTestDisplay( "NUnit.Tests.Assemblies.MockTestFixture.TestWithManyProperties", e, 4 );
-					break;
-				case 8:
-					CheckTestDisplay( "NUnit.Tests.ExplicitFixture.Test1", e, 4 );
-					break;
-				case 9:
-					CheckTestDisplay( "NUnit.Tests.ExplicitFixture.Test2", e, 4 );
-					break;
-				case 10:
-					CheckTestDisplay( "NUnit.Tests.IgnoredFixture.Test1", e, 4 );
-					break;
-				case 11:
-					CheckTestDisplay( "NUnit.Tests.IgnoredFixture.Test2", e, 4 );
-					break;
-				case 12:
-					CheckTestDisplay( "NUnit.Tests.IgnoredFixture.Test3", e, 4 );
-					break;
-				case 13:
-					CheckTestDisplay( "NUnit.Tests.Singletons.OneTestCase.TestCase", e, 5 );
-					break;
-				case 14:			
-					CheckTestDisplay( "NUnit.Tests.TestAssembly.MockTestFixture.MyTest", e, 6 );
-					break;
-			}
-		}
+            StringAssert.EndsWith( e.Result.Test.TestName.Name, statusBar.Panels[0].Text );
+            
+		    string runPanel = statusBar.Panels[2].Text;
+		    int testsRun = 0;
+            if (runPanel != "")
+            {
+                StringAssert.StartsWith( "Tests Run : ", runPanel );
+                testsRun = int.Parse(runPanel.Substring(12));
+            }
 
-		private void CheckTestDisplay( string expected, TestEventArgs e, int testsRun )
-		{
-			Assert.AreEqual( expected, e.Result.Test.TestName.FullName );
-			int index = expected.LastIndexOf( '.' ) + 1;
-			StringAssert.EndsWith( expected.Substring( index ), statusBar.Panels[0].Text );
-			if ( testsRun > 0 )
-				Assert.AreEqual( PanelMessage( "Tests Run", testsRun ), statusBar.Panels[2].Text );
-			else
-				Assert.AreEqual( "", statusBar.Panels[2].Text );
-		}
+            Assert.GreaterOrEqual( testsRun, testCount);
+            Assert.LessOrEqual( testsRun, testCount + 1);
+		    testCount = testsRun;
+   		}
 
 		private static string PanelMessage( string text, int count )
 		{

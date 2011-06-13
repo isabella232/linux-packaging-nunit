@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -14,8 +14,14 @@ using NUnit.Util;
 namespace NUnit.UiKit
 {
 	/// <summary>
-	/// Summary description for AssemblyNameDialog.
-	/// </summary>
+    /// Displays a dialog for creation of a new configuration.
+    /// The dialog collects and validates the name and the
+    /// name of a configuration to be copied and then adds the
+    /// new configuration to the project.
+    /// 
+    /// A DialogResult of DialogResult.OK indicates that the
+    /// configuration was added successfully.
+    /// </summary>
 	public class AddConfigurationDialog : System.Windows.Forms.Form
 	{
 		#region Instance variables
@@ -136,7 +142,6 @@ namespace NUnit.UiKit
 			// AddConfigurationDialog
 			// 
 			this.AcceptButton = this.okButton;
-			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.CancelButton = this.cancelButton;
 			this.ClientSize = new System.Drawing.Size(280, 149);
 			this.Controls.Add(this.label2);

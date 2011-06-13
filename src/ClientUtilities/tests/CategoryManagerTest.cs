@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -16,6 +16,7 @@ namespace NUnit.Util.Tests
 	public class CategoryManagerTest
 	{
 		private CategoryManager categoryManager;
+        string mockDll = MockAssembly.AssemblyPath;
 
 		[SetUp]
 		public void CreateCategoryManager()
@@ -59,9 +60,9 @@ namespace NUnit.Util.Tests
 		public void CanAddTestCategories()
 		{
 			TestSuiteBuilder builder = new TestSuiteBuilder();
-			Test suite = builder.Build( new TestPackage( "mock-assembly.dll" ) );
+			Test suite = builder.Build( new TestPackage( mockDll ) );
 			
-			Test test = TestFinder.Find( "MockTest3", suite );
+			Test test = TestFinder.Find( "MockTest3", suite, true );
 			categoryManager.AddCategories( test );
 			Assert.AreEqual( 2, categoryManager.Categories.Count );
 		}
@@ -70,7 +71,7 @@ namespace NUnit.Util.Tests
 		public void CanAddAllAvailableCategoriesInTestTree()
 		{
 			TestSuiteBuilder builder = new TestSuiteBuilder();
-			Test suite = builder.Build( new TestPackage( "mock-assembly.dll" ) );
+			Test suite = builder.Build( new TestPackage( mockDll ) );
 			
 			categoryManager.AddAllCategories( suite );
 			Assert.AreEqual( MockAssembly.Categories, categoryManager.Categories.Count );

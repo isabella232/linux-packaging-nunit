@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -13,6 +13,8 @@ namespace NUnit.Util.Tests
 	[TestFixture]
 	public class RemoteTestResultTest
 	{
+        private static readonly string mockDll = 
+            NUnit.Tests.Assemblies.MockAssembly.AssemblyPath; 
         private TestDomain domain;
 
         [SetUp]
@@ -31,12 +33,10 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void ResultStillValidAfterDomainUnload() 
 		{
-			TestPackage package = new TestPackage( "mock-assembly.dll" );
+			TestPackage package = new TestPackage( mockDll );
 			Assert.IsTrue( domain.Load( package ) );
 			TestResult result = domain.Run( new NullListener() );
-			TestSuiteResult suite = result as TestSuiteResult;
-			Assert.IsNotNull(suite);
-			TestCaseResult caseResult = findCaseResult(suite);
+			TestResult caseResult = findCaseResult(result);
 			Assert.IsNotNull(caseResult);
 			TestResultItem item = new TestResultItem(caseResult);
 			string message = item.GetMessage();
@@ -47,22 +47,22 @@ namespace NUnit.Util.Tests
         public void AppDomainUnloadedBug()
         {
             TestDomain domain = new TestDomain();
-            domain.Load( new TestPackage( "mock-assembly.dll" ) );
+            domain.Load( new TestPackage( mockDll ) );
             domain.Run(new NullListener());
             domain.Unload();
         }
 
-		private TestCaseResult findCaseResult(TestSuiteResult suite) 
+		private TestResult findCaseResult(TestResult suite) 
 		{
 			foreach (TestResult r in suite.Results) 
 			{
-				if (r is TestCaseResult)
+				if (!r.Test.IsSuite)
 				{
-					return (TestCaseResult) r;
+					return r;
 				}
 				else 
 				{
-					TestCaseResult result = findCaseResult((TestSuiteResult)r);
+					TestResult result = findCaseResult(r);
 					if (result != null)
 						return result;
 				}

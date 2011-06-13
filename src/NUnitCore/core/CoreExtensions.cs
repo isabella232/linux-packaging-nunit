@@ -1,13 +1,14 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
 using System.IO;
 using System.Collections;
 using System.Reflection;
+using NUnit.Core.Builders;
 using NUnit.Core.Extensibility;
 
 namespace NUnit.Core
@@ -20,6 +21,8 @@ namespace NUnit.Core
 	/// </summary>
 	public class CoreExtensions : ExtensionHost, IService
 	{
+		static Logger log = InternalTrace.GetLogger("CoreExtensions");
+
 		#region Instance Fields
 		private IAddinRegistry addinRegistry;
 		private bool initialized;
@@ -28,8 +31,10 @@ namespace NUnit.Core
 		private TestCaseBuilderCollection testBuilders;
 		private TestDecoratorCollection testDecorators;
 		private EventListenerCollection listeners;
+		private FrameworkRegistry frameworks;
+	    private TestCaseProviders testcaseProviders;
+        private DataPointProviders dataPointProviders;
 
-//		private log4net.Appender.ConsoleAppender appender;
 		#endregion
 
 		#region CoreExtensions Singleton
@@ -53,9 +58,19 @@ namespace NUnit.Core
 			this.testBuilders = new TestCaseBuilderCollection(this);
 			this.testDecorators = new TestDecoratorCollection(this);
 			this.listeners = new EventListenerCollection(this);
+			this.frameworks = new FrameworkRegistry(this);
+            this.testcaseProviders = new TestCaseProviders(this);
+            this.dataPointProviders = new DataPointProviders(this);
 
-			this.extensions = new IExtensionPoint[]
-				{ suiteBuilders, testBuilders, testDecorators, listeners };
+		    this.extensions = new ArrayList();
+		    extensions.Add(suiteBuilders);
+		    extensions.Add(testBuilders);
+		    extensions.Add(testDecorators);
+		    extensions.Add(listeners);
+		    extensions.Add(frameworks);
+		    extensions.Add(testcaseProviders);
+            extensions.Add(dataPointProviders);
+
 			this.supportedTypes = ExtensionType.Core;
 
 			// TODO: This should be somewhere central
@@ -74,7 +89,7 @@ namespace NUnit.Core
 		}
 		#endregion
 
-		#region Properties
+		#region Public Properties
 
 		public bool Initialized
 		{
@@ -95,52 +110,72 @@ namespace NUnit.Core
 			}
 			set { addinRegistry = value; }
 		}
+		#endregion
 
-		public ISuiteBuilder SuiteBuilders
+		#region Internal Properties
+		internal ISuiteBuilder SuiteBuilders
 		{
 			get { return suiteBuilders; }
 		}
 
-		public ITestCaseBuilder TestBuilders
+		internal ITestCaseBuilder2 TestBuilders
 		{
 			get { return testBuilders; }
 		}
 
-		public ITestDecorator TestDecorators
+		internal ITestDecorator TestDecorators
 		{
 			get { return testDecorators; }
 		}
 
-		public EventListener Listeners
+		internal EventListener Listeners
 		{
 			get { return listeners; }
 		}
 
-		public FrameworkRegistry TestFrameworks
+		internal FrameworkRegistry TestFrameworks
 		{
 			get { return frameworks; }
 		}
-		#endregion
+
+        internal TestCaseProviders TestCaseProviders
+	    {
+            get { return testcaseProviders; }
+	    }
+
+	    #endregion
 
 		#region Public Methods	
 		public void InstallBuiltins()
 		{
-			NTrace.Info( "Installing Builtins" );
+			log.Info( "Installing Builtins" );
 
-			// Define NUnit Framework
-			FrameworkRegistry.Register( "NUnit", "nunit.framework" );
+			// Define NUnit Frameworks
+			frameworks.Register( "NUnit", "nunit.framework" );
+            frameworks.Register("NUnitLite", "NUnitLite");
 
-			// Install builtin SuiteBuilders - Note that the
-			// NUnitTestCaseBuilder is installed whenever
-			// an NUnitTestFixture is being populated and
-			// removed afterward.
-			suiteBuilders.Install( new Builders.NUnitTestFixtureBuilder() );
-			suiteBuilders.Install( new Builders.SetUpFixtureBuilder() );
+			// Install builtin SuiteBuilders
+			suiteBuilders.Install( new NUnitTestFixtureBuilder() );
+			suiteBuilders.Install( new SetUpFixtureBuilder() );
+
+            // Install builtin TestCaseBuilder
+            testBuilders.Install( new NUnitTestCaseBuilder() );
+            //testBuilders.Install(new TheoryBuilder());
+
+            // Install builtin TestCaseProviders
+            testcaseProviders.Install(new TestCaseParameterProvider());
+            testcaseProviders.Install(new TestCaseSourceProvider());
+            testcaseProviders.Install(new CombinatorialTestCaseProvider());
+
+            // Install builtin DataPointProvider
+            dataPointProviders.Install(new InlineDataPointProvider());
+            dataPointProviders.Install(new ValueSourceProvider());
+            dataPointProviders.Install(new DatapointProvider());
 		}
 
 		public void InstallAddins()
 		{
-			NTrace.Info( "Installing Addins" );
+			log.Info( "Installing Addins" );
 
 			if( AddinRegistry != null )
 			{
@@ -148,26 +183,38 @@ namespace NUnit.Core
 				{
 					if ( (this.ExtensionTypes & addin.ExtensionType) != 0 )
 					{
+						AddinStatus status = AddinStatus.Unknown;
+						string message = null;
+
 						try
 						{
 							Type type = Type.GetType(addin.TypeName);
 							if ( type == null )
 							{
-								AddinRegistry.SetStatus( addin.Name, AddinStatus.Error, "Could not locate type" );
-								NTrace.Error( "Failed to load  " + addin.Name + " - Could not locate type" );
+								status = AddinStatus.Error;
+								message = string.Format( "Unable to locate {0} Type", addin.TypeName );
 							}
 							else if ( !InstallAddin( type ) )
 							{
-								AddinRegistry.SetStatus( addin.Name, AddinStatus.Error, "Install returned false" );
-								NTrace.Error( "Failed to load " +addin.Name + " - Install returned false" );
+								status = AddinStatus.Error;
+								message = "Install method returned false";
 							}
 							else
-								AddinRegistry.SetStatus( addin.Name, AddinStatus.Loaded, null );
+							{
+								status = AddinStatus.Loaded;
+							}
 						}
 						catch( Exception ex )
 						{
-							AddinRegistry.SetStatus( addin.Name, AddinStatus.Error, ex.Message );
-							NTrace.Error( "Exception loading " + addin.Name + " - " + ex.Message );
+							status = AddinStatus.Error;
+							message = ex.ToString(); 				
+						}
+
+						AddinRegistry.SetStatus( addin.Name, status, message );
+						if ( status != AddinStatus.Loaded )
+						{
+							log.Error( "Failed to load {0}", addin.Name );
+							log.Error( message );
 						}
 					}
 				}

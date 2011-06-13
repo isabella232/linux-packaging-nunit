@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -88,33 +88,30 @@ namespace NUnit.Core.Tests
 		}
 
 		[Test]
-		public void GetMethodWithAttribute()
+		public void GetMethodsWithAttribute()
 		{
-			Assert.IsNotNull( Reflect.GetMethodWithAttribute( myType, "Colors.BlueAttribute", BF, false ) );
-		}
-
-		[Test]
-		public void CountMethodsWithAttribute()
-		{
-			Assert.AreEqual( 1, Reflect.CountMethodsWithAttribute( myType, "Colors.BlueAttribute", BF, false ) );
-		}
+            MethodInfo[] methods = Reflect.GetMethodsWithAttribute(myType, "Colors.BlueAttribute", false);
+            Assert.That(
+                List.Map(methods).Property("Name"), 
+                Is.EqualTo(new string[] {"BaseBlueMethod", "BlueMethod"} ));
+        }
 
 		[Test]
 		public void GetNamedMethod()
 		{
-			Assert.IsNotNull( Reflect.GetNamedMethod( myType, "BlueMethod", BF ) );
+			Assert.IsNotNull( Reflect.GetNamedMethod( myType, "BlueMethod" ) );
 		}
 
 		[Test]
 		public void GetNamedMethodWithArgs()
 		{
-			Assert.IsNotNull( Reflect.GetNamedMethod( myType, "TwoArgs", new string[] { "System.Int32", "System.String" }, BF ) );
+			Assert.IsNotNull( Reflect.GetNamedMethod( myType, "TwoArgs", new string[] { "System.Int32", "System.String" } ) );
 		}
 
 		[Test]
 		public void GetPropertyWithAttribute()
 		{
-			Assert.IsNotNull( Reflect.GetPropertyWithAttribute( myType, "Colors.RedAttribute", BF ) );
+			Assert.IsNotNull( Reflect.GetPropertyWithAttribute( myType, "Colors.RedAttribute" ) );
 		}
 
 		[Test]
@@ -139,7 +136,7 @@ namespace NUnit.Core.Tests
 		public void InvokeMethod()
 		{
 			Colors.MyClass myClass = new Colors.MyClass();
-			MethodInfo method = Reflect.GetNamedMethod( myType, "BlueMethod", BF );
+			MethodInfo method = Reflect.GetNamedMethod( myType, "BlueMethod" );
 			Reflect.InvokeMethod( method, myClass );
 			Assert.IsTrue( myClass.BlueInvoked );
 		}
@@ -160,6 +157,8 @@ namespace Colors
 	[Red]
 	class BaseClass : MyInterface
 	{
+        [Blue]
+        public void BaseBlueMethod() { }
 	}
 
 	[Green]

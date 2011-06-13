@@ -1,11 +1,12 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Data;
@@ -26,7 +27,7 @@ namespace NUnit.UiKit
 		// Contains all available categories, whether
 		// selected or not. Unselected members of this
 		// list are displayed in selectedList
-		private IList availableCategories;
+		private IList availableCategories = new List<string>();
 
 		// Our test loader
 		private TestLoader loader;
@@ -235,11 +236,14 @@ namespace NUnit.UiKit
 			{
 				if ( availableCategories.Contains( category ) )
 				{
-					selectedList.Items.Add( category );
+					if (!selectedList.Items.Contains(category))
+					{
+						selectedList.Items.Add(category);
+					}
 					availableList.Items.Remove( category );
-				}
 
-				this.excludeCheckbox.Checked = exclude;
+					this.excludeCheckbox.Checked = exclude;
+				}
 			}
 
 			UpdateCategoryFilter();
@@ -329,7 +333,6 @@ namespace NUnit.UiKit
 		/// </summary>
 		private void InitializeComponent()
 		{
-			System.Resources.ResourceManager resources = new System.Resources.ResourceManager(typeof(TestTree));
 			this.tabs = new System.Windows.Forms.TabControl();
 			this.testPage = new System.Windows.Forms.TabPage();
 			this.testPanel = new System.Windows.Forms.Panel();

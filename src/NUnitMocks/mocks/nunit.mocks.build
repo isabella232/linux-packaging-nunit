@@ -1,11 +1,7 @@
 <?xml version="1.0"?>
 <project name="NUnitMocks" default="build" basedir=".">
 
-  <target name="build">
-    <csc target="library" 
-        output="${current.build.dir}/nunit.mocks.dll"
-        debug="${build.debug}" define="${build.defines}">
-      <sources>
+  <patternset id="source-files">
         <include name="AssemblyInfo.cs"/>
         <include name="DynamicMock.cs"/>
         <include name="ICall.cs"/>
@@ -18,12 +14,20 @@
         <include name="MockCall.cs"/>
         <include name="MockInterfaceHandler.cs"/>
         <include name="MockMethod.cs"/>
-        <include name="../../CommonAssemblyInfo.cs"/>
+  </patternset>
+
+  <target name="build">
+    <csc target="library" 
+        output="${current.framework.dir}/nunit.mocks.dll"
+        debug="${build.debug}" define="${build.defines}">
+      <sources>
+        <patternset refid="source-files"/>
+        <include name="../../GeneratedAssemblyInfo.cs"/>
       </sources>
       <nowarn>
-        <warning number="1699" if="${runtime.version=='2.0'}"/>
+        <warning number="1699" if="${runtime.version>='2.0'}"/>
       </nowarn>
-      <references basedir="${current.build.dir}">
+      <references basedir="${current.framework.dir}">
         <include name="nunit.framework.dll"/>
       </references>
     </csc>
@@ -31,7 +35,11 @@
 
   <target name="package">
     <copy todir="${package.src.dir}/NUnitMocks/mocks">
-      <fileset refid="source-files" />
+      <fileset>
+        <patternset refid="source-files"/>
+        <include name="nunit.mocks.csproj"/>
+        <include name="nunit.mocks.build"/>
+      </fileset>
     </copy>
   </target>
 

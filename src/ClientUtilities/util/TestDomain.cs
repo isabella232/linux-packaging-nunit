@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -19,12 +19,19 @@ namespace NUnit.Util
 
 	public class TestDomain : ProxyTestRunner, TestRunner
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(TestDomain));
+
 		#region Instance Variables
 
 		/// <summary>
 		/// The appdomain used  to load tests
 		/// </summary>
 		private AppDomain domain; 
+
+		/// <summary>
+		/// The TestAgent in the domain
+		/// </summary>
+		private DomainAgent agent;
 
 		#endregion
 
@@ -46,18 +53,27 @@ namespace NUnit.Util
 		{
 			Unload();
 
+            log.Info("Loading " + package.Name);
 			try
 			{
 				if ( this.domain == null )
 					this.domain = Services.DomainManager.CreateDomain( package );
+
+                if (this.agent == null)
+                {
+                    this.agent = DomainAgent.CreateInstance(domain);
+                    this.agent.Start();
+                }
             
 				if ( this.TestRunner == null )
-					this.TestRunner = MakeRemoteTestRunner( domain );
+					this.TestRunner = this.agent.CreateRunner( this.ID );
 
+                log.Info("Loading tests in AppDomain, see {0}.log", domain.FriendlyName);
 				return TestRunner.Load( package );
 			}
 			catch
 			{
+                log.Error("Load failure");
 				Unload();
 				throw;
 			}
@@ -65,29 +81,46 @@ namespace NUnit.Util
 
 		public override void Unload()
 		{
-			this.TestRunner = null;
+            if (this.TestRunner != null)
+            {
+                log.Info("Unloading");
+                this.TestRunner.Unload();
+                this.TestRunner = null;
+            }
+
+            if (this.agent != null)
+            {
+                log.Info("Stopping DomainAgent");
+                this.agent.Dispose();
+                this.agent = null;
+            }
 
 			if(domain != null) 
 			{
+                log.Info("Unloading AppDomain " + domain.FriendlyName);
 				Services.DomainManager.Unload(domain);
 				domain = null;
 			}
 		}
 		#endregion
 
-		#region MakeRemoteTestRunner Helper
-		private TestRunner MakeRemoteTestRunner( AppDomain runnerDomain )
-		{
-			Type runnerType = typeof( RemoteTestRunner );
-			object obj = runnerDomain.CreateInstanceAndUnwrap(
-				runnerType.Assembly.FullName, 
-				runnerType.FullName,
-				false, BindingFlags.Default,null,new object[] { this.ID },null,null,null);
-			
-			RemoteTestRunner runner = (RemoteTestRunner) obj;
+        #region Running Tests
+        public override void BeginRun(EventListener listener, ITestFilter filter)
+        {
+            log.Info("BeginRun in AppDomain {0}", domain.FriendlyName);
+            base.BeginRun(listener, filter);
+        }
+        #endregion
 
-			return runner;
-		}
-		#endregion
-	}
+        #region IDisposable Members
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            Unload();
+        }
+
+        #endregion
+    }
 }

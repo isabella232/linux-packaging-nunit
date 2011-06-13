@@ -1,5 +1,11 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using NUnit.Core;
@@ -26,7 +32,7 @@ namespace NUnit.UiKit
 		public bool ExcludeCategories;
 
 		[XmlArrayItem("Node")]
-		public VisualTreeNode[] Nodes;
+		public List<VisualTreeNode> Nodes;
 		#endregion
 
 		#region Static Methods
@@ -65,7 +71,9 @@ namespace NUnit.UiKit
 			this.ShowCheckBoxes = treeView.CheckBoxes;
 			this.TopNode = ((TestSuiteTreeNode)treeView.TopNode).Test.TestName.UniqueName;
 			this.SelectedNode = ((TestSuiteTreeNode)treeView.SelectedNode).Test.TestName.UniqueName;
-			this.Nodes = new VisualTreeNode[] { new VisualTreeNode((TestSuiteTreeNode)treeView.Nodes[0]) };
+			this.Nodes = new List<VisualTreeNode>();
+            ProcessTreeNodes( (TestSuiteTreeNode)treeView.Nodes[0] );
+
 			if ( !treeView.CategoryFilter.IsEmpty )
 			{
 				ITestFilter filter = treeView.CategoryFilter;
@@ -78,43 +86,23 @@ namespace NUnit.UiKit
 				this.SelectedCategories = filter.ToString();
 			}
 		}
+
+        private void ProcessTreeNodes(TestSuiteTreeNode node)
+        {
+            if (IsInteresting(node))
+                this.Nodes.Add(new VisualTreeNode(node));
+
+            foreach (TestSuiteTreeNode childNode in node.Nodes)
+                ProcessTreeNodes(childNode);
+        }
+
+        private bool IsInteresting(TestSuiteTreeNode node)
+        {
+            return node.IsExpanded || node.Checked;
+        }
 		#endregion
 
 		#region Instance Methods
-        public void Restore(TestSuiteTreeView tree)
-        {
-            if (ShowCheckBoxes != tree.CheckBoxes)
-                tree.CheckBoxes = ShowCheckBoxes;
-
-            foreach (VisualTreeNode visualNode in Nodes)
-                visualNode.Restore(tree);
-
-            if (SelectedNode != null)
-            {
-                TestSuiteTreeNode treeNode = tree[SelectedNode];
-                if (treeNode != null)
-                    tree.SelectedNode = treeNode;
-            }
-
-            if (TopNode != null)
-            {
-                TestSuiteTreeNode treeNode = tree[TopNode];
-                if (treeNode != null)
-                    tree.TryToSetTopNode(treeNode);
-            }
-
-
-			if (this.SelectedCategories != null)
-			{
-				TestFilter filter = new CategoryFilter( this.SelectedCategories.Split( new char[] { ',' } ) );
-				if ( this.ExcludeCategories )
-					filter = new NotFilter( filter );
-				tree.CategoryFilter = filter;
-			}
-			
-			tree.Select();
-        }
-
 		public void Save( string fileName )
 		{
 			using ( StreamWriter writer = new StreamWriter( fileName ) )
@@ -153,29 +141,6 @@ namespace NUnit.UiKit
 			this.UniqueName = treeNode.Test.TestName.UniqueName;
 			this.Expanded = treeNode.IsExpanded;
 			this.Checked = treeNode.Checked;
-			int count = treeNode.Nodes.Count;
-			if ( count > 0 )
-			{
-				this.Nodes = new VisualTreeNode[count];
-				for( int i = 0; i < count; i++ )
-					this.Nodes[i] = new VisualTreeNode( (TestSuiteTreeNode)treeNode.Nodes[i] );
-			}
 		}
-
-        public void Restore(TestSuiteTreeView tree)
-        {
-            TestSuiteTreeNode treeNode = tree[this.UniqueName];
-            if (treeNode != null)
-            {
-                if (treeNode.IsExpanded != this.Expanded)
-                    treeNode.Toggle();
-
-                treeNode.Checked = this.Checked;
-
-                if (this.Nodes != null)
-                    foreach (VisualTreeNode childNode in this.Nodes)
-                        childNode.Restore(tree);
-            }
-        }
-	}
+    }
 }

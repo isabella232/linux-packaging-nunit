@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -22,6 +22,8 @@ namespace NUnit.UiKit
 	/// </summary>
 	public class ResultTabs : System.Windows.Forms.UserControl, TestObserver
 	{
+		static Logger log = InternalTrace.GetLogger(typeof(ResultTabs));
+
 		private ISettings settings;
 		private bool updating = false;
 		private TextDisplayController displayController;
@@ -125,8 +127,6 @@ namespace NUnit.UiKit
 			this.tabControl.Controls.Add(this.errorTab);
 			this.tabControl.Controls.Add(this.notRunTab);
 			this.tabControl.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.tabControl.ForeColor = System.Drawing.Color.Red;
-			this.tabControl.ItemSize = new System.Drawing.Size(99, 18);
 			this.tabControl.Location = new System.Drawing.Point(0, 0);
 			this.tabControl.Name = "tabControl";
 			this.tabControl.SelectedIndex = 0;
@@ -168,7 +168,6 @@ namespace NUnit.UiKit
 			this.notRunTree.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.notRunTree.ImageIndex = -1;
 			this.notRunTree.Indent = 19;
-			this.notRunTree.ItemHeight = 16;
 			this.notRunTree.Location = new System.Drawing.Point(0, 0);
 			this.notRunTree.Name = "notRunTree";
 			this.notRunTree.SelectedImageIndex = -1;
@@ -215,7 +214,6 @@ namespace NUnit.UiKit
 
 				UpdateTabPages();
 
-				UpdateFixedFont();
 				Subscribe( Services.TestLoader.Events );
 				Services.UserSettings.Changed += new SettingsEventHandler(UserSettings_Changed);
 
@@ -234,7 +232,7 @@ namespace NUnit.UiKit
 			errorsTabMenuItem.Checked = settings.GetSetting( "Gui.ResultTabs.DisplayErrorsTab", true );
 			notRunTabMenuItem.Checked = settings.GetSetting( "Gui.ResultTabs.DisplayNotRunTab", true );
 
-			NTrace.Debug( "Updating tab pages" );
+			log.Debug( "Updating tab pages" );
 			updating = true;
 			
 			tabControl.TabPages.Clear();
@@ -251,29 +249,12 @@ namespace NUnit.UiKit
 			updating = false;
 		}
 
-		private void UpdateFixedFont()
-		{
-			Font fixedFont = null;
-			string fontDescription = settings.GetSetting( "Gui.FixedFont", "" );
-			if ( fontDescription == "" )
-			{
-				fixedFont = new Font( "Courier New", 8.0f );
-			}
-			else
-			{
-				TypeConverter converter = TypeDescriptor.GetConverter(typeof(Font));
-				fixedFont = (Font)converter.ConvertFrom(fontDescription);
-			}
-		}
-
 		private void UserSettings_Changed( object sender, SettingsEventArgs e )
 		{
 			if( e.SettingName.StartsWith( "Gui.ResultTabs.Display" ) ||
 				e.SettingName == "Gui.TextOutput.TabList" || 
 				e.SettingName.StartsWith( "Gui.TextOut" ) && e.SettingName.EndsWith( "Enabled" ) )
 					UpdateTabPages();
-			else if ( e.SettingName == "Gui.FixedFont" )
-				UpdateFixedFont();
 		}
 
 		private void errorsTabMenuItem_Click(object sender, System.EventArgs e)
@@ -352,6 +333,13 @@ namespace NUnit.UiKit
 				font.Dispose();
 		}
 
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            tabControl.ItemSize = new Size(tabControl.ItemSize.Width, this.Font.Height + 7);
+        }
+
 		private class TextDisplayController : TestObserver
 		{
 			private TabControl tabControl;
@@ -375,6 +363,7 @@ namespace NUnit.UiKit
 				tabSettings.LoadSettings();
 				ArrayList oldPages = tabPages;
 				tabPages = new ArrayList();
+				Font displayFont = GetFixedFont();
 
 				foreach( TextDisplayTabSettings.TabInfo tabInfo in tabSettings.Tabs )
 				{
@@ -391,6 +380,8 @@ namespace NUnit.UiKit
 						if ( thePage == null )
 							thePage = new TextDisplayTabPage( tabInfo );
 
+						thePage.DisplayFont = displayFont;
+
 						tabPages.Add( thePage );
 						tabControl.TabPages.Add( thePage );
 					}
@@ -402,6 +393,13 @@ namespace NUnit.UiKit
 				string settingName = args.SettingName; 
 				string prefix = "Gui.TextOutput.";
 
+				if ( settingName == "Gui.FixedFont" )
+				{
+					Font displayFont = GetFixedFont();
+					foreach( TextDisplayTabPage page in tabPages )
+						page.DisplayFont = displayFont;
+				}
+				else
 				if ( settingName.StartsWith( prefix ) )
 				{
 					string fieldName = settingName.Substring( prefix.Length );
@@ -426,6 +424,15 @@ namespace NUnit.UiKit
 							}
 					}
 				}
+			}
+
+			private static Font GetFixedFont()
+			{
+				ISettings settings = Services.UserSettings;
+
+				return settings == null 
+                    ? new Font(FontFamily.GenericMonospace, 8.0f) 
+                    : settings.GetSetting("Gui.FixedFont", new Font(FontFamily.GenericMonospace, 8.0f));
 			}
 
 			#region TestObserver Members

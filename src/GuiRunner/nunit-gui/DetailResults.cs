@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -14,12 +14,12 @@ namespace NUnit.Gui
 	using NUnit.Util;
 
 	/// <summary>
-	/// Summary description for ResultVisitor.
+	/// Summary description for DetailResults
 	/// </summary>
-	public class DetailResults : ResultVisitor
+	public class DetailResults
 	{
-		private ListBox testDetails;
-		private TreeView notRunTree;
+		private readonly ListBox testDetails;
+		private readonly TreeView notRunTree;
 
 		public DetailResults(ListBox listBox, TreeView notRun)
 		{
@@ -30,44 +30,39 @@ namespace NUnit.Gui
 		public void DisplayResults( TestResult results )
 		{
 			notRunTree.BeginUpdate();
-			results.Accept(this);
+			ProcessResults( results );
 			notRunTree.EndUpdate();
 
 			if( testDetails.Items.Count > 0 )
 				testDetails.SelectedIndex = 0;
 		}
 
-		public void Visit(TestCaseResult result)
+		private void ProcessResults(TestResult result)
 		{
-			if(result.Executed)
+			switch( result.ResultState )
 			{
-				if(result.IsFailure)
-				{
+                case ResultState.Failure:
+                case ResultState.Error:
+                case ResultState.Cancelled:
 					TestResultItem item = new TestResultItem(result);
 					//string resultString = String.Format("{0}:{1}", result.Name, result.Message);
 					testDetails.BeginUpdate();
 					testDetails.Items.Insert(testDetails.Items.Count, item);
 					testDetails.EndUpdate();
-				}
+			        break;
+                case ResultState.Skipped:
+                case ResultState.NotRunnable:
+                case ResultState.Ignored:
+    				notRunTree.Nodes.Add(MakeNotRunNode(result));
+			        break;
 			}
-			else
-			{
-				notRunTree.Nodes.Add(MakeNotRunNode(result));
-			}
-		}
 
-		public void Visit(TestSuiteResult suiteResult)
-		{
-			if(!suiteResult.Executed)
-				notRunTree.Nodes.Add(MakeNotRunNode(suiteResult));
+			if ( result.HasResults )
+				foreach (TestResult childResult in result.Results)
+	                ProcessResults( childResult );
+        }
 
-			foreach (TestResult result in suiteResult.Results)
-			{
-				result.Accept(this);
-			}
-		}
-
-		private TreeNode MakeNotRunNode(TestResult result)
+		private static TreeNode MakeNotRunNode(TestResult result)
 		{
 			TreeNode node = new TreeNode(result.Name);
 

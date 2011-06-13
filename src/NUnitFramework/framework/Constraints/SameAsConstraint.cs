@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -20,7 +20,7 @@ namespace NUnit.Framework.Constraints
         /// Initializes a new instance of the <see cref="T:SameAsConstraint"/> class.
         /// </summary>
         /// <param name="expected">The expected object.</param>
-        public SameAsConstraint(object expected)
+        public SameAsConstraint(object expected) : base(expected)
         {
             this.expected = expected;
         }
@@ -34,7 +34,12 @@ namespace NUnit.Framework.Constraints
         {
             this.actual = actual;
 
-            return Object.ReferenceEquals(expected,actual);
+#if NETCF_1_0
+            // TODO: THis makes it compile, now make it work.
+            return expected.Equals(actual);
+#else
+            return Object.ReferenceEquals(expected, actual);
+#endif
         }
 
         /// <summary>

@@ -1,3 +1,8 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using System.Collections;
 
@@ -49,32 +54,16 @@ namespace NUnit.UiKit
 		{
 			tabInfo = new TabInfoCollection();
 
-			// Get any legacy settings
-			bool mergeErrorOutput = settings.GetSetting( "Gui.ResultTabs.MergeErrorOutput", false );
-			bool mergeTraceOutput = settings.GetSetting( "Gui.ResultTabs.MergeTraceOutput", false );
-
-			TabInfo tab0 = tabInfo.AddNewTab( "Console.Out" );
-			tab0.Content = TextDisplayContent.Out;
-			if ( mergeErrorOutput )
-				tab0.Content |= TextDisplayContent.Error;
-			if ( mergeTraceOutput )
-				tab0.Content |= TextDisplayContent.Trace;
-			if ( settings.GetSetting( "Gui.ResultTabs.DisplayTestLabels", false ) )
-				tab0.Content |= TextDisplayContent.Labels;
-			tab0.Enabled = settings.GetSetting( "Gui.ResultTabs.DisplayConsoleOutputTab", true );
-
-			TabInfo tab1 = tabInfo.AddNewTab( "Console.Error" );
-			tab1.Content = mergeErrorOutput ? TextDisplayContent.Empty : TextDisplayContent.Error;
-			tab1.Enabled = settings.GetSetting( "Gui.ResultTabs.DisplayConsoleErrorTab", true );
-
-			TabInfo tab2 = tabInfo.AddNewTab( "Trace" );
-			tab2.Content = mergeTraceOutput ? TextDisplayContent.Empty : TextDisplayContent.Trace;
-			tab2.Enabled = settings.GetSetting( "Gui.ResultTabs.DisplayTraceTab", true );
-
-			TabInfo tab3 = tabInfo.AddNewTab( "Log" );
-			tab3.Content = TextDisplayContent.Log;
-			tab3.Enabled = settings.GetSetting( "Gui.ResultTabs.DisplayLoggingTab", true );
-		}
+            TabInfo tab = tabInfo.AddNewTab("Text Output");
+		    tab.Content =
+		        TextDisplayContent.Out |
+		        TextDisplayContent.Error |
+		        TextDisplayContent.Trace |
+		        TextDisplayContent.Log |
+		        TextDisplayContent.Labels |
+		        TextDisplayContent.LabelOnlyOnOutput;
+		    tab.Enabled = true;
+        }
 
 		public void ApplySettings()
 		{

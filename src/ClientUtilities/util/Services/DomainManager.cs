@@ -1,15 +1,19 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
 using System.IO;
 using System.Collections;
 using System.Text;
+using System.Threading;
+using System.Reflection;
 using System.Configuration;
 using System.Diagnostics;
+using System.Security;
+using System.Security.Permissions;
 using System.Security.Policy;
 using NUnit.Core;
 
@@ -21,6 +25,8 @@ namespace NUnit.Util
 	/// </summary>
 	public class DomainManager : IService
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(DomainManager));
+
 		#region Properties
 		private static string shadowCopyPath;
 		public static string ShadowCopyPath
@@ -29,9 +35,9 @@ namespace NUnit.Util
 			{
 				if ( shadowCopyPath == null )
 				{
-					shadowCopyPath = ConfigurationSettings.AppSettings["shadowfiles.path"];
-					if ( shadowCopyPath == "" || shadowCopyPath== null )
-						shadowCopyPath = Path.Combine( Path.GetTempPath(), @"nunit20\ShadowCopyCache" );
+                    shadowCopyPath = Services.UserSettings.GetSetting("Options.TestLoader.ShadowCopyPath", "");
+                    if (shadowCopyPath == "")
+                        shadowCopyPath = Path.Combine(Path.GetTempPath(), @"nunit20\ShadowCopyCache");
 					else
 						shadowCopyPath = Environment.ExpandEnvironmentVariables(shadowCopyPath);
 				}
@@ -48,98 +54,174 @@ namespace NUnit.Util
 		/// <param name="package">The TestPackage to be run</param>
 		public AppDomain CreateDomain( TestPackage package )
 		{
-			FileInfo testFile = new FileInfo( package.FullName );
-
 			AppDomainSetup setup = new AppDomainSetup();
+			 
+			//For paralell tests, we need to use distinct application name
+        	setup.ApplicationName = "Tests" + "_" + Environment.TickCount;
 
-			// We always use the same application name
-			setup.ApplicationName = "Tests";
+            FileInfo testFile = package.FullName != null && package.FullName != string.Empty
+                ? new FileInfo(package.FullName)
+                : null;
 
-			string appBase = package.BasePath;
-			if ( appBase == null || appBase == string.Empty )
-				appBase = testFile.DirectoryName;
-			setup.ApplicationBase = appBase;
+            string appBase = package.BasePath;
+            string configFile = package.ConfigurationFile;
+            string binPath = package.PrivateBinPath;
 
-			string configFile = package.ConfigurationFile;
-			if ( configFile == null || configFile == string.Empty )
-				configFile = NUnitProject.IsProjectFile(testFile.Name) 
-					? Path.GetFileNameWithoutExtension( testFile.Name ) + ".config"
-					: testFile.Name + ".config";
-			// Note: Mono needs full path to config file...
-			setup.ConfigurationFile =  Path.Combine( appBase, configFile );
+            if (testFile != null)
+            {
+                if (appBase == null || appBase == string.Empty)
+                    appBase = testFile.DirectoryName;
 
-			string binPath = package.PrivateBinPath;
-			if ( package.AutoBinPath )
+                if (configFile == null || configFile == string.Empty)
+                    configFile = Services.ProjectService.CanLoadProject(testFile.Name)
+                        ? Path.GetFileNameWithoutExtension(testFile.Name) + ".config"
+                        : testFile.Name + ".config";
+            }
+            else if (appBase == null || appBase == string.Empty)
+                appBase = GetCommonAppBase(package.Assemblies);
+
+            setup.ApplicationBase = appBase;
+            // TODO: Check whether Mono still needs full path to config file...
+            setup.ConfigurationFile = appBase != null && configFile != null
+                ? Path.Combine(appBase, configFile)
+                : configFile;
+
+            if (package.AutoBinPath)
 				binPath = GetPrivateBinPath( appBase, package.Assemblies );
+
 			setup.PrivateBinPath = binPath;
 
-			if ( package.GetSetting( "ShadowCopyFiles", true ) )
+            if (package.GetSetting("ShadowCopyFiles", true))
+            {
+                setup.ShadowCopyFiles = "true";
+                setup.ShadowCopyDirectories = appBase;
+                setup.CachePath = GetCachePath();
+            }
+            else
+                setup.ShadowCopyFiles = "false";
+
+			string domainName = "test-domain-" + package.Name;
+            // Setup the Evidence
+            Evidence evidence = new Evidence(AppDomain.CurrentDomain.Evidence);
+            if (evidence.Count == 0)
+            {
+                Zone zone = new Zone(SecurityZone.MyComputer);
+                evidence.AddHost(zone);
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                Url url = new Url(assembly.CodeBase);
+                evidence.AddHost(url);
+                Hash hash = new Hash(assembly);
+                evidence.AddHost(hash);
+            }
+
+            log.Info("Creating AppDomain " + domainName);
+
+			AppDomain runnerDomain;
+			
+			// TODO: Try to eliminate this test. Currently, running on
+			// Linux with the permission set specified causes an
+			// unexplained crash when unloading the domain.
+#if NET_2_0
+			if (Environment.OSVersion.Platform == PlatformID.Win32NT)
 			{
-				setup.ShadowCopyFiles = "true";
-				setup.ShadowCopyDirectories = appBase;
-				setup.CachePath = GetCachePath();
+            	PermissionSet permissionSet = new PermissionSet( PermissionState.Unrestricted );	
+           		runnerDomain = AppDomain.CreateDomain(domainName, evidence, setup, permissionSet, null);
 			}
-
-			string domainName = "domain-" + package.Name;
-			Evidence baseEvidence = AppDomain.CurrentDomain.Evidence;
-			Evidence evidence = new Evidence(baseEvidence);
-			AppDomain runnerDomain = AppDomain.CreateDomain(domainName, evidence, setup);
-
-			// Inject assembly resolver into remote domain to help locate our assemblies
-			AssemblyResolver assemblyResolver = (AssemblyResolver)runnerDomain.CreateInstanceFromAndUnwrap(
-				typeof(AssemblyResolver).Assembly.CodeBase,
-				typeof(AssemblyResolver).FullName);
-
-			// Tell resolver to use our core assemblies in the test domain
-			assemblyResolver.AddFile( typeof( NUnit.Core.RemoteTestRunner ).Assembly.Location );
-			assemblyResolver.AddFile( typeof( NUnit.Core.ITest ).Assembly.Location );
-
-// No reference to extensions, so we do it a different way
-            string moduleName = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-            string nunitDirPath = Path.GetDirectoryName(moduleName);
-//            string coreExtensions = Path.Combine(nunitDirPath, "nunit.core.extensions.dll");
-//			assemblyResolver.AddFile( coreExtensions );
-            //assemblyResolver.AddFiles( nunitDirPath, "*.dll" );
-
-            string addinsDirPath = Path.Combine(nunitDirPath, "addins");
-            assemblyResolver.AddDirectory( addinsDirPath );
+			else
+#endif
+            	runnerDomain = AppDomain.CreateDomain(domainName, evidence, setup);
 
 			// HACK: Only pass down our AddinRegistry one level so that tests of NUnit
 			// itself start without any addins defined.
 			if ( !IsTestDomain( AppDomain.CurrentDomain ) )
 				runnerDomain.SetData("AddinRegistry", Services.AddinRegistry);
 
+            // Inject DomainInitializer into the remote domain - there are other
+            // approaches, but this works for all CLR versions.
+            DomainInitializer initializer = DomainInitializer.CreateInstance(runnerDomain);
+
+            // HACK: Under nunit-console, direct use of the enum fails
+            int traceLevel = IsTestDomain(AppDomain.CurrentDomain)
+                ? (int)InternalTraceLevel.Off : (int)InternalTrace.Level;
+
+            initializer.InitializeDomain(traceLevel);
+
 			return runnerDomain;
 		}
 
-		public void Unload( AppDomain domain )
-		{
-			bool shadowCopy = domain.ShadowCopyFiles;
-			string cachePath = domain.SetupInformation.CachePath;
-			string domainName = domain.FriendlyName;
+        public void Unload(AppDomain domain)
+        {
+            new DomainUnloader(domain).Unload();
+        }
 
-            try
-            {
-                AppDomain.Unload(domain);
-            }
-            catch (Exception ex)
-            {
-                // We assume that the tests did something bad and just leave
-                // the orphaned AppDomain "out there". 
-                // TODO: Something useful.
-                Trace.WriteLine("Unable to unload AppDomain {0}", domainName);
-                Trace.WriteLine(ex.ToString());
-            }
-            finally
-            {
-                if (shadowCopy)
-                    DeleteCacheDir(new DirectoryInfo(cachePath));
-            }
-		}
 		#endregion
 
-		#region Helper Methods
-		/// <summary>
+        #region Nested DomainUnloader Class
+        class DomainUnloader
+        {
+            private Thread thread;
+            private AppDomain domain;
+
+            public DomainUnloader(AppDomain domain)
+            {
+                this.domain = domain;
+            }
+
+            public void Unload()
+            {
+                string domainName;
+                try
+                {
+                    domainName = domain.FriendlyName;
+                }
+                catch (AppDomainUnloadedException)
+                {
+                    return;
+                }
+
+                log.Info("Unloading AppDomain " + domainName);
+
+                thread = new Thread(new ThreadStart(UnloadOnThread));
+                thread.Start();
+                if (!thread.Join(30000))
+                {
+                    log.Error("Unable to unload AppDomain {0}, Unload thread timed out", domainName);
+                    thread.Abort();
+                }
+            }
+
+            private void UnloadOnThread()
+            {
+                bool shadowCopy = false;
+                string cachePath = null;
+                string domainName = "UNKNOWN";               
+
+                try
+                {
+                    shadowCopy = domain.ShadowCopyFiles;
+                    cachePath = domain.SetupInformation.CachePath;
+                    domainName = domain.FriendlyName;
+
+                    AppDomain.Unload(domain);
+                }
+                catch (Exception ex)
+                {
+                    // We assume that the tests did something bad and just leave
+                    // the orphaned AppDomain "out there". 
+                    // TODO: Something useful.
+                    log.Error("Unable to unload AppDomain " + domainName, ex);
+                }
+                finally
+                {
+                    if (shadowCopy && cachePath != null)
+                        DeleteCacheDir(new DirectoryInfo(cachePath));
+                }
+            }
+        }
+        #endregion
+
+        #region Helper Methods
+        /// <summary>
 		/// Get the location for caching and delete any old cache info
 		/// </summary>
 		private string GetCachePath()
@@ -172,7 +254,7 @@ namespace NUnit.Util
 		/// TODO: This entire method is problematic. Should we be doing it?
 		/// </summary>
 		/// <param name="cacheDir"></param>
-		private void DeleteCacheDir( DirectoryInfo cacheDir )
+		private static void DeleteCacheDir( DirectoryInfo cacheDir )
 		{
 			//			Debug.WriteLine( "Modules:");
 			//			foreach( ProcessModule module in Process.GetCurrentProcess().Modules )
@@ -214,8 +296,24 @@ namespace NUnit.Util
 
 		private bool IsTestDomain(AppDomain domain)
 		{
-			return domain.FriendlyName.StartsWith( "domain-" );
+			return domain.FriendlyName.StartsWith( "test-domain-" );
 		}
+
+        public static string GetCommonAppBase(IList assemblies)
+        {
+            string commonBase = null;
+
+            foreach (string assembly in assemblies)
+            {
+                string dir = Path.GetFullPath(Path.GetDirectoryName(assembly));
+                if (commonBase == null)
+                    commonBase = dir;
+                else while (!PathUtils.SamePathOrUnder(commonBase, dir) && commonBase != null)
+                        commonBase = Path.GetDirectoryName(commonBase);
+            }
+
+            return commonBase;
+        }
 
 		public static string GetPrivateBinPath( string basePath, IList assemblies )
 		{
@@ -224,7 +322,9 @@ namespace NUnit.Util
 
 			foreach( string assembly in assemblies )
 			{
-				string dir = PathUtils.RelativePath( basePath, Path.GetDirectoryName( assembly ) );
+				string dir = PathUtils.RelativePath(
+                    Path.GetFullPath(basePath), 
+                    Path.GetDirectoryName( Path.GetFullPath(assembly) ) );
 				if ( dir != null && dir != "." && !dirList.Contains( dir ) )
 				{
 					dirList.Add( dir );
@@ -248,8 +348,8 @@ namespace NUnit.Util
 
 		public void UnloadService()
 		{
-			// TODO:  Add DomainManager.UnloadService implementation
-		}
+            // TODO:  Add DomainManager.UnloadService implementation
+        }
 
 		public void InitializeService()
 		{

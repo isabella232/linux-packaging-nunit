@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -19,8 +19,10 @@ namespace NUnit.Core.Tests
 		private static readonly int totalTests = NoNamespaceTestFixture.Tests + MockAssembly.Tests;
 
 		private TestSuiteBuilder builder;
-		private static string[] assemblies = new string[]
-			{ "nonamespace-assembly.dll", "mock-assembly.dll" };
+		private static string[] assemblies = new string[] {
+            NoNamespaceTestFixture.AssemblyPath,
+            MockAssembly.AssemblyPath
+        };
 		private Test loadedSuite;
 
 		[SetUp]

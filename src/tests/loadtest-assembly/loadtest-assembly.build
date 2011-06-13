@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<project name="TestAssembly" default="build" basedir=".">
+<project name="LoadTestAssembly" default="build" basedir=".">
 
   <target name="build">
     <csc target="library" 
-        output="${current.build.dir}/loadtest-assembly.dll" 
+        output="${current.test.dir}/loadtest-assembly.dll" 
         debug="${build.debug}" define="${build.defines}">
       <sources>
         <include name="**/*.cs"/>
@@ -11,7 +11,7 @@
       <nowarn>
         <warning number="618,672"/>
       </nowarn>
-      <references basedir="${current.build.dir}">
+      <references basedir="${current.framework.dir}">
         <include name="nunit.framework.dll"/>
       </references>
     </csc>
@@ -19,7 +19,11 @@
 
   <target name="package">
     <copy todir="${package.src.dir}/tests/loadtest-assembly">
-      <fileset refid="source-files" />
+      <fileset>
+        <include name="**/*.cs"/>
+        <include name="loadtest-assembly.csproj"/>
+        <include name="loadtest-assembly.build"/>
+      </fileset>
     </copy>
   </target>
 

@@ -1,3 +1,8 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using System.IO;
 using System.Reflection;
@@ -12,13 +17,23 @@ namespace NUnit.ConsoleRunner
 	/// </summary>
 	public class Runner
 	{
+		static Logger log = InternalTrace.GetLogger(typeof(Runner));
+
 		[STAThread]
 		public static int Main(string[] args)
 		{
-			NTrace.Info( "NUnit-console.exe starting" );
-
 			ConsoleOptions options = new ConsoleOptions(args);
-			
+
+            // Create SettingsService early so we know the trace level right at the start
+            SettingsService settingsService = new SettingsService();
+            InternalTraceLevel level = (InternalTraceLevel)settingsService.GetSetting("Options.InternalTraceLevel", InternalTraceLevel.Default);
+            if (options.trace != InternalTraceLevel.Default)
+                level = options.trace;
+
+            InternalTrace.Initialize("nunit-console_%p.log", level);
+            
+            log.Info("NUnit-console.exe starting");
+
 			if(!options.nologo)
 				WriteCopyright();
 
@@ -44,18 +59,26 @@ namespace NUnit.ConsoleRunner
 			}
 
 			// Add Standard Services to ServiceManager
-			ServiceManager.Services.AddService( new SettingsService() );
+			ServiceManager.Services.AddService( settingsService );
 			ServiceManager.Services.AddService( new DomainManager() );
 			//ServiceManager.Services.AddService( new RecentFilesService() );
+			ServiceManager.Services.AddService( new ProjectService() );
 			//ServiceManager.Services.AddService( new TestLoader() );
 			ServiceManager.Services.AddService( new AddinRegistry() );
 			ServiceManager.Services.AddService( new AddinManager() );
-			// TODO: Resolve conflict with gui testagency when running
-			// console tests under the gui.
-			//ServiceManager.Services.AddService( new TestAgency() );
+            ServiceManager.Services.AddService( new TestAgency() );
 
 			// Initialize Services
 			ServiceManager.Services.InitializeServices();
+
+            foreach (string parm in options.Parameters)
+            {
+                if (!Services.ProjectService.CanLoadProject(parm) && !PathUtils.IsAssemblyFileType(parm))
+                {
+                    Console.WriteLine("File type not known: {0}", parm);
+                    return ConsoleUi.INVALID_ARG;
+                }
+            }
 
 			try
 			{
@@ -80,7 +103,7 @@ namespace NUnit.ConsoleRunner
 					Console.ReadLine();
 				}
 
-				NTrace.Info( "NUnit-console.exe terminating" );
+				log.Info( "NUnit-console.exe terminating" );
 			}
 
 		}
@@ -88,10 +111,10 @@ namespace NUnit.ConsoleRunner
 		private static void WriteCopyright()
 		{
 			Assembly executingAssembly = Assembly.GetExecutingAssembly();
-			System.Version version = executingAssembly.GetName().Version;
+			string versionText = executingAssembly.GetName().Version.ToString();
 
 			string productName = "NUnit";
-			string copyrightText = "Copyright (C) 2002-2007 Charlie Poole.\r\nCopyright (C) 2002-2004 James W. Newkirk, Michael C. Two, Alexei A. Vorontsov.\r\nCopyright (C) 2000-2002 Philip Craig.\r\nAll Rights Reserved.";
+			string copyrightText = "Copyright (C) 2002-2009 Charlie Poole.\r\nCopyright (C) 2002-2004 James W. Newkirk, Michael C. Two, Alexei A. Vorontsov.\r\nCopyright (C) 2000-2002 Philip Craig.\r\nAll Rights Reserved.";
 
 			object[] objectAttrs = executingAssembly.GetCustomAttributes(typeof(AssemblyProductAttribute), false);
 			if ( objectAttrs.Length > 0 )
@@ -101,7 +124,15 @@ namespace NUnit.ConsoleRunner
 			if ( objectAttrs.Length > 0 )
 				copyrightText = ((AssemblyCopyrightAttribute)objectAttrs[0]).Copyright;
 
-			Console.WriteLine(String.Format("{0} version {1}", productName, version.ToString(3)));
+			objectAttrs = executingAssembly.GetCustomAttributes(typeof(AssemblyConfigurationAttribute), false);
+            if (objectAttrs.Length > 0)
+            {
+                string configText = ((AssemblyConfigurationAttribute)objectAttrs[0]).Configuration;
+                if (configText != "")
+                    versionText += string.Format(" ({0})", configText);
+            }
+
+			Console.WriteLine(String.Format("{0} version {1}", productName, versionText));
 			Console.WriteLine(copyrightText);
 			Console.WriteLine();
 
@@ -109,7 +140,7 @@ namespace NUnit.ConsoleRunner
 			RuntimeFramework framework = RuntimeFramework.CurrentFramework;
 			Console.WriteLine( string.Format("   OS Version: {0}", Environment.OSVersion ) );
 			Console.WriteLine( string.Format("  CLR Version: {0} ( {1} )",
-				Environment.Version,  framework.GetDisplayName() ) );
+				Environment.Version,  framework.DisplayName ) );
 
 			Console.WriteLine();
 		}

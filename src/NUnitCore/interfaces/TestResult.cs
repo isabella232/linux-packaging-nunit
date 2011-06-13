@@ -1,29 +1,25 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
 {
 	using System;
 	using System.Text;
+	using System.Collections;
 
 	/// <summary>
-	/// The TestResult abstract class represents
+	/// The TestResult class represents
 	/// the result of a test and is used to
 	/// communicate results across AppDomains.
 	/// </summary>
 	/// 
 	[Serializable]
-	public abstract class TestResult
+	public class TestResult
 	{
 		#region Fields
-		/// <summary>
-		/// Indicates whether the test was executed or not
-		/// </summary>
-		private RunState runState;
-
 		/// <summary>
 		/// Indicates the result of the test
 		/// </summary>
@@ -40,14 +36,9 @@ namespace NUnit.Core
 		private double time = 0.0;
 
 		/// <summary>
-		/// The name of the test
-		/// </summary>
-		private string name;
-
-		/// <summary>
 		/// The test that this result pertains to
 		/// </summary>
-		private TestInfo test;
+		private readonly TestInfo test;
 
 		/// <summary>
 		/// The stacktrace at the point of failure
@@ -55,14 +46,14 @@ namespace NUnit.Core
 		private string stackTrace;
 
 		/// <summary>
-		/// Description of this test
-		/// </summary>
-		private string description;
-
-		/// <summary>
 		/// Message giving the reason for failure
 		/// </summary>
-		protected string messageString;
+		private string message;
+
+		/// <summary>
+		/// List of child results
+		/// </summary>
+		private IList results;
 
 		/// <summary>
 		/// Number of asserts executed by this test
@@ -71,38 +62,31 @@ namespace NUnit.Core
 
 		#endregion
 
-		#region Protected Constructor
+		#region Constructor
 		/// <summary>
-		/// Protected constructor constructs a test result given
-		/// a test and a name.
+		/// Construct a test result given a TestInfo
 		/// </summary>
 		/// <param name="test">The test to be used</param>
-		/// <param name="name">Name for this result</param>
-		protected TestResult(TestInfo test, string name)
+		public TestResult(TestInfo test)
 		{
-			this.name = name;
 			this.test = test;
-            this.RunState = RunState.Runnable;
-            if (test != null)
-            {
-                this.description = test.Description;
-                this.runState = test.RunState;
-                this.messageString = test.IgnoreReason;
-            }
-        }
+			this.message = test.IgnoreReason;
+		}
+
+        /// <summary>
+        /// Construct a TestResult given an ITest
+        /// </summary>
+        /// <param name="test"></param>
+        public TestResult(ITest test) : this( new TestInfo(test) ) { }
+
+		/// <summary>
+		/// Construct a TestResult given a TestName
+		/// </summary>
+		/// <param name="testName">A TestName</param>
+		public TestResult(TestName testName) : this( new TestInfo( testName ) ) { }
 		#endregion
 
         #region Properties
-
-		/// <summary>
-		/// Gets the RunState of the result, which indicates
-		/// whether or not it has executed and why.
-		/// </summary>
-        public RunState RunState
-        {
-            get { return runState; }
-            set { runState = value; }
-        }
 
 		/// <summary>
 		/// Gets the ResultState of the test result, which 
@@ -127,16 +111,30 @@ namespace NUnit.Core
 		/// </summary>
         public bool Executed
         {
-            get { return runState == RunState.Executed; }
+            get
+            {
+                return resultState == ResultState.Success ||
+                       resultState == ResultState.Failure ||
+                       resultState == ResultState.Error ||
+                       resultState == ResultState.Inconclusive;
+            }
         }
 
 		/// <summary>
 		/// Gets the name of the test result
 		/// </summary>
-        public virtual string Name
-        {
-            get { return name; }
-        }
+		public virtual string Name
+		{
+			get { return test.TestName.Name; }
+		}
+
+		/// <summary>
+		/// Gets the full name of the test result
+		/// </summary>
+		public virtual string FullName
+		{
+			get { return test.TestName.FullName; }
+		}
 
 		/// <summary>
 		/// Gets the test associated with this result
@@ -151,27 +149,31 @@ namespace NUnit.Core
 		/// </summary>
         public virtual bool IsSuccess
         {
-            // TODO: Redefine this more precisely
-            get { return !IsFailure; }
-            //get { return resultState == ResultState.Success; }
+            get { return resultState == ResultState.Success; }
         }
 
         /// <summary>
         /// Indicates whether the test failed
         /// </summary>
-		// TODO: Distinguish errors from failures
         public virtual bool IsFailure
         {
-            get { return resultState == ResultState.Failure || resultState == ResultState.Error; }
+            get { return resultState == ResultState.Failure;  }
         }
+
+	    /// <summary>
+	    /// Indicates whether the test had an error (as opposed to a failure)
+	    /// </summary>
+        public virtual bool IsError
+	    {
+            get { return resultState == ResultState.Error;  }   
+	    }
 
 		/// <summary>
 		/// Gets a description associated with the test
 		/// </summary>
-        public virtual string Description
+        public string Description
         {
-            get { return description; }
-            set { description = value; }
+            get { return test.Description; }
         }
 
 		/// <summary>
@@ -189,7 +191,7 @@ namespace NUnit.Core
 		/// </summary>
         public string Message
         {
-            get { return messageString; }
+            get { return message; }
         }
 
 		/// <summary>
@@ -198,14 +200,8 @@ namespace NUnit.Core
 		/// </summary>
         public virtual string StackTrace
         {
-            get
-            {
-                return stackTrace;
-            }
-            set
-            {
-                stackTrace = value;
-            }
+            get { return stackTrace; }
+            set { stackTrace = value; }
         }
 
 		/// <summary>
@@ -218,19 +214,42 @@ namespace NUnit.Core
             set { assertCount = value; }
         }
 
-        #endregion
+        /// <summary>
+        /// Return true if this result has any child results
+        /// </summary>
+	    public bool HasResults
+	    {
+            get { return results != null && results.Count > 0; }    
+	    }
+
+		/// <summary>
+		/// Gets a list of the child results of this TestResult
+		/// </summary>
+		public IList Results
+		{
+			get { return results; }
+		}
+
+		#endregion
 
         #region Public Methods
         /// <summary>
-		/// Mark the test as succeeding
-		/// </summary>
-		public void Success() 
-		{ 
-			this.runState = RunState.Executed;
-			this.resultState = ResultState.Success; 
-		}
+        /// Mark the test as succeeding
+        /// </summary>
+        public void Success()
+        {
+            SetResult( ResultState.Success, null, null );
+        }
 
-		/// <summary>
+        /// <summary>
+        /// Mark the test as succeeding and set a message
+        /// </summary>
+        public void Success( string message )
+        {
+            SetResult( ResultState.Success, message, null );
+        }
+
+        /// <summary>
 		/// Mark the test as ignored.
 		/// </summary>
 		/// <param name="reason">The reason the test was not run</param>
@@ -255,52 +274,92 @@ namespace NUnit.Core
 		/// <param name="stackTrace">Stack trace giving the location of the command</param>
 		public void Ignore(string reason, string stackTrace)
 		{
-			NotRun( RunState.Ignored, reason, stackTrace );
+			SetResult( ResultState.Ignored, reason, stackTrace );
 		}
 
 		/// <summary>
 		/// Mark the test as skipped.
 		/// </summary>
 		/// <param name="reason">The reason the test was not run</param>
-		public void Skip(string reason)
-		{
-			Skip( reason, null );
-		}
+        public void Skip(string reason)
+        {
+            SetResult(ResultState.Skipped, reason, null);
+        }
 
-		/// <summary>
-		/// Mark the test as ignored.
-		/// </summary>
-		/// <param name="ex">The ignore exception that was thrown</param>
-		public void Skip( Exception ex )
-		{
-			Skip( ex.Message, BuildStackTrace( ex ) );
-		}
+        /// <summary>
+        /// Mark the test a not runnable with a reason
+        /// </summary>
+        /// <param name="reason">The reason the test is invalid</param>
+        public void Invalid( string reason )
+        {
+            SetResult( ResultState.NotRunnable, reason, null );
+        }
 
-		/// <summary>
-		/// Mark the test as skipped.
+        /// <summary>
+        /// Mark the test as not runnable due to a builder exception
+        /// </summary>
+        /// <param name="ex">The exception thrown by the builder or an addin</param>
+        public void Invalid(Exception ex)
+        {
+            SetResult(ResultState.NotRunnable, BuildMessage( ex ), BuildStackTrace(ex));
+        }
+
+	    /// <summary>
+		/// Set the result of the test
 		/// </summary>
+		/// <param name="resultState">The ResultState to use in the result</param>
 		/// <param name="reason">The reason the test was not run</param>
-		/// <param name="stackTrace">Stack trace giving the location of the command</param>
-		public void Skip(string reason, string stackTrace)
+        /// <param name="stackTrace">Stack trace giving the location of the command</param>
+        /// <param name="failureSite">The location of the failure, if any</param>
+        public void SetResult(ResultState resultState, string reason, string stackTrace, FailureSite failureSite)
 		{
-			NotRun( RunState.Skipped, reason, stackTrace );
+            if (failureSite == FailureSite.SetUp)
+                reason = "SetUp : " + reason;
+            else if (failureSite == FailureSite.TearDown)
+            {
+                reason = "TearDown : " + reason;
+                stackTrace = "--TearDown" + Environment.NewLine + stackTrace;
+
+                if (this.message != null)
+                    reason = this.message + Environment.NewLine + reason;
+                if (this.stackTrace != null)
+                    stackTrace = this.stackTrace + Environment.NewLine + stackTrace;
+            }
+
+            this.resultState = resultState;
+            this.message = reason;
+            this.stackTrace = stackTrace;
+            this.failureSite = failureSite;
 		}
 
-		/// <summary>
-		/// Mark the test as Not Run - either skipped or ignored
-		/// </summary>
-		/// <param name="runState">The RunState to use in the result</param>
-		/// <param name="reason">The reason the test was not run</param>
-		/// <param name="stackTrace">Stack trace giving the location of the command</param>
-		public void NotRun(RunState runState, string reason, string stackTrace)
-		{
-			this.runState = runState;
-			this.messageString = reason;
-			this.stackTrace = stackTrace;
-		}
+        /// <summary>
+        /// Set the result of the test
+        /// </summary>
+        /// <param name="resultState">The ResultState to use in the result</param>
+        /// <param name="reason">The reason the test was not run</param>
+        /// <param name="stackTrace">Stack trace giving the location of the command</param>
+        public void SetResult(ResultState resultState, string reason, string stackTrace)
+        {
+            SetResult(resultState, reason, stackTrace, FailureSite.Test);
+        }
 
-
-		/// <summary>
+        /// <summary>
+        /// Set the result of the test.
+        /// </summary>
+        /// <param name="resultState">The ResultState to use in the result</param>
+        /// <param name="ex">The exception that caused this result</param>
+        /// <param name="failureSite">The site at which an error or failure occured</param>
+        public void SetResult(ResultState resultState, Exception ex, FailureSite failureSite)
+        {
+            if (resultState == ResultState.Cancelled)
+                SetResult(resultState, "Test cancelled by user", BuildStackTrace(ex));
+            else if (resultState == ResultState.Error)
+                SetResult( resultState, BuildMessage(ex), BuildStackTrace(ex), failureSite);
+            else
+                SetResult(resultState, ex.Message, ex.StackTrace, failureSite);
+        }
+   
+        /// <summary>
 		/// Mark the test as a failure due to an
 		/// assertion having failed.
 		/// </summary>
@@ -320,11 +379,8 @@ namespace NUnit.Core
 		/// <param name="failureSite">The site of the failure</param>
 		public void Failure(string message, string stackTrace, FailureSite failureSite )
 		{
-			this.runState = RunState.Executed;
-			this.resultState = ResultState.Failure;
+            SetResult( Core.ResultState.Failure, message, stackTrace );
             this.failureSite = failureSite;
-			this.messageString = message;
-			this.stackTrace = stackTrace;
 		}
 
 		/// <summary>
@@ -342,35 +398,60 @@ namespace NUnit.Core
 		/// from the indicated FailureSite.
 		/// </summary>
 		/// <param name="exception">The exception that was caught</param>
-		/// <param name="failureSite">The site from which it was thrown</param>
-		public void Error( Exception exception, FailureSite failureSite )
+        /// <param name="failureSite">The site from which it was thrown</param>
+        public void Error(Exception exception, FailureSite failureSite)
 		{
-			this.runState = RunState.Executed;
-			this.resultState = ResultState.Error;
-            this.failureSite = failureSite;
+            SetResult(ResultState.Error, exception, failureSite);
+            //string message = BuildMessage(exception);
+            //string stackTrace = BuildStackTrace(exception);
 
-            string message = BuildMessage(exception);
-            string stackTrace = BuildStackTrace(exception);
+            //if (failureSite == FailureSite.TearDown)
+            //{
+            //    message = "TearDown : " + message;
+            //    stackTrace = "--TearDown" + Environment.NewLine + stackTrace;
 
-            if (failureSite == FailureSite.TearDown)
+            //    if (this.message != null)
+            //        message = this.message + Environment.NewLine + message;
+            //    if (this.stackTrace != null)
+            //        stackTrace = this.stackTrace + Environment.NewLine + stackTrace;
+            //}
+
+            //SetResult( ResultState.Error, message, stackTrace );
+            //this.failureSite = failureSite;
+        }
+
+		/// <summary>
+		/// Add a child result
+		/// </summary>
+		/// <param name="result">The child result to be added</param>
+		public void AddResult(TestResult result) 
+		{
+			if ( results == null )
+				results = new ArrayList();
+
+			this.results.Add(result);
+
+            switch (result.ResultState)
             {
-                message = "TearDown : " + message;
-                stackTrace = "--TearDown" + Environment.NewLine + stackTrace;
-
-                if (this.messageString != null)
-                    message = this.messageString + Environment.NewLine + message;
-                if (this.stackTrace != null)
-                    stackTrace = this.stackTrace + Environment.NewLine + stackTrace;
+                case ResultState.Failure:
+                case ResultState.Error:
+                    if (!this.IsFailure && !this.IsError)
+                        this.Failure("Child test failed", null, FailureSite.Child);
+                    break;
+                case ResultState.Success:
+                    if (this.ResultState == ResultState.Inconclusive)
+                        this.Success();
+                    break;
+                case ResultState.Cancelled:
+                    this.SetResult(ResultState.Cancelled, result.Message, null, FailureSite.Child);
+                    break;
             }
-
-            this.messageString = message;
-            this.stackTrace = stackTrace;
 		}
 		#endregion
 
 		#region Exception Helpers
 
-		private string BuildMessage(Exception exception)
+		private static string BuildMessage(Exception exception)
 		{
 			StringBuilder sb = new StringBuilder();
 			sb.AppendFormat( "{0} : {1}", exception.GetType().ToString(), exception.Message );
@@ -386,7 +467,7 @@ namespace NUnit.Core
 			return sb.ToString();
 		}
 		
-		private string BuildStackTrace(Exception exception)
+		private static string BuildStackTrace(Exception exception)
 		{
             StringBuilder sb = new StringBuilder( GetStackTrace( exception ) );
 
@@ -405,7 +486,7 @@ namespace NUnit.Core
             return sb.ToString();
 		}
 
-		private string GetStackTrace(Exception exception)
+		private static string GetStackTrace(Exception exception)
 		{
 			try
 			{
@@ -418,11 +499,5 @@ namespace NUnit.Core
 		}
 
 		#endregion
-
-		/// <summary>
-		/// Abstract method that accepts a ResultVisitor
-		/// </summary>
-		/// <param name="visitor">The visitor</param>
-		public abstract void Accept(ResultVisitor visitor);
 	}
 }

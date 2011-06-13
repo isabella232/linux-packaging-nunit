@@ -1,7 +1,7 @@
 // ****************************************************************
-// Copyright 2002-2003, Charlie Poole
+// Copyright 2002-2008, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 namespace NUnit.Util
@@ -9,11 +9,11 @@ namespace NUnit.Util
 	using System;
 	using System.IO;
 	using System.Collections;
+	using System.Diagnostics;
 	using System.Threading;
 	using System.Configuration;
 	using NUnit.Core;
 	using NUnit.Core.Filters;
-
 
 	/// <summary>
 	/// TestLoader handles interactions between a test runner and a 
@@ -31,6 +31,8 @@ namespace NUnit.Util
 	/// </summary>
 	public class TestLoader : MarshalByRefObject, NUnit.Core.EventListener, ITestLoader, IService
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(TestLoader));
+
 		#region Instance Variables
 
 		/// <summary>
@@ -38,22 +40,10 @@ namespace NUnit.Util
 		/// </summary>
 		private TestEventDispatcher events;
 
-		/// <summary>
-		/// Use MuiltipleTestDomainRunner if true
-		/// </summary>
-		private bool multiDomain;
-
-		/// <summary>
-		/// Merge namespaces across multiple assemblies
-		/// </summary>
-		private bool mergeAssemblies;
-
-		/// <summary>
-		/// Generate suites for each level of namespace containing tests
-		/// </summary>
-		private bool autoNamespaceSuites;
-
-		private bool shadowCopyFiles;
+        /// <summary>
+        /// Our TestRunnerFactory
+        /// </summary>
+        private ITestRunnerFactory factory;
 
 		/// <summary>
 		/// Loads and executes tests. Non-null when
@@ -81,6 +71,11 @@ namespace NUnit.Util
 		/// </summary>
 		private string currentTestName;
 
+        /// <summary>
+        /// The currently set runtime framework
+        /// </summary>
+        private RuntimeFramework currentRuntime;
+
 		/// <summary>
 		/// Result of the last test run
 		/// </summary>
@@ -94,7 +89,7 @@ namespace NUnit.Util
 		/// <summary>
 		/// Watcher fires when the assembly changes
 		/// </summary>
-		private AssemblyWatcher watcher;
+		private IAssemblyWatcher watcher;
 
 		/// <summary>
 		/// Assembly changed during a test and
@@ -103,28 +98,17 @@ namespace NUnit.Util
 		private bool reloadPending = false;
 
 		/// <summary>
-		/// Indicates whether to watch for changes
-		/// and reload the tests when a change occurs.
-		/// </summary>
-		private bool reloadOnChange = false;
-
-		/// <summary>
-		/// Indicates whether to automatically rerun
-		/// the tests when a change occurs.
-		/// </summary>
-		private bool rerunOnChange = false;
-
-		/// <summary>
 		/// The last filter used for a run - used to 
 		/// rerun tests when a change occurs
 		/// </summary>
 		private ITestFilter lastFilter;
 
-		/// <summary>
-		/// Indicates whether to reload the tests
-		/// before each run.
-		/// </summary>
-		private bool reloadOnRun = false;
+        /// <summary>
+        /// The runtime framework being used for the currently
+        /// loaded tests, or the current framework if no tests
+        /// are loaded.
+        /// </summary>
+        private RuntimeFramework currentFramework = RuntimeFramework.CurrentFramework;
 
 		#endregion
 
@@ -133,20 +117,18 @@ namespace NUnit.Util
 		public TestLoader()
 			: this( new TestEventDispatcher() ) { }
 
-		public TestLoader(TestEventDispatcher eventDispatcher )
+		public TestLoader(TestEventDispatcher eventDispatcher)
+			: this(eventDispatcher, new AssemblyWatcher()) { }
+
+		public TestLoader(IAssemblyWatcher assemblyWatcher)
+			: this(new TestEventDispatcher(), assemblyWatcher) { }
+
+		public TestLoader(TestEventDispatcher eventDispatcher, IAssemblyWatcher assemblyWatcher)
 		{
 			this.events = eventDispatcher;
-
-			ISettings settings = Services.UserSettings;
-			this.ReloadOnRun = settings.GetSetting( "Options.TestLoader.ReloadOnRun", true );
-			this.ReloadOnChange = settings.GetSetting( "Options.TestLoader.ReloadOnChange", true );
-			this.RerunOnChange = settings.GetSetting( "Options.TestLoader.RerunOnChange", false );
-			this.MultiDomain = settings.GetSetting( "Options.TestLoader.MultiDomain", false );
-			this.MergeAssemblies = settings.GetSetting( "Options.TestLoader.MergeAssemblies", false );
-			this.AutoNamespaceSuites = settings.GetSetting( "Options.TestLoader.AutoNamespaceSuites", true );
-			this.ShadowCopyFiles = settings.GetSetting( "Options.TestLoader.ShadowCopyFiles", true );
-
-			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler( OnUnhandledException );
+			this.watcher = assemblyWatcher;
+			this.factory = new DefaultTestRunnerFactory();
+			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(OnUnhandledException);
 		}
 
 		#endregion
@@ -170,7 +152,6 @@ namespace NUnit.Util
 		public NUnitProject TestProject
 		{
 			get { return testProject; }
-			set	{ OnProjectLoad( value ); }
 		}
 
 		public ITestEvents Events
@@ -193,48 +174,6 @@ namespace NUnit.Util
 			get { return lastException; }
 		}
 
-		public bool ReloadOnChange
-		{
-			get { return reloadOnChange; }
-			set { reloadOnChange = value; }
-		}
-
-		public bool RerunOnChange
-		{
-			get { return rerunOnChange; }
-			set { rerunOnChange = value; }
-		}
-
-		public bool ReloadOnRun
-		{
-			get { return reloadOnRun; }
-			set { reloadOnRun = value; }
-		}
-
-		public bool MultiDomain
-		{
-			get { return multiDomain; }
-			set { multiDomain = value; }
-		}
-
-		public bool MergeAssemblies
-		{
-			get { return mergeAssemblies; }
-			set { mergeAssemblies = value; }
-		}
-
-		public bool AutoNamespaceSuites
-		{
-			get { return autoNamespaceSuites; }
-			set { autoNamespaceSuites = value; }
-		}
-
-		public bool ShadowCopyFiles
-		{
-			get { return shadowCopyFiles; }
-			set { shadowCopyFiles = value; }
-		}
-
 		public IList AssemblyInfo
 		{
 			get { return testRunner == null ? null : testRunner.AssemblyInfo; }
@@ -244,16 +183,22 @@ namespace NUnit.Util
 		{
 			get { return loadedTest == null ? 0 : loadedTest.TestCount; }
 		}
+
+        public RuntimeFramework CurrentFramework
+        {
+            get { return currentFramework; }
+        }
 		#endregion
 
 		#region EventListener Handlers
 
-		void EventListener.RunStarted(string name, int testCount)
+		public void RunStarted(string name, int testCount)
 		{
+            log.Debug("Got RunStarted Event");
 			events.FireRunStarting( name, testCount );
 		}
 
-		void EventListener.RunFinished(NUnit.Core.TestResult testResult)
+		public void RunFinished(NUnit.Core.TestResult testResult)
 		{
 			this.testResult = testResult;
 
@@ -270,7 +215,7 @@ namespace NUnit.Util
 			}
 		}
 
-		void EventListener.RunFinished(Exception exception)
+		public void RunFinished(Exception exception)
 		{
 			this.lastException = exception;
 			events.FireRunFinished( exception );
@@ -279,8 +224,8 @@ namespace NUnit.Util
 		/// <summary>
 		/// Trigger event when each test starts
 		/// </summary>
-		/// <param name="testCase">TestCase that is starting</param>
-		void EventListener.TestStarted(TestName testName)
+		/// <param name="testName">TestName of the Test that is starting</param>
+		public void TestStarted(TestName testName)
 		{
 			this.currentTestName = testName.FullName;
 			events.FireTestStarting( testName );
@@ -290,7 +235,7 @@ namespace NUnit.Util
 		/// Trigger event when each test finishes
 		/// </summary>
 		/// <param name="result">Result of the case that finished</param>
-		void EventListener.TestFinished(TestCaseResult result)
+		public void TestFinished(TestResult result)
 		{
 			events.FireTestFinished( result );
 		}
@@ -299,7 +244,7 @@ namespace NUnit.Util
 		/// Trigger event when each suite starts
 		/// </summary>
 		/// <param name="suite">Suite that is starting</param>
-		void EventListener.SuiteStarted(TestName suiteName)
+		public void SuiteStarted(TestName suiteName)
 		{
 			events.FireSuiteStarting( suiteName );
 		}
@@ -308,7 +253,7 @@ namespace NUnit.Util
 		/// Trigger event when each suite finishes
 		/// </summary>
 		/// <param name="result">Result of the suite that finished</param>
-		void EventListener.SuiteFinished(TestSuiteResult result)
+		public void SuiteFinished(TestResult result)
 		{
 			events.FireSuiteFinished( result );
 		}
@@ -317,7 +262,7 @@ namespace NUnit.Util
 		/// Trigger event when an unhandled exception (other than ThreadAbordException) occurs during a test
 		/// </summary>
 		/// <param name="exception">The unhandled exception</param>
-		void EventListener.UnhandledException(Exception exception)
+		public void UnhandledException(Exception exception)
 		{
 			events.FireTestException( this.currentTestName, exception );
 		}
@@ -330,7 +275,8 @@ namespace NUnit.Util
 					break;
 				case "NUnit.Framework.AssertionException":
 				default:
-					events.FireTestException( this.currentTestName, (Exception)args.ExceptionObject );
+                    Exception ex = args.ExceptionObject as Exception;
+					events.FireTestException( this.currentTestName, ex);
 					break;
 			}
 		}
@@ -339,7 +285,7 @@ namespace NUnit.Util
 		/// Trigger event when output occurs during a test
 		/// </summary>
 		/// <param name="testOutput">The test output</param>
-		void EventListener.TestOutput(TestOutput testOutput)
+		public void TestOutput(TestOutput testOutput)
 		{
 			events.FireTestOutput( testOutput );
 		}
@@ -353,15 +299,17 @@ namespace NUnit.Util
 		/// </summary>
 		public void NewProject()
 		{
-			try
+            log.Info("Creating empty project");
+            try
 			{
 				events.FireProjectLoading( "New Project" );
 
-				OnProjectLoad( NUnitProject.NewProject() );
+				OnProjectLoad( Services.ProjectService.NewProject() );
 			}
 			catch( Exception exception )
 			{
-				lastException = exception;
+                log.Error("Project creation failed", exception);
+                lastException = exception;
 				events.FireProjectLoadFailed( "New Project", exception );
 			}
 		}
@@ -371,7 +319,8 @@ namespace NUnit.Util
 		/// </summary>
 		public void NewProject( string filePath )
 		{
-			try
+            log.Info("Creating project " + filePath);
+            try
 			{
 				events.FireProjectLoading( filePath );
 
@@ -385,7 +334,8 @@ namespace NUnit.Util
 			}
 			catch( Exception exception )
 			{
-				lastException = exception;
+                log.Error("Project creation failed", exception);
+                lastException = exception;
 				events.FireProjectLoadFailed( filePath, exception );
 			}
 		}
@@ -397,9 +347,10 @@ namespace NUnit.Util
 		{
 			try
 			{
-				events.FireProjectLoading( filePath );
+                log.Info("Loading project {0}, {1} config", filePath, configName == null ? "default" : configName);
+                events.FireProjectLoading(filePath);
 
-				NUnitProject newProject = NUnitProject.LoadProject( filePath );
+				NUnitProject newProject = Services.ProjectService.LoadProject( filePath );
 				if ( configName != null ) 
 				{
 					newProject.SetActiveConfig( configName );
@@ -410,7 +361,8 @@ namespace NUnit.Util
 			}
 			catch( Exception exception )
 			{
-				lastException = exception;
+                log.Error("Project load failed", exception);
+                lastException = exception;
 				events.FireProjectLoadFailed( filePath, exception );
 			}
 		}
@@ -430,15 +382,17 @@ namespace NUnit.Util
 		{
 			try
 			{
+                log.Info("Loading multiple assemblies as new project");
 				events.FireProjectLoading( "New Project" );
 
-				NUnitProject newProject = NUnitProject.FromAssemblies( assemblies );
+				NUnitProject newProject = Services.ProjectService.WrapAssemblies( assemblies );
 
 				OnProjectLoad( newProject );
 			}
 			catch( Exception exception )
 			{
-				lastException = exception;
+                log.Error("Project load failed", exception);
+                lastException = exception;
 				events.FireProjectLoadFailed( "New Project", exception );
 			}
 		}
@@ -450,6 +404,7 @@ namespace NUnit.Util
 		{
 			string testFileName = TestFileName;
 
+            log.Info("Unloading project " + testFileName);
 			try
 			{
 				events.FireProjectUnloading( testFileName );
@@ -457,14 +412,14 @@ namespace NUnit.Util
 				if ( IsTestLoaded )
 					UnloadTest();
 
-				testProject.Changed -= new ProjectEventHandler( OnProjectChanged );
 				testProject = null;
 
 				events.FireProjectUnloaded( testFileName );
 			}
 			catch (Exception exception )
 			{
-				lastException = exception;
+                log.Error("Project unload failed", exception);
+                lastException = exception;
 				events.FireProjectUnloadFailed( testFileName, exception );
 			}
 
@@ -480,43 +435,8 @@ namespace NUnit.Util
 				UnloadProject();
 
 			this.testProject = testProject;
-			testProject.Changed += new ProjectEventHandler( OnProjectChanged );
 
 			events.FireProjectLoaded( TestFileName );
-		}
-
-		private void OnProjectChanged( object sender, ProjectEventArgs e )
-		{
-			switch ( e.type )
-			{
-				case ProjectChangeType.ActiveConfig:
-				case ProjectChangeType.Other:
-					if( TestProject.IsLoadable )
-						TryToLoadOrReloadTest();
-					break;
-
-				case ProjectChangeType.AddConfig:
-				case ProjectChangeType.UpdateConfig:
-					if ( e.configName == TestProject.ActiveConfigName && TestProject.IsLoadable )
-						TryToLoadOrReloadTest();
-					break;
-
-				case ProjectChangeType.RemoveConfig:
-					if ( IsTestLoaded && TestProject.Configs.Count == 0 )
-						UnloadTest();
-					break;
-
-				default:
-					break;
-			}
-		}
-
-		private void TryToLoadOrReloadTest()
-		{
-			if ( IsTestLoaded ) 
-				ReloadTest();
-			else 
-				LoadTest();
 		}
 
 		#endregion
@@ -530,34 +450,47 @@ namespace NUnit.Util
 		
 		public void LoadTest( string testName )
 		{
+            log.Info("Loading tests for " + Path.GetFileName(TestFileName));
+
             long startTime = DateTime.Now.Ticks;
 
 			try
 			{
 				events.FireTestLoading( TestFileName );
 
-				testRunner = CreateRunner();
+                TestPackage package = MakeTestPackage(testName);
+                if (testRunner != null)
+                    testRunner.Dispose();
+				testRunner = factory.MakeTestRunner(package);
 
-				bool loaded = testRunner.Load( MakeTestPackage( testName ) );
+                bool loaded = testRunner.Load(package);
 
 				loadedTest = testRunner.Test;
 				loadedTestName = testName;
 				testResult = null;
 				reloadPending = false;
 			
-				if ( ReloadOnChange )
+				if ( Services.UserSettings.GetSetting( "Options.TestLoader.ReloadOnChange", true ) )
 					InstallWatcher( );
 
-				if ( loaded )
-					events.FireTestLoaded( TestFileName, loadedTest );
-				else
-				{
-					lastException = new ApplicationException( string.Format ( "Unable to find test {0} in assembly", testName ) );
-					events.FireTestLoadFailed( TestFileName, lastException );
-				}
+                if (loaded)
+                {
+                    this.currentFramework = package.Settings.Contains("RuntimeFramework")
+                        ? package.Settings["RuntimeFramework"] as RuntimeFramework
+                        : RuntimeFramework.CurrentFramework;
+
+                    testProject.HasChangesRequiringReload = false;
+                    events.FireTestLoaded(TestFileName, loadedTest);
+                }
+                else
+                {
+                    lastException = new ApplicationException(string.Format("Unable to find test {0} in assembly", testName));
+                    events.FireTestLoadFailed(TestFileName, lastException);
+                }
 			}
 			catch( FileNotFoundException exception )
 			{
+                log.Error("File not found", exception);
 				lastException = exception;
 
 				foreach( string assembly in TestProject.ActiveConfig.Assemblies )
@@ -571,15 +504,17 @@ namespace NUnit.Util
 				}
 
 				events.FireTestLoadFailed( TestFileName, lastException );
-			}
+
+                double loadTime = (double)(DateTime.Now.Ticks - startTime) / (double)TimeSpan.TicksPerSecond;
+                log.Info("Load completed in {0} seconds", loadTime);
+            }
 			catch( Exception exception )
 			{
+                log.Error("Failed to load test", exception);
+
 				lastException = exception;
 				events.FireTestLoadFailed( TestFileName, exception );
 			}
-
-            double loadTime = (double)(DateTime.Now.Ticks - startTime) / (double)TimeSpan.TicksPerSecond;
-            System.Diagnostics.Trace.WriteLine(string.Format("TestLoader: Loaded in {0} seconds", loadTime)); 
 		}
 
 		/// <summary>
@@ -589,6 +524,8 @@ namespace NUnit.Util
 		{
 			if( IsTestLoaded )
 			{
+                log.Info("Unloading tests for " + Path.GetFileName(TestFileName));
+
 				// Hold the name for notifications after unload
 				string fileName = TestFileName;
 
@@ -599,7 +536,7 @@ namespace NUnit.Util
 					RemoveWatcher();
 
 					testRunner.Unload();
-
+                    testRunner.Dispose();
 					testRunner = null;
 
 					loadedTest = null;
@@ -608,10 +545,12 @@ namespace NUnit.Util
 					reloadPending = false;
 
 					events.FireTestUnloaded( fileName );
+                    log.Info("Unload complete");
 				}
 				catch( Exception exception )
 				{
-					lastException = exception;
+                    log.Error("Failed to unload tests", exception);
+                    lastException = exception;
 					events.FireTestUnloadFailed( fileName, exception );
 				}
 			}
@@ -620,25 +559,55 @@ namespace NUnit.Util
 		/// <summary>
 		/// Reload the current test on command
 		/// </summary>
-		public void ReloadTest()
+		public void ReloadTest(RuntimeFramework framework)
 		{
+            log.Info("Reloading tests for " + Path.GetFileName(TestFileName));
 			try
 			{
 				events.FireTestReloading( TestFileName );
 
-				testRunner.Load( MakeTestPackage( loadedTestName ) );
+                TestPackage package = MakeTestPackage(loadedTestName);
+                if (framework != null)
+                    package.Settings["RuntimeFramework"] = framework;
 
-				loadedTest = testRunner.Test;
+                RemoveWatcher();
+
+                testRunner.Unload();
+                if (!factory.CanReuse(testRunner, package))
+                {
+                    testRunner.Dispose();
+                    testRunner = factory.MakeTestRunner(package);
+                }
+
+                if (testRunner.Load(package))
+                    this.currentFramework = package.Settings.Contains("RuntimeFramework")
+                        ? package.Settings["RuntimeFramework"] as RuntimeFramework
+                        : RuntimeFramework.CurrentFramework;
+
+                loadedTest = testRunner.Test;
+                currentRuntime = framework;
 				reloadPending = false;
 
-				events.FireTestReloaded( TestFileName, loadedTest );				
+                if (Services.UserSettings.GetSetting("Options.TestLoader.ReloadOnChange", true))
+                    InstallWatcher();
+
+                testProject.HasChangesRequiringReload = false;
+                events.FireTestReloaded(TestFileName, loadedTest);
+
+                log.Info("Reload complete");
 			}
 			catch( Exception exception )
 			{
-				lastException = exception;
+                log.Error("Reload failed", exception);
+                lastException = exception;
 				events.FireTestReloadFailed( TestFileName, exception );
 			}
 		}
+
+        public void ReloadTest()
+        {
+            ReloadTest(currentRuntime);
+        }
 
 		/// <summary>
 		/// Handle watcher event that signals when the loaded assembly
@@ -649,13 +618,15 @@ namespace NUnit.Util
 		/// </summary>
 		public void OnTestChanged( string testFileName )
 		{
+            log.Info("Assembly changed: {0}", testFileName);
+
 			if ( Running )
 				reloadPending = true;
 			else
 			{
 				ReloadTest();
 
-				if ( rerunOnChange && lastFilter != null )
+                if (lastFilter != null && Services.UserSettings.GetSetting("Options.TestLoader.RerunOnChange", false))
 					testRunner.BeginRun( this, lastFilter );
 			}
 		}
@@ -678,7 +649,7 @@ namespace NUnit.Util
 		{
 			if ( !Running )
 			{
-				if ( reloadPending || ReloadOnRun )
+                if (reloadPending || Services.UserSettings.GetSetting("Options.TestLoader.ReloadOnRun", false))
 					ReloadTest();
 
 				this.lastFilter = filter;
@@ -705,29 +676,30 @@ namespace NUnit.Util
 			list.Sort();
 			return list;
 		}
-		#endregion
 
 		public void SaveLastResult( string fileName )
 		{
-			XmlResultVisitor resultVisitor 
-				= new XmlResultVisitor( fileName, this.testResult );
-			this.testResult.Accept(resultVisitor);
-			resultVisitor.Write();
-		}
+			new XmlResultWriter( fileName ).SaveTestResult(this.testResult);
+        }
+        #endregion
 
-		#region Helper Methods
+        #region Helper Methods
 
-		/// <summary>
+        /// <summary>
 		/// Install our watcher object so as to get notifications
 		/// about changes to a test.
 		/// </summary>
 		private void InstallWatcher()
 		{
-			if(watcher!=null) watcher.Stop();
+            if (watcher != null)
+            {
+                watcher.Stop();
+                watcher.FreeResources();
 
-			watcher = new AssemblyWatcher( 1000, TestProject.ActiveConfig.Assemblies.ToArray() );
-			watcher.AssemblyChangedEvent += new AssemblyWatcher.AssemblyChangedHandler( OnTestChanged );
-			watcher.Start();
+                watcher.Setup(1000, TestProject.ActiveConfig.Assemblies.ToArray());
+                watcher.AssemblyChanged += new AssemblyChangedHandler(OnTestChanged);
+                watcher.Start();
+            }
 		}
 
 		/// <summary>
@@ -735,30 +707,35 @@ namespace NUnit.Util
 		/// </summary>
 		private void RemoveWatcher()
 		{
-			if ( watcher != null )
-			{
-				watcher.Stop();
-				watcher = null;
-			}
-		}
-
-		private TestRunner CreateRunner()
-		{
-			TestRunner runner = multiDomain
-				? (TestRunner)new MultipleTestDomainRunner()
-				: (TestRunner)new TestDomain();
-				
-			return runner;
+            if (watcher != null)
+            {
+                watcher.Stop();
+                watcher.FreeResources();
+                watcher.AssemblyChanged -= new AssemblyChangedHandler(OnTestChanged);
+            }
 		}
 
 		private TestPackage MakeTestPackage( string testName )
 		{
 			TestPackage package = TestProject.ActiveConfig.MakeTestPackage();
 			package.TestName = testName;
-			package.Settings["MergeAssemblies"] = mergeAssemblies;
-			package.Settings["AutoNamespaceSuites"] = autoNamespaceSuites;
-			package.Settings["ShadowCopyFiles"] = shadowCopyFiles;
-			return package;
+
+            ISettings settings = Services.UserSettings;
+            package.Settings["MergeAssemblies"] = settings.GetSetting("Options.TestLoader.MergeAssemblies", false);
+            package.Settings["AutoNamespaceSuites"] = settings.GetSetting("Options.TestLoader.AutoNamespaceSuites", true);
+            package.Settings["ShadowCopyFiles"] = settings.GetSetting("Options.TestLoader.ShadowCopyFiles", true);
+
+            ProcessModel processModel = (ProcessModel)settings.GetSetting("Options.TestLoader.ProcessModel", ProcessModel.Default);
+            DomainUsage domainUsage = (DomainUsage)settings.GetSetting("Options.TestLoader.DomainUsage", DomainUsage.Default);
+
+            if (processModel != ProcessModel.Default && !package.Settings.Contains("ProcessModel"))
+                package.Settings["ProcessModel"] = processModel;
+
+            if (processModel != ProcessModel.Multiple && domainUsage == DomainUsage.Multiple
+                    && !package.Settings.Contains("DomainUsage"))
+                package.Settings["DomainUsage"] = domainUsage;
+			
+            return package;
 		}
 		#endregion
 

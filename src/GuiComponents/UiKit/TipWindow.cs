@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2002-2003, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -129,7 +129,6 @@ namespace CP.Windows.Forms
 			// 
 			// TipWindow
 			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.BackColor = System.Drawing.Color.LightYellow;
 			this.ClientSize = new System.Drawing.Size(292, 268);
 			this.ControlBox = false;

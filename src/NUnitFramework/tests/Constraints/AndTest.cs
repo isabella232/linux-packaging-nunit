@@ -1,26 +1,29 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 
-using System;
-
-namespace NUnit.Framework.Constraints.Tests
+namespace NUnit.Framework.Constraints
 {
     [TestFixture]
     public class AndTest : ConstraintTestBase
     {
-		[SetUp]
+        [SetUp]
         public void SetUp()
         {
-            Matcher = new AndConstraint(new GreaterThanConstraint(40), new LessThanConstraint(50));
-            GoodValues = new object[] { 42 };
-            BadValues = new object[] { 37, 53 };
-            Description = "greater than 40 and less than 50";
+            theConstraint = new AndConstraint(new GreaterThanConstraint(40), new LessThanConstraint(50));
+            expectedDescription = "greater than 40 and less than 50";
+            stringRepresentation = "<and <greaterthan 40> <lessthan 50>>";
         }
 
-        [Test]
+		internal object[] SuccessData = new object[] { 42 };
+	
+		internal object[] FailureData = new object[] { 37, 53 };
+
+		internal string[] ActualValues = new string[] { "37", "53" };
+
+		[Test]
         public void CanCombineTestsWithAndOperator()
         {
             Assert.That(42, new GreaterThanConstraint(40) & new LessThanConstraint(50));

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -38,8 +38,8 @@ namespace NUnit.Mocks
 
 				for( int i = 0; i < expectedArgs.Length; i++ )
 				{
-					if ( expectedArgs[i] is Constraint )
-						Assert.That( actualArgs[i], (Constraint)expectedArgs[i] );
+					if ( expectedArgs[i] is IResolveConstraint )
+						Assert.That( actualArgs[i], (IResolveConstraint)expectedArgs[i] );
 					else
 						Assert.AreEqual( expectedArgs[i], actualArgs[i] );
 				}

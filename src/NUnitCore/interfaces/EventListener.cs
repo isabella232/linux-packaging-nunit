@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
@@ -45,7 +45,7 @@ namespace NUnit.Core
 		/// Called when a test case has finished
 		/// </summary>
 		/// <param name="result">The result of the test</param>
-		void TestFinished(TestCaseResult result);
+		void TestFinished(TestResult result);
 
 		/// <summary>
 		/// Called when a suite is starting
@@ -57,7 +57,7 @@ namespace NUnit.Core
 		/// Called when a suite has finished
 		/// </summary>
 		/// <param name="result">The result of the suite</param>
-		void SuiteFinished(TestSuiteResult result);
+		void SuiteFinished(TestResult result);
 
 		/// <summary>
 		/// Called when an unhandled exception is detected during

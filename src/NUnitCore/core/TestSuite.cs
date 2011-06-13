@@ -1,12 +1,14 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
 {
 	using System;
+    using System.Text;
+    using System.Threading;
 	using System.Collections;
 	using System.Reflection;
 	using NUnit.Core.Filters;
@@ -19,22 +21,54 @@ namespace NUnit.Core
 	public class TestSuite : Test
 	{
 		#region Fields
+        static Logger log = InternalTrace.GetLogger(typeof(TestSuite));
+
 		/// <summary>
 		/// Our collection of child tests
 		/// </summary>
 		private ArrayList tests = new ArrayList();
 
-		/// <summary>
-		/// The fixture setup method for this suite
-		/// </summary>
-		protected MethodInfo fixtureSetUp;
+        /// <summary>
+        /// The fixture setup methods for this suite
+        /// </summary>
+        protected MethodInfo[] fixtureSetUpMethods;
 
-		/// <summary>
-		/// The fixture teardown method for this suite
-		/// </summary>
-		protected MethodInfo fixtureTearDown;
+        /// <summary>
+        /// The fixture teardown methods for this suite
+        /// </summary>
+        protected MethodInfo[] fixtureTearDownMethods;
 
-		#endregion
+        /// <summary>
+        /// The setup methods for this suite
+        /// </summary>
+        protected MethodInfo[] setUpMethods;
+
+        /// <summary>
+        /// The teardown methods for this suite
+        /// </summary>
+        protected MethodInfo[] tearDownMethods;
+
+        /// <summary>
+        /// Set to true to suppress sorting this suite's contents
+        /// </summary>
+        protected bool maintainTestOrder;
+
+        /// <summary>
+        /// Arguments for use in creating a parameterized fixture
+        /// </summary>
+        internal object[] arguments;
+
+        /// <summary>
+        /// The System.Type of the fixture for this test suite, if there is one
+        /// </summary>
+        private Type fixtureType;
+
+        /// <summary>
+        /// The fixture object, if it has been created
+        /// </summary>
+        private object fixture;
+
+        #endregion
 
 		#region Constructors
 		public TestSuite( string name ) 
@@ -43,21 +77,38 @@ namespace NUnit.Core
 		public TestSuite( string parentSuiteName, string name ) 
 			: base( parentSuiteName, name ) { }
 
-		public TestSuite( Type fixtureType )
-			: base( fixtureType ) { }
-		#endregion
+        public TestSuite(Type fixtureType)
+            : this(fixtureType, null) { }
+
+        public TestSuite(Type fixtureType, object[] arguments)
+            : base(fixtureType.FullName)
+        {
+            string name = TypeHelper.GetDisplayName(fixtureType, arguments);
+            this.TestName.Name = name;
+            
+            this.TestName.FullName = name;
+            string nspace = fixtureType.Namespace;
+            if (nspace != null && nspace != "")
+                this.TestName.FullName = nspace + "." + name;
+            this.fixtureType = fixtureType;
+            this.arguments = arguments;
+        }
+        #endregion
 
 		#region Public Methods
 		public void Sort()
 		{
-			this.tests.Sort();
+            if (!maintainTestOrder)
+            {
+                this.tests.Sort();
 
-			foreach( Test test in Tests )
-			{
-				TestSuite suite = test as TestSuite;
-				if ( suite != null )
-					suite.Sort();
-			}		
+                foreach (Test test in Tests)
+                {
+                    TestSuite suite = test as TestSuite;
+                    if (suite != null)
+                        suite.Sort();
+                }
+            }
 		}
 
 		public void Sort(IComparer comparer)
@@ -115,13 +166,35 @@ namespace NUnit.Core
 				return count;
 			}
 		}
-		#endregion
+
+        public override Type FixtureType
+        {
+            get { return fixtureType; }
+        }
+
+        public override object Fixture
+        {
+            get { return fixture; }
+            set { fixture = value; }
+        }
+
+        public MethodInfo[] GetSetUpMethods()
+        {
+            return setUpMethods;
+        }
+
+        public MethodInfo[] GetTearDownMethods()
+        {
+            return tearDownMethods;
+        }
+        #endregion
 
 		#region Test Overrides
-		public override string TestType
-		{
-			get	{ return "Test Suite"; }
-		}
+
+        public override string TestType
+        {
+            get { return "TestSuite"; }
+        }
 
 		public override int CountTestCases(ITestFilter filter)
 		{
@@ -137,62 +210,97 @@ namespace NUnit.Core
 			return count;
 		}
 
-		public override TestResult Run(EventListener listener)
-		{
-			return Run( listener, TestFilter.Empty );
-		}
-
 		public override TestResult Run(EventListener listener, ITestFilter filter)
 		{
-			using( new TestContext() )
-			{
-				TestSuiteResult suiteResult = new TestSuiteResult( new TestInfo(this), TestName.Name);
+            listener.SuiteStarted(this.TestName);
+            long startTime = DateTime.Now.Ticks;
 
-				listener.SuiteStarted( this.TestName );
-				long startTime = DateTime.Now.Ticks;
+			TestResult suiteResult = this.RunState == RunState.Runnable || this.RunState == RunState.Explicit
+				? RunSuiteInContext(listener, filter)
+				: SkipSuite(listener, filter);
+			
+            long stopTime = DateTime.Now.Ticks;
+            double time = ((double)(stopTime - startTime)) / (double)TimeSpan.TicksPerSecond;
+            suiteResult.Time = time;
 
-				switch (this.RunState)
-				{
-					case RunState.Runnable:
-					case RunState.Explicit:
-						suiteResult.RunState = RunState.Executed;
-						DoOneTimeSetUp(suiteResult);
-						if ( suiteResult.IsFailure )
-							MarkTestsFailed(Tests, suiteResult, listener, filter);
-						else
-						{
-							try
-							{
-								RunAllTests(suiteResult, listener, filter);
-							}
-							finally
-							{
-								DoOneTimeTearDown(suiteResult);
-							}
-						}
-						break;
-
-					case RunState.Skipped:
-						suiteResult.Skip(this.IgnoreReason);
-						MarkTestsNotRun(Tests, RunState.Skipped, IgnoreReason, suiteResult, listener, filter);
-						break;
-
-					default:
-					case RunState.Ignored:
-					case RunState.NotRunnable:
-						suiteResult.Ignore(this.IgnoreReason);
-						MarkTestsNotRun(Tests, RunState.Ignored, IgnoreReason, suiteResult, listener, filter);
-						break;
-				}
-
-				long stopTime = DateTime.Now.Ticks;
-				double time = ((double)(stopTime - startTime)) / (double)TimeSpan.TicksPerSecond;
-				suiteResult.Time = time;
-
-				listener.SuiteFinished(suiteResult);
-				return suiteResult;
-			}
+            listener.SuiteFinished(suiteResult);
+            return suiteResult;
 		}
+		
+		private TestResult SkipSuite(EventListener listener, ITestFilter filter)
+		{
+			TestResult suiteResult = new TestResult(this);
+			
+            switch (this.RunState)
+            {
+                default:
+                case RunState.Skipped:
+                    SkipAllTests(suiteResult, listener, filter);
+                    break;
+                case RunState.NotRunnable:
+                    MarkAllTestsInvalid(suiteResult, listener, filter);
+                    break;
+                case RunState.Ignored:
+                    IgnoreAllTests(suiteResult, listener, filter);
+                    break;
+            }
+
+			return suiteResult;
+		}
+
+		private TestResult RunSuiteInContext(EventListener listener, ITestFilter filter)
+		{
+            TestExecutionContext.Save();
+
+            try
+            {
+				return ShouldRunOnOwnThread
+	                ? new TestSuiteThread(this).Run(listener, filter)
+	                : RunSuite(listener, filter);
+            }
+            finally
+            {
+                TestExecutionContext.Restore();
+            }
+		}
+
+        public TestResult RunSuite(EventListener listener, ITestFilter filter)
+        {
+			TestResult suiteResult = new TestResult(this);
+			
+            DoOneTimeSetUp(suiteResult);
+
+            if (this.Properties["_SETCULTURE"] != null)
+                TestExecutionContext.CurrentContext.CurrentCulture =
+                    new System.Globalization.CultureInfo((string)Properties["_SETCULTURE"]);
+
+            if (this.Properties["_SETUICULTURE"] != null)
+                TestExecutionContext.CurrentContext.CurrentUICulture =
+                    new System.Globalization.CultureInfo((string)Properties["_SETUICULTURE"]);
+
+            switch (suiteResult.ResultState)
+            {
+                case ResultState.Failure:
+                case ResultState.Error:
+                    MarkTestsFailed(Tests, suiteResult, listener, filter);
+                    break;
+                case ResultState.NotRunnable:
+                    MarkTestsNotRun(this.Tests, ResultState.NotRunnable, suiteResult.Message, suiteResult, listener, filter);
+                    break;
+                default:
+                    try
+                    {
+                        RunAllTests(suiteResult, listener, filter);
+                    }
+                    finally
+                    {
+                        DoOneTimeTearDown(suiteResult);
+                    }
+                    break;
+            }
+			
+			return suiteResult;
+        }
 		#endregion
 
 		#region Virtual Methods
@@ -202,52 +310,61 @@ namespace NUnit.Core
             {
                 try
                 {
-                    if (Fixture == null) // In case TestFixture was created with fixture object
+					// In case TestFixture was created with fixture object
+					if (Fixture == null && !IsStaticClass( FixtureType ) )
 						CreateUserFixture();
 
-                    if (this.Properties["_SETCULTURE"] != null)
-                        TestContext.CurrentCulture =
-                            new System.Globalization.CultureInfo((string)Properties["_SETCULTURE"]);
+                    if (this.fixtureSetUpMethods != null)
+                        foreach( MethodInfo fixtureSetUp in fixtureSetUpMethods )
+                            Reflect.InvokeMethod(fixtureSetUp, fixtureSetUp.IsStatic ? null : Fixture);
 
-                    if (this.fixtureSetUp != null)
-                        Reflect.InvokeMethod(fixtureSetUp, Fixture);
+                    TestExecutionContext.CurrentContext.Update();
                 }
                 catch (Exception ex)
                 {
                     if (ex is NUnitException || ex is System.Reflection.TargetInvocationException)
                         ex = ex.InnerException;
 
-                    if (IsIgnoreException(ex))
+                    if (ex is InvalidTestFixtureException)
+                        suiteResult.Invalid(ex.Message);
+                    else if (IsIgnoreException(ex))
                     {
                         this.RunState = RunState.Ignored;
                         suiteResult.Ignore(ex.Message);
                         suiteResult.StackTrace = ex.StackTrace;
                         this.IgnoreReason = ex.Message;
                     }
-                    else 
-                    {
-                        if (IsAssertException(ex))
-                            suiteResult.Failure(ex.Message, ex.StackTrace, FailureSite.SetUp);
-                        else
-                            suiteResult.Error(ex, FailureSite.SetUp);
-                    }
+                    else if (IsAssertException(ex))
+                        suiteResult.Failure(ex.Message, ex.StackTrace, FailureSite.SetUp);
+                    else
+                        suiteResult.Error(ex, FailureSite.SetUp);
                 }
             }
         }
 
 		protected virtual void CreateUserFixture()
 		{
-			Fixture = Reflect.Construct(FixtureType);
+            if (arguments != null && arguments.Length > 0)
+                Fixture = Reflect.Construct(FixtureType, arguments);
+            else
+			    Fixture = Reflect.Construct(FixtureType);
 		}
 
         protected virtual void DoOneTimeTearDown(TestResult suiteResult)
         {
-            if ( this.Fixture != null)
+            if ( this.FixtureType != null)
             {
                 try
                 {
-                    if (this.fixtureTearDown != null)
-                        Reflect.InvokeMethod(fixtureTearDown, Fixture);
+                    if (this.fixtureTearDownMethods != null)
+                    {
+                        int index = fixtureTearDownMethods.Length;
+                        while (--index >= 0 )
+                        {
+                            MethodInfo fixtureTearDown = fixtureTearDownMethods[index];
+                            Reflect.InvokeMethod(fixtureTearDown, fixtureTearDown.IsStatic ? null : Fixture);
+                        }
+                    }
 
 					IDisposable disposable = Fixture as IDisposable;
 					if (disposable != null)
@@ -269,10 +386,32 @@ namespace NUnit.Core
                 this.Fixture = null;
             }
         }
+
+        protected virtual bool IsAssertException(Exception ex)
+        {
+            return ex.GetType().FullName == NUnitFramework.AssertException;
+        }
+
+        protected virtual bool IsIgnoreException(Exception ex)
+        {
+            return ex.GetType().FullName == NUnitFramework.IgnoreException;
+        }
         
+        #endregion
+
+        #region Helper Methods
+
+        private bool IsStaticClass(Type type)
+        {
+            return type.IsAbstract && type.IsSealed;
+        }
+
         private void RunAllTests(
-			TestSuiteResult suiteResult, EventListener listener, ITestFilter filter )
+			TestResult suiteResult, EventListener listener, ITestFilter filter )
 		{
+            if (Properties.Contains("Timeout"))
+                TestExecutionContext.CurrentContext.TestCaseTimeout = (int)Properties["Timeout"];
+
             foreach (Test test in ArrayList.Synchronized(Tests))
             {
                 if (filter.Pass(test))
@@ -287,51 +426,76 @@ namespace NUnit.Core
 
                     TestResult result = test.Run(listener, filter);
 
+					log.Debug("Test result = " + result.ResultState);
+					
                     suiteResult.AddResult(result);
+					
+					log.Debug("Suite result = " + suiteResult.ResultState);
 
                     if (saveRunState != test.RunState)
                     {
                         test.RunState = saveRunState;
                         test.IgnoreReason = null;
                     }
+
+                    if (result.ResultState == ResultState.Cancelled)
+                        break;
                 }
             }
 		}
 
+        private void SkipAllTests(TestResult suiteResult, EventListener listener, ITestFilter filter)
+        {
+            suiteResult.Skip(this.IgnoreReason);
+            MarkTestsNotRun(this.Tests, ResultState.Skipped, this.IgnoreReason, suiteResult, listener, filter);
+        }
+
+        private void IgnoreAllTests(TestResult suiteResult, EventListener listener, ITestFilter filter)
+        {
+            suiteResult.Ignore(this.IgnoreReason);
+            MarkTestsNotRun(this.Tests, ResultState.Ignored, this.IgnoreReason, suiteResult, listener, filter);
+        }
+
+        private void MarkAllTestsInvalid(TestResult suiteResult, EventListener listener, ITestFilter filter)
+        {
+            suiteResult.Invalid(this.IgnoreReason);
+            MarkTestsNotRun(this.Tests, ResultState.NotRunnable, this.IgnoreReason, suiteResult, listener, filter);
+        }
+       
         private void MarkTestsNotRun(
-            IList tests, RunState runState, string ignoreReason, TestSuiteResult suiteResult, EventListener listener, ITestFilter filter)
+            IList tests, ResultState resultState, string ignoreReason, TestResult suiteResult, EventListener listener, ITestFilter filter)
         {
             foreach (Test test in ArrayList.Synchronized(tests))
             {
                 if (filter.Pass(test))
-                    MarkTestNotRun(test, runState, ignoreReason, suiteResult, listener, filter);
+                    MarkTestNotRun(test, resultState, ignoreReason, suiteResult, listener, filter);
             }
         }
 
         private void MarkTestNotRun(
-            Test test, RunState runState, string ignoreReason, TestSuiteResult suiteResult, EventListener listener, ITestFilter filter)
+            Test test, ResultState resultState, string ignoreReason, TestResult suiteResult, EventListener listener, ITestFilter filter)
         {
             if (test is TestSuite)
             {
                 listener.SuiteStarted(test.TestName);
-                TestSuiteResult result = new TestSuiteResult( new TestInfo(test), test.TestName.FullName);
-				result.NotRun( runState, ignoreReason, null );
-                MarkTestsNotRun(test.Tests, runState, ignoreReason, suiteResult, listener, filter);
+                TestResult result = new TestResult( new TestInfo(test) );
+				result.SetResult( resultState, ignoreReason, null );
+                MarkTestsNotRun(test.Tests, resultState, ignoreReason, suiteResult, listener, filter);
                 suiteResult.AddResult(result);
                 listener.SuiteFinished(result);
             }
             else
             {
                 listener.TestStarted(test.TestName);
-                TestCaseResult result = new TestCaseResult( new TestInfo(test) );
-                result.NotRun( runState, ignoreReason, null );
+                TestResult result = new TestResult( new TestInfo(test) );
+                result.SetResult( resultState, ignoreReason, null );
                 suiteResult.AddResult(result);
                 listener.TestFinished(result);
             }
         }
 
         private void MarkTestsFailed(
-            IList tests, TestSuiteResult suiteResult, EventListener listener, ITestFilter filter)
+            IList tests, TestResult suiteResult, EventListener listener, ITestFilter filter)
         {
             foreach (Test test in ArrayList.Synchronized(tests))
                 if (filter.Pass(test))
@@ -339,12 +503,12 @@ namespace NUnit.Core
         }
 
         private void MarkTestFailed(
-            Test test, TestSuiteResult suiteResult, EventListener listener, ITestFilter filter)
+            Test test, TestResult suiteResult, EventListener listener, ITestFilter filter)
         {
             if (test is TestSuite)
             {
                 listener.SuiteStarted(test.TestName);
-                TestSuiteResult result = new TestSuiteResult( new TestInfo(test), test.TestName.FullName);
+                TestResult result = new TestResult( new TestInfo(test) );
 				string msg = string.Format( "Parent SetUp failed in {0}", this.FixtureType.Name );
 				result.Failure(msg, null, FailureSite.Parent);
                 MarkTestsFailed(test.Tests, suiteResult, listener, filter);
@@ -354,23 +518,13 @@ namespace NUnit.Core
             else
             {
                 listener.TestStarted(test.TestName);
-                TestCaseResult result = new TestCaseResult( new TestInfo(test) );
+                TestResult result = new TestResult( new TestInfo(test) );
 				string msg = string.Format( "TestFixtureSetUp failed in {0}", this.FixtureType.Name );
 				result.Failure(msg, null, FailureSite.Parent);
 				suiteResult.AddResult(result);
                 listener.TestFinished(result);
             }
         }
-
-        protected virtual bool IsAssertException(Exception ex)
-		{
-            return ex.GetType().FullName == NUnitFramework.AssertException;
-		}
-
-		protected virtual bool IsIgnoreException(Exception ex)
-		{
-            return ex.GetType().FullName == NUnitFramework.IgnoreException;
-		}
-		#endregion
-	}
+        #endregion
+    }
 }

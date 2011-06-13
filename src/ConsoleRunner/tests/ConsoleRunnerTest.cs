@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -10,13 +10,19 @@ using System.Text;
 using System.Collections;
 
 using NUnit.Framework;
+using NUnit.Core;
 using NUnit.TestData.ConsoleRunnerTest;
+using NUnit.Tests.Assemblies;
 
 namespace NUnit.ConsoleRunner.Tests
 {
 	[TestFixture]
 	public class ConsoleRunnerTest
 	{
+        private static readonly string failureMsg = 
+            string.Format( "Errors: {0}, Failures: {1}", 
+                MockAssembly.Errors, MockAssembly.Failures );
+
 		private static readonly string xmlFile = "console-test.xml";
 		private StringBuilder output;
 		TextWriter saveOut;
@@ -82,17 +88,23 @@ namespace NUnit.ConsoleRunner.Tests
 		[Test]
 		public void InvalidFixture()
 		{
-			int resultCode = executeConsole( new string[] 
-				{ GetType().Module.Name, "-fixture:NUnit.Tests.BogusTest" } );
+			int resultCode = executeConsole( new string[] { MockAssembly.AssemblyPath, "-fixture:NUnit.Tests.BogusTest", "-trace:Off" });
 			Assert.AreEqual(ConsoleUi.FIXTURE_NOT_FOUND, resultCode);
 		}
 
 		[Test]
-		public void InvalidAssembly()
+		public void AssemblyNotFound()
 		{
-			int resultCode = executeConsole( new string[] { "badassembly.dll" } );
-			Assert.AreEqual(ConsoleUi.FILE_NOT_FOUND, resultCode);
-		}
+            int resultCode = executeConsole(new string[] { "badassembly.dll", "-trace:Off" });
+            Assert.AreEqual(ConsoleUi.FILE_NOT_FOUND, resultCode);
+        }
+
+        [Test]
+        public void OneOfTwoAssembliesNotFound()
+        {
+            int resultCode = executeConsole(new string[] { GetType().Module.Name, "badassembly.dll", "-trace:Off" });
+            Assert.AreEqual(ConsoleUi.FILE_NOT_FOUND, resultCode);
+        }
 
 		[Test]
 		public void XmlToConsole() 
@@ -124,56 +136,57 @@ namespace NUnit.ConsoleRunner.Tests
 		[Test]
 		public void CanRunWithoutTestDomain()
 		{
-			Assert.AreEqual( 0, executeConsole( "mock-assembly.dll", "-domain:None" ) );
-			StringAssert.Contains( "Failures: 0", output.ToString() );
+            Assert.AreEqual(MockAssembly.ErrorsAndFailures, executeConsole(MockAssembly.AssemblyPath, "-domain:None", "-process:single", "-trace:Off"));
+			StringAssert.Contains( failureMsg, output.ToString() );
 		}
 
 		[Test]
 		public void CanRunWithSingleTestDomain()
 		{
-			Assert.AreEqual( 0, executeConsole( "mock-assembly.dll", "-domain:Single" ) );
-			StringAssert.Contains( "Failures: 0", output.ToString() );
+            Assert.AreEqual(MockAssembly.ErrorsAndFailures, executeConsole(MockAssembly.AssemblyPath, "-domain:Single", "-process:single", "-trace:Off"));
+			StringAssert.Contains( failureMsg, output.ToString() );
 		}
 
 		[Test]
 		public void CanRunWithMultipleTestDomains()
 		{
-			Assert.AreEqual( 0, executeConsole( "mock-assembly.dll", "nonamespace-assembly.dll", "-domain:Multiple" ) );
-			StringAssert.Contains( "Failures: 0", output.ToString() );
+            Assert.AreEqual(MockAssembly.ErrorsAndFailures, executeConsole(MockAssembly.AssemblyPath, NoNamespaceTestFixture.AssemblyPath, "-domain:Multiple", "-process:single", "-trace:Off"));
+			StringAssert.Contains( failureMsg, output.ToString() );
 		}
 
-		[Test,Platform(Exclude="Mono")]
+		[Test]
 		public void CanRunWithoutTestDomain_NoThread()
 		{
-			Assert.AreEqual( 0, executeConsole( "mock-assembly.dll", "-domain:None", "-nothread" ) );
-			StringAssert.Contains( "Failures: 0", output.ToString() );
+            Assert.AreEqual(MockAssembly.ErrorsAndFailures, executeConsole(MockAssembly.AssemblyPath, "-domain:None", "-nothread", "-process:single", "-trace:Off"));
+			StringAssert.Contains( failureMsg, output.ToString() );
 		}
 
-		[Test,Platform(Exclude="Mono")]
+		[Test]
 		public void CanRunWithSingleTestDomain_NoThread()
 		{
-			Assert.AreEqual( 0, executeConsole( "mock-assembly.dll", "-domain:Single", "-nothread" ) );
-			StringAssert.Contains( "Failures: 0", output.ToString() );
+            Assert.AreEqual(MockAssembly.ErrorsAndFailures, executeConsole(MockAssembly.AssemblyPath, "-domain:Single", "-nothread", "-process:single", "-trace:Off"));
+			StringAssert.Contains( failureMsg, output.ToString() );
 		}
 
-		[Test,Platform(Exclude="Mono")]
+		[Test]
 		public void CanRunWithMultipleTestDomains_NoThread()
 		{
-			Assert.AreEqual( 0, executeConsole( "mock-assembly.dll", "nonamespace-assembly.dll", "-domain:Multiple", "-nothread" ) );
-			StringAssert.Contains( "Failures: 0", output.ToString() );
+            Assert.AreEqual(MockAssembly.ErrorsAndFailures, executeConsole(MockAssembly.AssemblyPath, NoNamespaceTestFixture.AssemblyPath, "-domain:Multiple", "-nothread", "-process:single", "-trace:Off"));
+			StringAssert.Contains( failureMsg, output.ToString() );
 		}
 
 		private int runFixture( Type type )
 		{
-			return executeConsole( new string[] 
-				{ type.Module.Name, "-fixture:" + type.FullName } );
+			return executeConsole( new string[] { AssemblyHelper.GetAssemblyPath(type), "-trace:Off", "-process:single", "-fixture:" + type.FullName });
 		}
 
 		private int runFixture( Type type, params string[] arguments )
 		{
-			string[] args = new string[arguments.Length+2];
+			string[] args = new string[arguments.Length+4];
 			int n = 0;
-			args[n++] = type.Module.Name;
+			args[n++] = AssemblyHelper.GetAssemblyPath(type);
+            args[n++] = "-trace:Off";
+            args[n++] = "-process:single";
 			args[n++] = "-fixture:" + type.FullName;
 			foreach( string arg in arguments )
 				args[n++] = arg;

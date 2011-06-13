@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using System.IO;
@@ -12,6 +12,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Reflection;
 using System.Diagnostics;
+using NUnit.Core;
 
 namespace NUnit.Util
 {
@@ -20,6 +21,8 @@ namespace NUnit.Util
 	/// </summary>
 	public class ServerUtilities
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(ServerUtilities));
+
 		/// <summary>
 		///  Create a TcpChannel with a given name, on a given port.
 		/// </summary>
@@ -44,7 +47,7 @@ namespace NUnit.Util
 				object typeFilterLevel = Enum.Parse(typeFilterLevelType, "Full");
 				typeFilterLevelProperty.SetValue(serverProvider, typeFilterLevel, null);
 
-                props.Add("clientConnectionLimit", limit);
+//                props.Add("clientConnectionLimit", limit);
             }
 
 			BinaryClientFormatterSinkProvider clientProvider =
@@ -93,12 +96,16 @@ namespace NUnit.Util
 					try
 					{
 						channel = CreateTcpChannel( name, port, limit );
+#if NET_2_0
+						ChannelServices.RegisterChannel( channel, false );
+#else
 						ChannelServices.RegisterChannel( channel );
-						break;
+#endif
+                        break;
 					}
 					catch( Exception e )
 					{
-                        Trace.WriteLine(e);
+                        log.Error("Failed to create/register channel", e);
 						System.Threading.Thread.Sleep(300);
 					}
 			}
@@ -118,11 +125,5 @@ namespace NUnit.Util
 					// Channel was not registered - ignore
 				}
 		}
-
-		public static string MakeUrl( string uri, int port )
-		{
-			return string.Format( "tcp://127.0.0.1:{0}/{1}", port, uri );
-		}
-
 	}
 }

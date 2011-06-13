@@ -1,8 +1,13 @@
+// ****************************************************************
+// Copyright 2007, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
 using System;
 using System.Threading;
 using System.Globalization;
 using NUnit.Framework;
-using NUnit.Framework.SyntaxHelpers;
 using NUnit.TestData.CultureAttributeTests;
 using NUnit.TestUtilities;
 
@@ -131,8 +136,11 @@ namespace NUnit.Core.Tests
 		{
 			TestResult result = TestBuilder.RunTestCase( typeof( InvalidCultureFixture ), "InvalidCultureSet" );
 			Assert.AreEqual( ResultState.Error, result.ResultState );
-            Assert.That( result.Message, Text.StartsWith( "System.ArgumentException" ) );
-            Assert.That( result.Message, Text.Contains("xx-XX").IgnoreCase );
+            string expectedException = RuntimeFramework.CurrentFramework.ClrVersion.Major == 4
+                ? "System.Globalization.CultureNotFoundException"
+                : "System.ArgumentException";
+            Assert.That(result.Message, Text.StartsWith(expectedException));
+            Assert.That(result.Message, Text.Contains("xx-XX").IgnoreCase);
 		}
 
 		[TestFixture, SetCulture("en-GB")]
@@ -144,5 +152,14 @@ namespace NUnit.Core.Tests
 				Assert.AreEqual( "en-GB", CultureInfo.CurrentCulture.Name );
 			}
 		}
+
+#if NET_2_0
+        [Test, SetCulture("de-DE")]
+        [TestCase(Result="01.06.2010 00:00:00")]
+        public string UseWithParameterizedTest()
+        {
+            return new DateTime(2010, 6, 1).ToString();
+        }
+#endif
 	}
 }

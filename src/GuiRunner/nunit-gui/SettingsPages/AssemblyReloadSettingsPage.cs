@@ -1,3 +1,8 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using System.Collections;
 using System.ComponentModel;
@@ -122,19 +127,16 @@ namespace NUnit.Gui.SettingsPages
 
 		public override void LoadSettings()
 		{
-			reloadOnChangeCheckBox.Enabled = Environment.OSVersion.Platform == System.PlatformID.Win32NT;
 			reloadOnChangeCheckBox.Checked = settings.GetSetting( "Options.TestLoader.ReloadOnChange", true );
 			rerunOnChangeCheckBox.Checked = settings.GetSetting( "Options.TestLoader.RerunOnChange", false );
-			reloadOnRunCheckBox.Checked = settings.GetSetting( "Options.TestLoader.ReloadOnRun", true );
+			reloadOnRunCheckBox.Checked = settings.GetSetting( "Options.TestLoader.ReloadOnRun", false );
 		}
 
 		public override void ApplySettings()
 		{
-			TestLoader loader = Services.TestLoader;
-
-			settings.SaveSetting( "Options.TestLoader.ReloadOnChange", loader.ReloadOnChange = reloadOnChangeCheckBox.Checked );
-			settings.SaveSetting( "Options.TestLoader.RerunOnChange", loader.RerunOnChange = rerunOnChangeCheckBox.Checked );
-			settings.SaveSetting( "Options.TestLoader.ReloadOnRun", loader.ReloadOnRun = reloadOnRunCheckBox.Checked );
+			settings.SaveSetting( "Options.TestLoader.ReloadOnChange", reloadOnChangeCheckBox.Checked );
+			settings.SaveSetting( "Options.TestLoader.RerunOnChange", rerunOnChangeCheckBox.Checked );
+			settings.SaveSetting( "Options.TestLoader.ReloadOnRun", reloadOnRunCheckBox.Checked );
 		}
 
 

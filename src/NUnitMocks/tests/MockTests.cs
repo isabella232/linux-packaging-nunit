@@ -1,12 +1,11 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
 using NUnit.Framework;
-using NUnit.Framework.SyntaxHelpers;
 
 namespace NUnit.Mocks.Tests
 {
@@ -58,7 +57,7 @@ namespace NUnit.Mocks.Tests
 			mock.Verify();
 		}
 
-		[Test, ExpectedException( typeof(AssertionException) )]
+		[Test, ExpectedException(typeof(AssertionException))]
 		public void MethodNotCalled()
 		{
 			mock.Expect( "x" );
@@ -275,18 +274,36 @@ namespace NUnit.Mocks.Tests
 			mock.Verify();
 		}
 
-		[Test, ExpectedException( typeof( AssertionException ) )]
-		public void StrictMode()
-		{
-			mock.Strict = true;
-			mock.Expect( "method1" );
-			mock.Expect( "method2" );
-			mock.Call( "method1" );
-			mock.Call( "method2" );
-			mock.Call( "method3" );
-		}
+        [Test, ExpectedException(typeof(AssertionException))]
+        public void StrictMode()
+        {
+            mock.Strict = true;
+            mock.Expect("method1");
+            mock.Expect("method2");
+            mock.Call("method1");
+            mock.Call("method2");
+            mock.Call("method3");
+        }
 
-		[Test]
+        [Test, ExpectedException(typeof(AssertionException))]
+        public void StrictMode_ExceptionsCaught()
+        {
+            mock.Strict = true;
+            mock.Expect("method1");
+            mock.Expect("method2");
+            try
+            {
+                mock.Call("method1");
+                mock.Call("method2");
+                mock.Call("method3");
+            }
+            catch(Exception)
+            {}
+
+            mock.Verify();
+        }
+
+        [Test]
 		public void ChangeFixedReturnToExpectAndReturn()
 		{
 			mock.SetReturnValue( "MyMethod", "x" );

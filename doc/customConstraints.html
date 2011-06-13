@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<!-- saved from url=(0014)about:internet --><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
 <html>
 <!-- Standard Head Part -->
 <head>
@@ -24,19 +24,21 @@
 
 <div id="content">
 
-<h2>Custom Constraints (NUnit 2.4)</h2>
+<h2>Custom Constraints (NUnit 2.4 / 2.5)</h2>
 
 <p>You can implement your own custom constraints by creating a class that 
 inherits from the <b>Constraint</b> abstract class, which supports performing a 
 test on an actual value and generating appropriate messages. The class includes
-two abstract methods, which you must override and two virtual methods which
-may be overridden as needed:
+two abstract methods, which you must override and four virtual methods with
+default implementation that may be overridden as needed:
    
 <div class="code" style="width: 36em">
 <pre>public abstract class Constraint
 {
  	...
     public abstract bool Matches( object actual );
+    public virtual bool Matches( ActualValueDelegate del );
+    public virtual bool Matches&lt;T&gt;( ref T actual );
     public abstract void WriteDescriptionTo( MessageWriter writer );
     public virtual void WriteMessageTo( MessageWriter writer );
     public virtual void WriteActualValueTo( MessageWriter writer );
@@ -49,7 +51,28 @@ field actual for later use.
 
 <p>The MessageWriter abstract class is implemented in the framework by
 TextMessageWriter. Examining the source for some of the builtin constraints
-should give you a good idea of how to use it.
+should give you a good idea of how to use it if you have special formatting
+requirements for error messages.
+
+<h3>Custom Constraint Syntax</h3>
+
+<p>NUnit includes classes that implement a special constraint syntax,
+allowing you to write things like...
+
+<div class="code">
+<pre>Assert.That( myArray, Is.All.InRange(1,100) );</pre>
+</div>
+
+<p>Of course, the NUnit constraint syntax will not be aware of your
+custom constraint unless you modify NUnit itself. As an alternative,
+you may use the <b>Matches(Constraint)</b> syntactic element in order
+to write code like...
+
+<div class="code">
+<pre>MyConstraint myConstraint = new MyConstraint();
+Assert.That( myArray, Has.Some.Matches(myConstraint) );</pre>
+</div>
+
 
 
 </div>
@@ -57,31 +80,19 @@ should give you a good idea of how to use it.
 <!-- Submenu -->
 <div id="subnav">
 <ul>
-<li><a href="index.html">NUnit 2.4.7</a></li>
+<li><a href="index.html">NUnit 2.5.10</a></li>
 <ul>
 <li><a href="getStarted.html">Getting&nbsp;Started</a></li>
 <li><a href="assertions.html">Assertions</a></li>
-<ul>
-<li><a href="classicModel.html">Classic&nbsp;Model</a></li>
-<li><a href="constraintModel.html">Constraint&nbsp;Model</a></li>
-<ul>
-<li><a href="equalConstraint.html">Equal&nbsp;Constraint</a></li>
-<li><a href="sameasConstraint.html">SameAs&nbsp;Constraint</a></li>
-<li><a href="conditionConstraints.html">Condition&nbsp;Constraints</a></li>
-<li><a href="comparisonConstraints.html">Comparison&nbsp;Constrants</a></li>
-<li><a href="typeConstraints.html">Type&nbsp;Constraints</a></li>
-<li><a href="stringConstraints.html">String&nbsp;Constraints</a></li>
-<li><a href="collectionConstraints.html">Collection&nbsp;Constraints</a></li>
-<li><a href="propertyConstraint.html">Property&nbsp;Constraint</a></li>
-<li><a href="compoundConstraints.html">Compound&nbsp;Constraints</a></li>
-<li id="current"><a href="customConstraints.html">Custom&nbsp;Constraints</a></li>
-<li><a href="listMapper.html">List&nbsp;Mapper</a></li>
-</ul>
-</ul>
+<li><a href="constraintModel.html">Constraints</a></li>
 <li><a href="attributes.html">Attributes</a></li>
-<li><a href="nunit-console.html">Console&nbsp;Runner</a></li>
-<li><a href="nunit-gui.html">Gui&nbsp;Runner</a></li>
-<li><a href="features.html">Other&nbsp;Features</a></li>
+<li><a href="runningTests.html">Running&nbsp;Tests</a></li>
+<li><a href="extensibility.html">Extensibility</a></li>
+<ul>
+<li id="current"><a href="customConstraints.html">Custom&nbsp;Constraints</a></li>
+<li><a href="nunitAddins.html">NUnit&nbsp;Addins</a></li>
+<li><a href="extensionTips.html">Tips&nbsp;for&nbsp;Extenders</a></li>
+</ul>
 <li><a href="releaseNotes.html">Release&nbsp;Notes</a></li>
 <li><a href="samples.html">Samples</a></li>
 <li><a href="license.html">License</a></li>
@@ -93,7 +104,7 @@ should give you a good idea of how to use it.
 
 <!-- Standard Footer for NUnit.org -->
 <div id="footer">
-  Copyright &copy; 2008 Charlie Poole. All Rights Reserved.
+  Copyright &copy; 2010 Charlie Poole. All Rights Reserved.
 </div>
 <!-- End of Footer -->
 

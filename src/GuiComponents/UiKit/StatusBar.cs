@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -17,13 +17,15 @@ namespace NUnit.UiKit
 		private StatusBarPanel statusPanel = new StatusBarPanel();
 		private StatusBarPanel testCountPanel = new StatusBarPanel();
 		private StatusBarPanel testsRunPanel = new StatusBarPanel();
+		private StatusBarPanel errorsPanel = new StatusBarPanel();
 		private StatusBarPanel failuresPanel = new StatusBarPanel();
 		private StatusBarPanel timePanel = new StatusBarPanel();
 
 		private int testCount = 0;
 		private int testsRun = 0;
+		private int errors = 0;
 		private int failures = 0;
-		private int time = 0;
+		private double time = 0.0;
 
 		private bool displayProgress = false;
 
@@ -38,23 +40,19 @@ namespace NUnit.UiKit
 			Panels.Add( statusPanel );
 			Panels.Add( testCountPanel );
 			Panels.Add( testsRunPanel );
+			Panels.Add( errorsPanel );
 			Panels.Add( failuresPanel );
 			Panels.Add( timePanel );
 
 			statusPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Spring;
 			statusPanel.BorderStyle = StatusBarPanelBorderStyle.None;
 			statusPanel.Text = "Status";
-
-			// Temporarily remove AutoSize due to Mono 1.2 rc problems
-			//
-			//testCountPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-			testCountPanel.MinWidth = 120;
-			//testsRunPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-			testsRunPanel.MinWidth = 120;
-			//failuresPanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-			failuresPanel.MinWidth = 104;
-			//timePanel.AutoSize = System.Windows.Forms.StatusBarPanelAutoSize.Contents;
-			timePanel.MinWidth = 120;
+			
+			testCountPanel.AutoSize = StatusBarPanelAutoSize.Contents;
+			testsRunPanel.AutoSize = StatusBarPanelAutoSize.Contents;
+			errorsPanel.AutoSize = StatusBarPanelAutoSize.Contents;
+			failuresPanel.AutoSize = StatusBarPanelAutoSize.Contents;
+			timePanel.AutoSize = StatusBarPanelAutoSize.Contents;
 
 			ShowPanels = true;
 			InitPanels();
@@ -92,50 +90,72 @@ namespace NUnit.UiKit
 
 			this.testCount = testCount;
 			this.testsRun = 0;
+			this.errors = 0;
 			this.failures = 0;
-			this.time = 0;
+			this.time = 0.0;
 
 			InitPanels();
 		}
 
 		private void InitPanels()
 		{
+			this.testCountPanel.MinWidth = 50;
 			DisplayTestCount();
+
+			this.testsRunPanel.MinWidth = 50;
 			this.testsRunPanel.Text = "";
+
+			this.errorsPanel.MinWidth = 50;
+			this.errorsPanel.Text = "";
+			
+			this.failuresPanel.MinWidth = 50;
 			this.failuresPanel.Text = "";
+			
+			this.timePanel.MinWidth = 50;
 			this.timePanel.Text = "";
 		}
 
 		private void DisplayTestCount()
 		{
-			this.testCountPanel.Text = "Test Cases : " + testCount.ToString();
+            testCountPanel.Text = "Test Cases : " + testCount.ToString();
 		}
 
 		private void DisplayTestsRun()
 		{
-			this.testsRunPanel.Text = "Tests Run : " + testsRun.ToString();
+            testsRunPanel.Text = "Tests Run : " + testsRun.ToString();
+		}
+
+		private void DisplayErrors()
+		{
+            errorsPanel.Text = "Errors : " + errors.ToString();
 		}
 
 		private void DisplayFailures()
 		{
-			this.failuresPanel.Text = "Failures : " + failures.ToString();
+            failuresPanel.Text = "Failures : " + failures.ToString();
 		}
 
 		private void DisplayTime()
 		{
-			this.timePanel.Text = "Time : " + time.ToString();
+            timePanel.Text = "Time : " + time.ToString();
 		}
 
 		private void DisplayResult(TestResult result)
 		{
 			ResultSummarizer summarizer = new ResultSummarizer(result);
 
-			int failureCount = summarizer.FailureCount;
+            //this.testCount = summarizer.ResultCount;
+            this.testsRun = summarizer.TestsRun;
+			this.errors = summarizer.Errors;
+            this.failures = summarizer.Failures;
+            this.time = summarizer.Time;
 
-			failuresPanel.Text = "Failures : " + failureCount.ToString();
-			testsRunPanel.Text = "Tests Run : " + summarizer.ResultCount.ToString();
-			timePanel.Text = "Time : " + summarizer.Time.ToString();
-		}
+            DisplayTestCount();
+            DisplayTestsRun();
+            DisplayErrors();
+            DisplayFailures();
+            DisplayTime();
+        }
 
 		public void OnTestLoaded( object sender, TestEventArgs e )
 		{
@@ -156,9 +176,11 @@ namespace NUnit.UiKit
 		{
 			Initialize( e.TestCount, "Running :" + e.Name );
 			DisplayTestCount();
-			DisplayFailures();
-			DisplayTime();
-		}
+            DisplayTestsRun();
+            DisplayErrors();
+            DisplayFailures();
+            DisplayTime();
+        }
 
 		private void OnRunFinished(object sender, TestEventArgs e )
 		{
@@ -198,13 +220,27 @@ namespace NUnit.UiKit
 			{
 				++testsRun;
 				DisplayTestsRun();
-				if ( e.Result.IsFailure ) 
-				{
-					++failures;
-					DisplayFailures();
+                switch ( e.Result.ResultState )
+                {
+                    case ResultState.Error:
+                    case ResultState.Cancelled:
+    					++errors;
+	    				DisplayErrors();
+                        break;
+                    case ResultState.Failure:
+    					++failures;
+	    				DisplayFailures();
+                        break;
 				}
 			}
 		}
+
+//        protected override void OnFontChanged(EventArgs e)
+//        {
+//            base.OnFontChanged(e);
+//
+//            this.Height = (int)(this.Font.Height * 1.6);
+//        }
 
 		#region TestObserver Members
 

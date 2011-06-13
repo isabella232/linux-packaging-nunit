@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -23,7 +23,6 @@ namespace NUnit.Util.Tests
 		private readonly string FILENAME = "MyTestFileName";
 		private readonly string TESTNAME = "MyTestName";
 		private readonly string MESSAGE = "My message!";
-		private readonly string RSLTNAME = "MyResult";
 
 		[SetUp]
 		public void SetUp()
@@ -31,7 +30,7 @@ namespace NUnit.Util.Tests
 			dispatcher = new TestEventDispatcher();
 			catcher = new TestEventCatcher( dispatcher );
 			test = new TestInfo( new TestSuite( TESTNAME ) );
-			result = new TestSuiteResult( test, RSLTNAME );
+			result = new TestResult( test );
 			exception = new Exception( MESSAGE );
 		}
 
@@ -228,7 +227,7 @@ namespace NUnit.Util.Tests
 		private void CheckEvent( TestAction action, TestResult result )
 		{
 			CheckEvent( action );
-			Assert.AreEqual( RSLTNAME, result.Name );
+			Assert.AreEqual( TESTNAME, result.Name );
 		}
 
 		private void CheckEvent( TestAction action, Exception exception )

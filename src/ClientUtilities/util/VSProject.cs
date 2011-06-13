@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2002-2003, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -90,8 +90,12 @@ namespace NUnit.Util
 
 		public static bool IsProjectFile( string path )
 		{
+#if NET_2_0
+            if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+#else
 			if ( path.IndexOfAny( Path.InvalidPathChars ) >= 0 )
-				return false;
+#endif
+                return false;
 
 			if ( path.ToLower().IndexOf( "http:" ) >= 0 )
 				return false;
@@ -134,7 +138,6 @@ namespace NUnit.Util
 				switch ( extension )
 				{
 					case ".vcproj":
-						XmlNode topNode = doc.SelectSingleNode( "/VisualStudioProject" );
 
 						// TODO: This is all very hacked up... replace it.
 						foreach ( XmlNode configNode in doc.SelectNodes( "/VisualStudioProject/Configurations/Configuration" ) )

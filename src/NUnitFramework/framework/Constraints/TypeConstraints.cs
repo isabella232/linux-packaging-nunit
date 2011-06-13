@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -23,14 +23,14 @@ namespace NUnit.Framework.Constraints
         /// Construct a TypeConstraint for a given Type
         /// </summary>
         /// <param name="type"></param>
-        public TypeConstraint(Type type)
+        public TypeConstraint(Type type) : base(type)
         {
             this.expectedType = type;
         }
 
         /// <summary>
         /// Write the actual value for a failing constraint test to a
-        /// MessageWriter. TypeCOnstraints override this method to write
+        /// MessageWriter. TypeConstraints override this method to write
         /// the name of the type.
         /// </summary>
         /// <param name="writer">The writer on which the actual value is displayed</param>
@@ -49,14 +49,17 @@ namespace NUnit.Framework.Constraints
         /// <summary>
         /// Construct an ExactTypeConstraint for a given Type
         /// </summary>
-        /// <param name="type"></param>
-        public ExactTypeConstraint(Type type) : base( type ) { }
+        /// <param name="type">The expected Type.</param>
+        public ExactTypeConstraint(Type type) : base( type ) 
+        {
+            this.DisplayName = "typeof";
+        }
 
         /// <summary>
         /// Test that an object is of the exact type specified
         /// </summary>
-        /// <param name="actual"></param>
-        /// <returns></returns>
+        /// <param name="actual">The actual value.</param>
+        /// <returns>True if the tested object is of the exact type provided, otherwise false.</returns>
         public override bool Matches(object actual)
         {
             this.actual = actual;
@@ -66,7 +69,7 @@ namespace NUnit.Framework.Constraints
         /// <summary>
         /// Write the description of this constraint to a MessageWriter
         /// </summary>
-        /// <param name="writer"></param>
+        /// <param name="writer">The MessageWriter to use</param>
         public override void WriteDescriptionTo(MessageWriter writer)
         {
             writer.WriteExpectedValue(expectedType);
@@ -82,14 +85,17 @@ namespace NUnit.Framework.Constraints
         /// <summary>
         /// Construct an InstanceOfTypeConstraint for the type provided
         /// </summary>
-        /// <param name="type"></param>
-        public InstanceOfTypeConstraint(Type type) : base(type) { }
+        /// <param name="type">The expected Type</param>
+        public InstanceOfTypeConstraint(Type type) : base(type) 
+        {
+            this.DisplayName = "instanceof";
+        }
 
         /// <summary>
         /// Test whether an object is of the specified type or a derived type
         /// </summary>
-        /// <param name="actual"></param>
-        /// <returns></returns>
+        /// <param name="actual">The object to be tested</param>
+        /// <returns>True if the object is of the provided type or derives from it, otherwise false.</returns>
         public override bool Matches(object actual)
         {
             this.actual = actual;
@@ -99,7 +105,7 @@ namespace NUnit.Framework.Constraints
         /// <summary>
         /// Write a description of this constraint to a MessageWriter
         /// </summary>
-        /// <param name="writer"></param>
+        /// <param name="writer">The MessageWriter to use</param>
         public override void WriteDescriptionTo(MessageWriter writer)
         {
             writer.WritePredicate("instance of");
@@ -122,21 +128,55 @@ namespace NUnit.Framework.Constraints
         /// <summary>
         /// Test whether an object can be assigned from the specified type
         /// </summary>
-        /// <param name="actual"></param>
-        /// <returns></returns>
+        /// <param name="actual">The object to be tested</param>
+        /// <returns>True if the object can be assigned a value of the expected Type, otherwise false.</returns>
         public override bool Matches(object actual)
         {
-			this.actual = actual;
-            return actual != null && actual.GetType().IsAssignableFrom( expectedType );
+            this.actual = actual;
+            return actual != null && actual.GetType().IsAssignableFrom(expectedType);
         }
 
         /// <summary>
         /// Write a description of this constraint to a MessageWriter
         /// </summary>
-        /// <param name="writer"></param>
+        /// <param name="writer">The MessageWriter to use</param>
         public override void WriteDescriptionTo(MessageWriter writer)
         {
-            writer.WritePredicate("Type assignable from");
+            writer.WritePredicate("assignable from");
+            writer.WriteExpectedValue(expectedType);
+        }
+    }
+
+    /// <summary>
+    /// AssignableToConstraint is used to test that an object
+    /// can be assigned to a given Type.
+    /// </summary>
+    public class AssignableToConstraint : TypeConstraint
+    {
+        /// <summary>
+        /// Construct an AssignableToConstraint for the type provided
+        /// </summary>
+        /// <param name="type"></param>
+        public AssignableToConstraint(Type type) : base(type) { }
+
+        /// <summary>
+        /// Test whether an object can be assigned to the specified type
+        /// </summary>
+        /// <param name="actual">The object to be tested</param>
+        /// <returns>True if the object can be assigned a value of the expected Type, otherwise false.</returns>
+        public override bool Matches(object actual)
+        {
+            this.actual = actual;
+            return actual != null && expectedType.IsAssignableFrom(actual.GetType());
+        }
+
+        /// <summary>
+        /// Write a description of this constraint to a MessageWriter
+        /// </summary>
+        /// <param name="writer">The MessageWriter to use</param>
+        public override void WriteDescriptionTo(MessageWriter writer)
+        {
+            writer.WritePredicate("assignable to");
             writer.WriteExpectedValue(expectedType);
         }
     }

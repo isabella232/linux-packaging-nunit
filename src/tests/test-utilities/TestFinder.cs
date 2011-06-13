@@ -1,11 +1,12 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
 using NUnit.Core;
+using NUnit.Framework;
 
 namespace NUnit.TestUtilities
 {
@@ -14,43 +15,47 @@ namespace NUnit.TestUtilities
 	/// </summary>
 	public class TestFinder
 	{
-		public static Test Find(string name, Test test)
+		public static Test Find(string name, Test test, bool recursive)
 		{
-			Test result = null;
-			if (test.TestName.Name == name)
-				result = test;
-			else if (test.Tests != null)
+			if (test.Tests != null)
 			{
-				foreach(Test t in test.Tests) 
+				foreach(Test child in test.Tests) 
 				{
-					result = Find(name, t);
-					if (result != null)
-						break;
+                    if (child.TestName.Name == name)
+                        return child;
+                    if (recursive)
+                    {
+                        Test grandchild = Find(name, child, true);
+                        if (grandchild != null)
+                            return grandchild;
+                    }
 				}
 			}
 
-			return result;
+			return null;
 		}
 		
-		public static TestResult Find(string name, TestResult result) 
+		public static TestResult Find(string name, TestResult result, bool recursive) 
 		{
-			if (result.Test.TestName.Name == name)
-				return result;
-
-			TestSuiteResult suiteResult = result as TestSuiteResult;
-			if ( suiteResult != null )
+			if ( result.HasResults )
 			{
-				foreach( TestResult r in suiteResult.Results ) 
+                foreach (TestResult childResult in result.Results) 
 				{
-					TestResult myResult = Find( name, r );
-					if ( myResult != null )
-						return myResult;
+                    if (childResult.Test.TestName.Name == name)
+                        return childResult;
+
+                    if (recursive)
+                    {
+                        TestResult r = Find(name, childResult, true);
+                        if (r != null)
+                            return r;
+                    }
 				}
 			}
 
 			return null;
 		}
 
-		private TestFinder() { }
+        private TestFinder() { }
 	}
 }

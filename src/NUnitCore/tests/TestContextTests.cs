@@ -1,72 +1,86 @@
-using System;
-using System.Threading;
-using System.Globalization;
+﻿using System;
+using System.IO;
 using NUnit.Framework;
+using NUnit.TestData.TestContextData;
+using NUnit.TestUtilities;
 
 namespace NUnit.Core.Tests
 {
-	/// <summary>
-	/// Summary description for TestContextTests.
-	/// </summary>
-	[TestFixture]
-	public class TestContextTests
-	{
-		string currentDirectory;
-		CultureInfo currentCulture;
+    [TestFixture]
+    public class TestContextTests
+    {
+        [Test]
+        public void TestCanAccessItsOwnName()
+        {
+            Assert.That(TestContext.CurrentContext.Test.Name, Is.EqualTo("TestCanAccessItsOwnName"));
+        }
 
-		/// <summary>
-		/// Since we are testing the mechanism that saves and
-		/// restores contexts, we save manually here
-		/// </summary>
-		[SetUp]
-		public void SaveContext()
-		{
-			currentDirectory = Environment.CurrentDirectory;
-			currentCulture = CultureInfo.CurrentCulture;
-		}
+        [Test]
+        public void TestCanAccessItsOwnFullName()
+        {
+            Assert.That(TestContext.CurrentContext.Test.FullName,
+                Is.EqualTo("NUnit.Core.Tests.TestContextTests.TestCanAccessItsOwnFullName"));
+        }
 
-		[TearDown]
-		public void RestoreContext()
-		{
-			Environment.CurrentDirectory = currentDirectory;
-			Thread.CurrentThread.CurrentCulture = currentCulture;
-		}
+        [Test]
+        [Property("Answer", 42)]
+        public void TestCanAccessItsOwnProperties()
+        {
+            Assert.That(TestContext.CurrentContext.Test.Properties["Answer"], Is.EqualTo(42));
+        }
 
-		[Test]
-		public void SetAndRestoreCurrentDirectory()
-		{
-			Assert.AreEqual( currentDirectory, TestContext.CurrentDirectory, "Directory not in initial context" );
-			
-			using ( new TestContext() )
-			{
-				string otherDirectory = System.IO.Path.GetTempPath();
-				if( otherDirectory[otherDirectory.Length-1] == System.IO.Path.DirectorySeparatorChar )
-					otherDirectory = otherDirectory.Substring(0, otherDirectory.Length-1);
-				TestContext.CurrentDirectory = otherDirectory;
-				Assert.AreEqual( otherDirectory, Environment.CurrentDirectory, "Directory was not set" );
-				Assert.AreEqual( otherDirectory, TestContext.CurrentDirectory, "Directory not in new context" );
-			}
+        [Test]
+        public void TestCanAccessTestDirectory()
+        {
+            string testDirectory = TestContext.CurrentContext.TestDirectory;
+            Assert.NotNull(testDirectory);
+            Assert.That(Directory.Exists(testDirectory));
+            Assert.That(File.Exists(Path.Combine(testDirectory, "nunit.core.tests.dll")));
+        }
 
-			Assert.AreEqual( currentDirectory, Environment.CurrentDirectory, "Directory was not restored" );
-			Assert.AreEqual( currentDirectory, TestContext.CurrentDirectory, "Directory not in final context" );
-		}
+        [Test]
+        public void TestCanAccessTestState_PassingTest()
+        {
+            TestStateRecordingFixture fixture = new TestStateRecordingFixture();
+            TestBuilder.RunTestFixture(fixture);
+            Assert.That(fixture.stateList, Is.EqualTo("Inconclusive=>Inconclusive=>Success"));
+            Assert.That(fixture.statusList, Is.EqualTo("Inconclusive=>Inconclusive=>Passed"));
+        }
 
-		[Test]
-		public void SetAndRestoreCurrentCulture()
-		{
-			Assert.AreEqual( currentCulture, TestContext.CurrentCulture, "Culture not in initial context" );
-			
-			using ( new TestContext() )
-			{
-				CultureInfo otherCulture =
-					new CultureInfo( currentCulture.Name == "fr-FR" ? "en-GB" : "fr-FR" );
-				TestContext.CurrentCulture = otherCulture;
-				Assert.AreEqual( otherCulture, CultureInfo.CurrentCulture, "Culture was not set" );
-				Assert.AreEqual( otherCulture, TestContext.CurrentCulture, "Culture not in new context" );
-			}
+        [Test]
+        public void TestCanAccessTestState_FailureInSetUp()
+        {
+            TestStateRecordingFixture fixture = new TestStateRecordingFixture();
+            fixture.setUpFailure = true;
+            TestBuilder.RunTestFixture(fixture);
+            Assert.That(fixture.stateList, Is.EqualTo("Inconclusive=>=>Failure"));
+            Assert.That(fixture.statusList, Is.EqualTo("Inconclusive=>=>Failed"));
+        }
 
-			Assert.AreEqual( currentCulture, CultureInfo.CurrentCulture, "Culture was not restored" );
-			Assert.AreEqual( currentCulture, TestContext.CurrentCulture, "Culture not in final context" );
-		}
+        [Test]
+        public void TestCanAccessTestState_FailingTest()
+        {
+            TestStateRecordingFixture fixture = new TestStateRecordingFixture();
+            fixture.testFailure = true;
+            TestBuilder.RunTestFixture(fixture);
+            Assert.That(fixture.stateList, Is.EqualTo("Inconclusive=>Inconclusive=>Failure"));
+            Assert.That(fixture.statusList, Is.EqualTo("Inconclusive=>Inconclusive=>Failed"));
+        }
+
+        [Test]
+        public void TestCanAccessTestState_IgnoredInSetUp()
+        {
+            TestStateRecordingFixture fixture = new TestStateRecordingFixture();
+            fixture.setUpIgnore = true;
+            TestBuilder.RunTestFixture(fixture);
+            Assert.That(fixture.stateList, Is.EqualTo("Inconclusive=>=>Ignored"));
+            Assert.That(fixture.statusList, Is.EqualTo("Inconclusive=>=>Skipped"));
+        }	
+
+	        [Test, RequiresThread]
+        public void CanAccessTestContextOnSeparateThread()
+        {
+            Assert.That(TestContext.CurrentContext.Test.Name, Is.EqualTo("CanAccessTestContextOnSeparateThread"));
+        }
 	}
 }

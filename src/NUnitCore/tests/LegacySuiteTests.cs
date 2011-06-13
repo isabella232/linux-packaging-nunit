@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -9,6 +9,7 @@ using System.Collections;
 using NUnit.Framework;
 using NUnit.Core;
 using NUnit.TestData;
+using NUnit.TestData.LegacySuiteData;
 
 namespace NUnit.Core.Tests
 {
@@ -20,11 +21,12 @@ namespace NUnit.Core.Tests
 	{
         static int setupCount = 0;
         static int teardownCount = 0;
+        private Builders.LegacySuiteBuilder builder = new Builders.LegacySuiteBuilder();
 
         [Test]
         public void SuiteReturningTestSuite()
         {
-            TestSuite suite = new LegacySuite(typeof(NUnit.Core.Tests.AllTests));
+            Test suite = builder.BuildFrom(typeof(NUnit.Core.Tests.AllTests));
             Assert.AreEqual(RunState.Runnable, suite.RunState);
             Assert.AreEqual(3, suite.Tests.Count);
             Assert.AreEqual(11, suite.TestCount);
@@ -33,7 +35,7 @@ namespace NUnit.Core.Tests
         [Test]
         public void SuiteReturningFixtures()
         {
-            TestSuite suite = new LegacySuite(typeof(LegacySuiteReturningFixtures));
+            Test suite = builder.BuildFrom(typeof(LegacySuiteReturningFixtures));
             Assert.AreEqual(RunState.Runnable, suite.RunState);
             Assert.AreEqual(3, suite.Tests.Count);
             Assert.AreEqual(11, suite.TestCount);
@@ -56,9 +58,18 @@ namespace NUnit.Core.Tests
         }
 
         [Test]
+        public void SuiteReturningFixtureWithArguments()
+        {
+            Test suite = builder.BuildFrom(typeof(LegacySuiteReturningFixtureWithArguments));
+            Assert.AreEqual(RunState.Runnable, suite.RunState);
+            Assert.AreEqual(1, suite.Tests.Count);
+            Assert.AreEqual(0, suite.TestCount);
+        }
+
+        [Test]
         public void SuiteReturningTypes()
         {
-            TestSuite suite = new LegacySuite(typeof(LegacySuiteReturningTypes));
+            Test suite = builder.BuildFrom(typeof(LegacySuiteReturningTypes));
             Assert.AreEqual(RunState.Runnable, suite.RunState);
             Assert.AreEqual(3, suite.Tests.Count);
             Assert.AreEqual(11, suite.TestCount);
@@ -84,9 +95,9 @@ namespace NUnit.Core.Tests
 		public void SetUpAndTearDownAreCalled()
 		{
             setupCount = teardownCount = 0;
-			TestSuite suite = new LegacySuite( typeof( LegacySuiteWithSetUpAndTearDown ) );
+			Test suite = builder.BuildFrom( typeof( LegacySuiteWithSetUpAndTearDown ) );
             Assert.AreEqual(RunState.Runnable, suite.RunState);
-			suite.Run( NullListener.NULL );
+            suite.Run(NullListener.NULL, TestFilter.Empty);
 			Assert.AreEqual( 1, setupCount );
 			Assert.AreEqual( 1, teardownCount );
 		}
@@ -115,7 +126,7 @@ namespace NUnit.Core.Tests
         [Test]
         public void SuitePropertyWithInvalidType()
         {
-            TestSuite suite = new LegacySuite(typeof(LegacySuiteWithInvalidPropertyType));
+            Test suite = builder.BuildFrom(typeof(LegacySuiteWithInvalidPropertyType));
             Assert.AreEqual(RunState.NotRunnable, suite.RunState);
         }
 

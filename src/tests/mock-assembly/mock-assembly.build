@@ -3,23 +3,27 @@
 
   <target name="build">
     <csc target="library" 
-      output="${current.build.dir}/mock-assembly.dll" 
+      output="${current.test.dir}/mock-assembly.dll" 
       debug="${build.debug}" define="${build.defines}">
       <sources>
         <include name="MockAssembly.cs"/>
-        <include name="../../CommonAssemblyInfo.cs"/>
+        <include name="../../GeneratedAssemblyInfo.cs"/>
       </sources>
-      <references basedir="${current.build.dir}">
-        <include name="nunit.framework.dll"/>
-        <include name="nunit.core.interfaces.dll"/>
-        <include name="nunit.core.dll"/>
+      <references>
+        <include name="${current.framework.dir}/nunit.framework.dll"/>
+        <include name="${current.lib.dir}/nunit.core.interfaces.dll"/>
+        <include name="${current.lib.dir}/nunit.core.dll"/>
       </references>
     </csc>
   </target>
 
   <target name="package">
     <copy todir="${package.src.dir}/tests/mock-assembly">
-      <fileset refid="source-files" />
+      <fileset>
+        <include name="MockAssembly.cs"/>
+        <include name="mock-assembly.csproj"/>
+        <include name="mock-assembly.build"/>
+      </fileset>
     </copy>
   </target>
 

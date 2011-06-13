@@ -1,28 +1,42 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
 using System.IO;
 using System.Collections;
+#if NET_2_0
+using System.Collections.Generic;
+#endif
 
 namespace NUnit.Framework.Constraints
 {
     /// <summary>
     /// EqualConstraint is able to compare an actual value with the
-    /// expected value provided in its constructor.
+    /// expected value provided in its constructor. Two objects are 
+    /// considered equal if both are null, or if both have the same 
+    /// value. NUnit has special semantics for some object types.
     /// </summary>
     public class EqualConstraint : Constraint
     {
-        private static IDictionary constraintHelpers = new Hashtable();
+        #region Static and Instance Fields
 
-        private readonly object expected;
+		private readonly object expected;
 
-        private ArrayList failurePoints;
+        /// <summary>
+        /// If true, strings in error messages will be clipped
+        /// </summary>
+        private bool clipStrings = true;
 
-		private static readonly string StringsDiffer_1 =
+        /// <summary>
+        /// NUnitEqualityComparer used to test equality.
+        /// </summary>
+        private NUnitEqualityComparer comparer = new NUnitEqualityComparer();
+
+        #region Message Strings
+        private static readonly string StringsDiffer_1 =
 			"String lengths are both {0}. Strings differ at index {1}.";
 		private static readonly string StringsDiffer_2 =
 			"Expected string length {0} but was {1}. Strings differ at index {2}.";
@@ -38,18 +52,258 @@ namespace NUnit.Framework.Constraints
 			"Values differ at index {0}";
 		private static readonly string ValuesDiffer_2 =
 			"Values differ at expected index {0}, actual index {1}";
-
-		private static readonly int BUFFER_SIZE = 4096;
 		
+        #endregion
+
+        #endregion
+
         #region Constructor
         /// <summary>
         /// Initializes a new instance of the <see cref="EqualConstraint"/> class.
         /// </summary>
         /// <param name="expected">The expected value.</param>
-        public EqualConstraint(object expected)
+        public EqualConstraint(object expected) : base(expected)
         {
             this.expected = expected;
         }
+        #endregion
+
+        #region Constraint Modifiers
+        /// <summary>
+        /// Flag the constraint to ignore case and return self.
+        /// </summary>
+        public EqualConstraint IgnoreCase
+        {
+            get
+            {
+                comparer.IgnoreCase = true;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Flag the constraint to suppress string clipping 
+        /// and return self.
+        /// </summary>
+        public EqualConstraint NoClip
+        {
+            get
+            {
+                clipStrings = false;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Flag the constraint to compare arrays as collections
+        /// and return self.
+        /// </summary>
+        public EqualConstraint AsCollection
+        {
+            get
+            {
+                comparer.CompareAsCollection = true;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Flag the constraint to use a tolerance when determining equality.
+        /// </summary>
+        /// <param name="amount">Tolerance value to be used</param>
+        /// <returns>Self.</returns>
+        public EqualConstraint Within(object amount)
+        {
+            if (!comparer.Tolerance.IsEmpty)
+                throw new InvalidOperationException("Within modifier may appear only once in a constraint expression");
+
+            comparer.Tolerance = new Tolerance(amount);
+            return this;
+        }
+
+        /// <summary>
+        /// Switches the .Within() modifier to interpret its tolerance as
+        /// a distance in representable values (see remarks).
+        /// </summary>
+        /// <returns>Self.</returns>
+        /// <remarks>
+        /// Ulp stands for "unit in the last place" and describes the minimum
+        /// amount a given value can change. For any integers, an ulp is 1 whole
+        /// digit. For floating point values, the accuracy of which is better
+        /// for smaller numbers and worse for larger numbers, an ulp depends
+        /// on the size of the number. Using ulps for comparison of floating
+        /// point results instead of fixed tolerances is safer because it will
+        /// automatically compensate for the added inaccuracy of larger numbers.
+        /// </remarks>
+        public EqualConstraint Ulps
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Ulps;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Switches the .Within() modifier to interpret its tolerance as
+        /// a percentage that the actual values is allowed to deviate from
+        /// the expected value.
+        /// </summary>
+        /// <returns>Self</returns>
+        public EqualConstraint Percent
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Percent;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Causes the tolerance to be interpreted as a TimeSpan in days.
+        /// </summary>
+        /// <returns>Self</returns>
+        public EqualConstraint Days
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Days;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Causes the tolerance to be interpreted as a TimeSpan in hours.
+        /// </summary>
+        /// <returns>Self</returns>
+        public EqualConstraint Hours
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Hours;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Causes the tolerance to be interpreted as a TimeSpan in minutes.
+        /// </summary>
+        /// <returns>Self</returns>
+        public EqualConstraint Minutes
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Minutes;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Causes the tolerance to be interpreted as a TimeSpan in seconds.
+        /// </summary>
+        /// <returns>Self</returns>
+        public EqualConstraint Seconds
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Seconds;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Causes the tolerance to be interpreted as a TimeSpan in milliseconds.
+        /// </summary>
+        /// <returns>Self</returns>
+        public EqualConstraint Milliseconds
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Milliseconds;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Causes the tolerance to be interpreted as a TimeSpan in clock ticks.
+        /// </summary>
+        /// <returns>Self</returns>
+        public EqualConstraint Ticks
+        {
+            get
+            {
+                comparer.Tolerance = comparer.Tolerance.Ticks;
+                return this;
+            }
+        }
+
+        /// <summary>
+        /// Flag the constraint to use the supplied IComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        [Obsolete("Replace with 'Using'")]
+        public EqualConstraint Comparer(IComparer comparer)
+        {
+            return Using(comparer);
+        }
+
+        /// <summary>
+        /// Flag the constraint to use the supplied IComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public EqualConstraint Using(IComparer comparer)
+        {
+            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            return this;
+        }
+
+#if NET_2_0
+        /// <summary>
+        /// Flag the constraint to use the supplied IComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public EqualConstraint Using<T>(IComparer<T> comparer)
+        {
+            this.comparer.ExternalComparer = EqualityAdapter.For( comparer );
+            return this;
+        }
+
+                /// <summary>
+        /// Flag the constraint to use the supplied Comparison object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public EqualConstraint Using<T>(Comparison<T> comparer)
+        {
+            this.comparer.ExternalComparer = EqualityAdapter.For( comparer );
+            return this;
+        }
+
+        /// <summary>
+        /// Flag the constraint to use the supplied IEqualityComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public EqualConstraint Using(IEqualityComparer comparer)
+        {
+            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            return this;
+        }
+
+        /// <summary>
+        /// Flag the constraint to use the supplied IEqualityComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public EqualConstraint Using<T>(IEqualityComparer<T> comparer)
+        {
+            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            return this;
+        }
+#endif
         #endregion
 
         #region Public Methods
@@ -61,9 +315,8 @@ namespace NUnit.Framework.Constraints
         public override bool Matches(object actual)
         {
             this.actual = actual;
-            this.failurePoints = new ArrayList();
 
-            return ObjectsEqual( expected, actual );
+            return comparer.ObjectsEqual(expected, actual);
         }
 
         /// <summary>
@@ -85,13 +338,13 @@ namespace NUnit.Framework.Constraints
         {
 			writer.WriteExpectedValue( expected );
 
-			if ( tolerance != null )
+            if (comparer.Tolerance != null && !comparer.Tolerance.IsEmpty)
 			{
 				writer.WriteConnector("+/-");
-				writer.WriteExpectedValue(tolerance);
+                writer.WriteExpectedValue(comparer.Tolerance.Value);
 			}
 
-			if ( this.caseInsensitive )
+			if ( comparer.IgnoreCase )
 				writer.WriteModifier("ignoring case");
         }
 
@@ -103,160 +356,24 @@ namespace NUnit.Framework.Constraints
                 DisplayCollectionDifferences(writer, (ICollection)expected, (ICollection)actual, depth);
 			else if (expected is Stream && actual is Stream)
 				DisplayStreamDifferences(writer, (Stream)expected, (Stream)actual, depth);
-			else if ( tolerance != null )
-				writer.DisplayDifferences( expected, actual, tolerance );
+            else if (comparer.Tolerance != null)
+                writer.DisplayDifferences(expected, actual, comparer.Tolerance);
             else
                 writer.DisplayDifferences(expected, actual);
-        }
-        #endregion
-
-        #region ObjectsEqual
-        private bool ObjectsEqual(object expected, object actual)
-        {
-            if (expected == null && actual == null)
-                return true;
-
-            if (expected == null || actual == null)
-                return false;
-
-            Type expectedType = expected.GetType();
-            Type actualType = actual.GetType();
-
-            if (expectedType.IsArray && actualType.IsArray && !compareAsCollection)
-                return ArraysEqual((Array)expected, (Array)actual);
-
-            if (expected is ICollection && actual is ICollection)
-                return CollectionsEqual((ICollection)expected, (ICollection)actual);
-
-			if (expected is Stream && actual is Stream)
-				return StreamsEqual((Stream)expected, (Stream)actual);
-
-            if (compareWith != null)
-				return compareWith.Compare( expected, actual ) == 0;
-
-            if (expected is DirectoryInfo && actual is DirectoryInfo)
-                return DirectoriesEqual((DirectoryInfo)expected, (DirectoryInfo)actual);
-
-            if (Numerics.IsNumericType(expected) && Numerics.IsNumericType(actual))
-            {
-                return Numerics.AreEqual(expected, actual, ref tolerance);
-            }
-
-            if (expected is string && actual is string)
-            {
-				return StringsEqual( (string) expected, (string)actual );
-            }
-
-			if (expected is DateTime && actual is DateTime && tolerance is TimeSpan)
-			{
-				return ((DateTime)expected - (DateTime)actual).Duration() <= (TimeSpan)tolerance;
-			}
-
-            return expected.Equals(actual);
-        }
-
-        /// <summary>
-        /// Helper method to compare two arrays
-        /// </summary>
-        protected virtual bool ArraysEqual(Array expected, Array actual)
-        {
-            int rank = expected.Rank;
-
-            if (rank != actual.Rank)
-                return false;
-
-            for (int r = 1; r < rank; r++)
-                if (expected.GetLength(r) != actual.GetLength(r))
-                    return false;
-
-            return CollectionsEqual((ICollection)expected, (ICollection)actual);
-        }
-
-        private bool CollectionsEqual(ICollection expected, ICollection actual)
-        {
-            IEnumerator expectedEnum = expected.GetEnumerator();
-            IEnumerator actualEnum = actual.GetEnumerator();
-
-            int count;
-            for (count = 0; expectedEnum.MoveNext() && actualEnum.MoveNext(); count++)
-            {
-                if (!ObjectsEqual(expectedEnum.Current, actualEnum.Current))
-                    break;
-            }
-
-            if (count == expected.Count && count == actual.Count)
-                return true;
-
-            failurePoints.Insert(0, count);
-            return false;
-        }
-
-		private bool StreamsEqual( Stream expected, Stream actual )
-		{
-			if (expected.Length != actual.Length) return false;
-
-			byte[] bufferExpected = new byte[BUFFER_SIZE];
-			byte[] bufferActual = new byte[BUFFER_SIZE];
-
-			BinaryReader binaryReaderExpected = new BinaryReader(expected);
-			BinaryReader binaryReaderActual = new BinaryReader(actual);
-
-			binaryReaderExpected.BaseStream.Seek(0, SeekOrigin.Begin);
-			binaryReaderActual.BaseStream.Seek(0, SeekOrigin.Begin);
-
-			for(long readByte = 0; readByte < expected.Length; readByte += BUFFER_SIZE )
-			{
-				binaryReaderExpected.Read(bufferExpected, 0, BUFFER_SIZE);
-				binaryReaderActual.Read(bufferActual, 0, BUFFER_SIZE);
-
-				for (int count=0; count < BUFFER_SIZE; ++count) 
-				{
-					if (bufferExpected[count] != bufferActual[count]) 
-					{
-						failurePoints.Insert( 0, readByte + count );
-						//FailureMessage.WriteLine("\tIndex : {0}", readByte + count);
-						return false;
-					}
-				}
-			}
-
-			return true;
-		}
-
-		private bool StringsEqual( string expected, string actual )
-		{
-			string s1 = caseInsensitive ? expected.ToLower() : expected;
-			string s2 = caseInsensitive ? actual.ToLower() : actual;
-
-			return s1.Equals( s2 );
-		}
-
-        /// <summary>
-        /// Method to compare two DirectoryInfo objects
-        /// </summary>
-        /// <param name="expected">first directory to compare</param>
-        /// <param name="actual">second directory to compare</param>
-        /// <returns>true if equivalent, false if not</returns>
-        private bool DirectoriesEqual(DirectoryInfo expected, DirectoryInfo actual)
-        {
-            return expected.Attributes == actual.Attributes
-                && expected.CreationTime == actual.CreationTime
-                && expected.FullName == actual.FullName
-                && expected.LastAccessTime == actual.LastAccessTime;
         }
         #endregion
 
         #region DisplayStringDifferences
         private void DisplayStringDifferences(MessageWriter writer, string expected, string actual)
         {
-            int mismatch = MsgUtils.FindMismatchPosition(expected, actual, 0, this.caseInsensitive);
+            int mismatch = MsgUtils.FindMismatchPosition(expected, actual, 0, comparer.IgnoreCase);
 
             if (expected.Length == actual.Length)
 				writer.WriteMessageLine(StringsDiffer_1, expected.Length, mismatch);
 			else
 				writer.WriteMessageLine(StringsDiffer_2, expected.Length, actual.Length, mismatch);
 
-            writer.DisplayStringDifferences(expected, actual, mismatch, caseInsensitive, clipStrings);
+            writer.DisplayStringDifferences(expected, actual, mismatch, comparer.IgnoreCase, clipStrings);
         }
         #endregion
 
@@ -265,7 +382,7 @@ namespace NUnit.Framework.Constraints
 		{
 			if ( expected.Length == actual.Length )
 			{
-				long offset = (long)failurePoints[depth];
+				long offset = (long)comparer.FailurePoints[depth];
 				writer.WriteMessageLine(StreamsDiffer_1, expected.Length, offset);
 			}
 			else
@@ -283,7 +400,7 @@ namespace NUnit.Framework.Constraints
         /// <param name="depth">The depth of this failure in a set of nested collections</param>
         private void DisplayCollectionDifferences(MessageWriter writer, ICollection expected, ICollection actual, int depth)
         {
-            int failurePoint = failurePoints.Count > depth ? (int)failurePoints[depth] : -1;
+            int failurePoint = comparer.FailurePoints.Count > depth ? (int)comparer.FailurePoints[depth] : -1;
 
             DisplayCollectionTypesAndSizes(writer, expected, actual, depth);
 

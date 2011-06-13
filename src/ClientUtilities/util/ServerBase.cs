@@ -1,3 +1,9 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
 using System;
 using System.Threading;
 using System.Runtime.Remoting;
@@ -36,16 +42,33 @@ namespace NUnit.Util
 			this.port = port;
 		}
 
+        public string ServerUrl
+        {
+            get { return string.Format("tcp://127.0.0.1:{0}/{1}", port, uri); }
+        }
+
 		public virtual void Start()
 		{
-			if ( uri != null && uri != string.Empty )
-				lock( theLock )
-				{
-					this.channel = ServerUtilities.GetTcpChannel( uri + "Channel", port, 100 );
+            if (uri != null && uri != string.Empty)
+            {
+                lock (theLock)
+                {
+                    this.channel = ServerUtilities.GetTcpChannel(uri + "Channel", port, 100);
 
-					RemotingServices.Marshal( this, uri );
-					this.isMarshalled = true;
-				}
+                    RemotingServices.Marshal(this, uri);
+                    this.isMarshalled = true;
+                }
+
+                if (this.port == 0)
+                {
+                    ChannelDataStore store = this.channel.ChannelData as ChannelDataStore;
+                    if (store != null)
+                    {
+                        string channelUri = store.ChannelUris[0];
+                        this.port = int.Parse(channelUri.Substring(channelUri.LastIndexOf(':') + 1));
+                    }
+                }
+            }
 		}
 
 		[System.Runtime.Remoting.Messaging.OneWay]
@@ -84,6 +107,13 @@ namespace NUnit.Util
 			this.Stop();
 		}
 
+		#endregion
+
+		#region InitializeLifetimeService
+		public override object InitializeLifetimeService()
+		{
+			return null;
+		}
 		#endregion
 	}
 }

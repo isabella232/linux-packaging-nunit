@@ -1,12 +1,13 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
 using System.IO;
 using Microsoft.Win32;
+using NUnit.Core;
 
 namespace NUnit.Util
 {
@@ -15,23 +16,28 @@ namespace NUnit.Util
 	/// </summary>
 	public class SettingsService : SettingsGroup, NUnit.Core.IService
 	{
-		static readonly string applicationDirectory = 
-			Environment.GetFolderPath( Environment.SpecialFolder.ApplicationData ) 
-			+ Path.DirectorySeparatorChar + "NUnit" + Path.DirectorySeparatorChar;
-
 		static readonly string settingsFileName = "NUnitSettings.xml";
 
-		public SettingsService()
-		{
-			string settingsFile = System.Configuration.ConfigurationSettings.AppSettings["settingsFile"];
-			if ( settingsFile == null )
-				settingsFile = applicationDirectory + settingsFileName;
+        private bool writeable;
 
-			this.storage = new XmlSettingsStorage( settingsFile );
+        public SettingsService() : this(true) { }
+
+		public SettingsService(bool writeable)
+		{
+            this.writeable = writeable;
+#if NET_2_0
+			string settingsFile = System.Configuration.ConfigurationManager.AppSettings["settingsFile"];
+#else
+			string settingsFile = System.Configuration.ConfigurationSettings.AppSettings["settingsFile"];
+#endif
+			if ( settingsFile == null )
+				settingsFile = Path.Combine( NUnitConfiguration.ApplicationDirectory, settingsFileName );
+
+			this.storage = new XmlSettingsStorage( settingsFile, writeable );
 
 			if ( File.Exists( settingsFile ) )
 				storage.LoadSettings();
-			else
+			else if (writeable)
 				ConvertLegacySettings();
 		}
 
@@ -42,7 +48,9 @@ namespace NUnit.Util
 
 		public void UnloadService()
 		{
-			storage.SaveSettings();
+            if ( writeable )
+			    storage.SaveSettings();
+
 			this.Dispose();
 		}
 		#endregion
@@ -68,13 +76,11 @@ namespace NUnit.Util
 		private class LegacySettingsConverter : SettingsGroup
 		{
 			private ISettingsStorage legacy;
-			private ISettingsStorage current;
 
 			public LegacySettingsConverter( ISettingsStorage legacy, ISettingsStorage current )
 				: base( current )
 			{
 				this.legacy = legacy;
-				this.current = current;
 			}
 
 			public void Convert()
@@ -104,10 +110,14 @@ namespace NUnit.Util
 				Convert( "Options.RerunOnChange", "Options.TestLoader.RerunOnChange", "False", "True" );
 				Convert( "Options.ReloadOnRun", "Options.TestLoader.ReloadOnRun", "False", "True" );
 				Convert( "Options.MergeAssemblies", "Options.TestLoader.MergeAssemblies", "False", "True" );
-				Convert( "Options.MultiDomain", "Options.TestLoader.MultiDomain", "False", "True" );
+				//Convert( "Options.MultiDomain", "Options.TestLoader.MultiDomain", "False", "True" );
 				Convert( "Options.AutoNamespaceSuites", "Options.TestLoader.AutoNamespaceSuites", "False", "True" );
 				Convert( "Options.VisualStudioSupport", "Options.TestLoader.VisualStudioSupport", "False", "True" );
 				Convert( "Recent-Projects.MaxFiles", "RecentProjects.MaxFiles" );
+
+                object val = legacy.GetSetting("Options.MultiDomain");
+                if (val != null && (bool)val)
+                    this.SaveSetting("Options.TestLoader.DomainUsage", NUnit.Core.DomainUsage.Multiple);
 
 				int maxFiles = this.GetSetting( "RecentProjects.MaxFiles", 5 );
 				for( int i = 1; i <= maxFiles; i++ )

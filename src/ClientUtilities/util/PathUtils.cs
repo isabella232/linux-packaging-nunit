@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2002-2003, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -44,24 +44,29 @@ namespace NUnit.Util
 				throw new ArgumentNullException (from);
 			if (to == null)
 				throw new ArgumentNullException (to);
-			if (!Path.IsPathRooted (to))
-				return to;
-			if (Path.GetPathRoot (from) != Path.GetPathRoot (to))
-				return null;
 
-			string[] _from = from.Split (PathUtils.DirectorySeparatorChar, 
-				PathUtils.AltDirectorySeparatorChar);
-			string[] _to   =   to.Split (PathUtils.DirectorySeparatorChar, 
-				PathUtils.AltDirectorySeparatorChar);
+            string toPathRoot = Path.GetPathRoot(to);
+            if (toPathRoot == null || toPathRoot == string.Empty)
+                return to;
+            string fromPathRoot = Path.GetPathRoot(from);
+
+            if (!PathsEqual(toPathRoot, fromPathRoot))
+                return null;
+
+            string fromNoRoot = from.Substring(fromPathRoot.Length);
+            string toNoRoot = to.Substring(toPathRoot.Length);
+
+            string[] _from = SplitPath(fromNoRoot);
+            string[] _to = SplitPath(toNoRoot);
 
 			StringBuilder sb = new StringBuilder (Math.Max (from.Length, to.Length));
 
 			int last_common, min = Math.Min (_from.Length, _to.Length);
 			for (last_common = 0; last_common < min;  ++last_common) 
 			{
-				if (!_from [last_common].Equals (_to [last_common]))
-					break;
-			}
+                if (!PathsEqual(_from[last_common], _to[last_common]))
+                    break;
+            }
 
 			if (last_common < _from.Length)
 				sb.Append ("..");
@@ -110,8 +115,12 @@ namespace NUnit.Util
 						break;
 				}
 			}
-	
-			return String.Join( DirectorySeparatorChar.ToString(), (string[])parts.ToArray( typeof( string ) ) );
+
+            // Trailing separator removal
+            if (parts.Count > 1 && path.Length > 1 && (string)parts[parts.Count - 1] == "")
+                parts.RemoveAt(parts.Count - 1);
+
+            return String.Join(DirectorySeparatorChar.ToString(), (string[])parts.ToArray(typeof(string)));
 		}
 
 		/// <summary>
@@ -145,11 +154,9 @@ namespace NUnit.Util
 
 			// if lengths are the same, check for equality
 			if ( length1 == length2 )
-				//return path1.ToLower() == path2.ToLower();
 				return string.Compare( path1, path2, IsWindows() ) == 0;
 
 			// path 2 is longer than path 1: see if initial parts match
-			//if ( path1.ToLower() != path2.Substring( 0, length1 ).ToLower() )
 			if ( string.Compare( path1, path2.Substring( 0, length1 ), IsWindows() ) != 0 )
 				return false;
 			
@@ -200,10 +207,54 @@ namespace NUnit.Util
 		#endregion
 
 		#region Helper Methods
+
 		private static bool IsWindows()
 		{
 			return PathUtils.DirectorySeparatorChar == '\\';
 		}
-		#endregion
+
+        private static string[] SplitPath(string path)
+        {
+            char[] separators = new char[] { PathUtils.DirectorySeparatorChar, PathUtils.AltDirectorySeparatorChar };
+
+#if NET_2_0
+            return path.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+#else
+            string[] trialSplit = path.Split(separators);
+            
+            int emptyEntries = 0;
+            foreach(string piece in trialSplit)
+                if (piece == string.Empty)
+                    emptyEntries++;
+
+            if (emptyEntries == 0)
+                return trialSplit;
+
+            string[] finalSplit = new string[trialSplit.Length - emptyEntries];
+            int index = 0;
+            foreach(string piece in trialSplit)
+                if (piece != string.Empty)
+                    finalSplit[index++] = piece;
+
+            return finalSplit;
+#endif
+        }
+
+        private static bool PathsEqual(string path1, string path2)
+        {
+#if NET_2_0
+            if (PathUtils.IsWindows())
+                return path1.Equals(path2, StringComparison.InvariantCultureIgnoreCase);
+            else
+                return path1.Equals(path2, StringComparison.InvariantCulture);
+#else
+            if (PathUtils.IsWindows())
+                return path1.ToLower().Equals(path2.ToLower());
+            else
+                return path1.Equals(path2);
+#endif
+        }
+
+        #endregion
 	}
 }

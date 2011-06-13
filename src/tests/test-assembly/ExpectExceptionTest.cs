@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -34,14 +34,21 @@ namespace NUnit.TestData.ExpectExceptionTest
 	[TestFixture]
 	public class MismatchedException
 	{
-		[Test]
-		[ExpectedException(typeof(ArgumentException))]
-		public void MismatchedExceptionType()
-		{
-			throw new ArgumentOutOfRangeException();
-		}
+        [Test]
+        [ExpectedException(typeof(ArgumentException))]
+        public void MismatchedExceptionType()
+        {
+            throw new ArgumentOutOfRangeException();
+        }
 
-		[Test]
+        [Test]
+        [ExpectedException(ExpectedException=typeof(ArgumentException))]
+        public void MismatchedExceptionTypeAsNamedParameter()
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+
+        [Test]
 		[ExpectedException(typeof(ArgumentException), UserMessage="custom message")]
 		public void MismatchedExceptionTypeWithUserMessage()
 		{
@@ -142,7 +149,7 @@ namespace NUnit.TestData.ExpectExceptionTest
 	public class TestThrowsExceptionWithRightMessage
 	{
 		[Test]
-		[ExpectedException(typeof(Exception), "the message")]
+		[ExpectedException(typeof(Exception), ExpectedMessage="the message")]
 		public void TestThrow()
 		{
 			throw new Exception("the message");
@@ -188,4 +195,51 @@ namespace NUnit.TestData.ExpectExceptionTest
 			Assert.Fail( "private message" );
 		}
 	}
+
+    [TestFixture]
+    public class ExceptionHandlerCalledClass : IExpectException
+    {
+        public bool HandlerCalled = false;
+        public bool AlternateHandlerCalled = false;
+
+        [Test, ExpectedException(typeof(ArgumentException))]
+        public void ThrowsArgumentException()
+        {
+            throw new ArgumentException();
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException), Handler = "AlternateExceptionHandler")]
+        public void ThrowsArgumentException_AlternateHandler()
+        {
+            throw new ArgumentException();
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException))]
+        public void ThrowsApplicationException()
+        {
+            throw new ApplicationException();
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException), Handler = "AlternateExceptionHandler")]
+        public void ThrowsApplicationException_AlternateHandler()
+        {
+            throw new ApplicationException();
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException), Handler = "DeliberatelyMissingHandler")]
+        public void MethodWithBadHandler()
+        {
+            throw new ArgumentException();
+        }
+
+        public void HandleException(Exception ex)
+        {
+            HandlerCalled = true;
+        }
+
+        public void AlternateExceptionHandler(Exception ex)
+        {
+            AlternateHandlerCalled = true;
+        }
+    }
 }

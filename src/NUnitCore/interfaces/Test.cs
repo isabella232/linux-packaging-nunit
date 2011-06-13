@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
@@ -9,15 +9,23 @@ namespace NUnit.Core
 	using System;
 	using System.Collections;
 	using System.Collections.Specialized;
+    using System.Threading;
 	using System.Reflection;
 
 	/// <summary>
 	///		Test Class.
 	/// </summary>
 	public abstract class Test : ITest, IComparable
-	{
-		#region Fields
-		/// <summary>
+    {
+        #region Constants
+        //private static readonly string SETCULTURE = "_SETCULTURE";
+        private static readonly string DESCRIPTION = "_DESCRIPTION";
+        private static readonly string IGNOREREASON = "_IGNOREREASON";
+        private static readonly string CATEGORIES = "_CATEGORIES";
+        #endregion
+
+        #region Fields
+        /// <summary>
 		/// TestName that identifies this test
 		/// </summary>
 		private TestName testName;
@@ -28,46 +36,70 @@ namespace NUnit.Core
 		private RunState runState;
 
 		/// <summary>
-		/// The reason for not running the test
-		/// </summary>
-		private string ignoreReason;
-		
-		/// <summary>
-		/// Description for this test 
-		/// </summary>
-		private string description;
-		
-		/// <summary>
 		/// Test suite containing this test, or null
 		/// </summary>
 		private Test parent;
 		
-		/// <summary>
-		/// List of categories applying to this test
-		/// </summary>
-		private IList categories;
-
 		/// <summary>
 		/// A dictionary of properties, used to add information
 		/// to tests without requiring the class to change.
 		/// </summary>
 		private IDictionary properties;
 
-		/// <summary>
-		/// The System.Type of the fixture for this test suite, if there is one
-		/// </summary>
-		private Type fixtureType;
-
-		/// <summary>
-		/// The fixture object, if it has been created
-		/// </summary>
-		private object fixture;
-
 		#endregion
 
-		#region Construction
+        #region Properties
+        /// <summary>
+        /// Return true if the test requires a thread
+        /// </summary>
+        public bool RequiresThread
+        {
+            get { return Properties.Contains("RequiresThread") && (bool)Properties["RequiresThread"]; }
+        }
 
-		/// <summary>
+        /// <summary>
+        /// Get the desired apartment state for running the test
+        /// </summary>
+        public ApartmentState ApartmentState
+        {
+            get
+            {
+                return Properties.Contains("APARTMENT_STATE")
+                    ? (ApartmentState)Properties["APARTMENT_STATE"]
+                    : GetCurrentApartment();
+            }
+        }
+
+        /// <summary>
+        /// Get the current apartment state of the test
+        /// </summary>
+        protected ApartmentState GetCurrentApartment()
+        {
+#if NET_2_0
+            return Thread.CurrentThread.GetApartmentState();
+#else
+            return Thread.CurrentThread.ApartmentState;
+#endif
+        }
+
+        /// <summary>
+        /// Gets a boolean value indicating whether this 
+        /// test should run on it's own thread.
+        /// </summary>
+        protected virtual bool ShouldRunOnOwnThread
+        {
+            get
+            {
+                return RequiresThread
+                    || ApartmentState != ApartmentState.Unknown
+                    && ApartmentState != GetCurrentApartment();
+            }
+        }
+		#endregion
+
+        #region Construction
+
+        /// <summary>
 		/// Constructs a test given its name
 		/// </summary>
 		/// <param name="name">The name of the test</param>
@@ -110,35 +142,6 @@ namespace NUnit.Core
 		}
 
 		/// <summary>
-		/// Constructs a test given a fixture type
-		/// </summary>
-		/// <param name="fixtureType">The type to use in constructiong the test</param>
-		protected Test( Type fixtureType )
-		{
-			this.testName = new TestName();
-			this.testName.FullName = fixtureType.FullName;
-			this.testName.Name = fixtureType.Namespace != null
-				? TestName.FullName.Substring( TestName.FullName.LastIndexOf( '.' ) + 1 )
-				: fixtureType.FullName;
-			this.testName.TestID = new TestID();
-
-			this.fixtureType = fixtureType;
-			this.RunState = RunState.Runnable;
-		}
-
-		/// <summary>
-		/// Construct a test given a MethodInfo
-		/// </summary>
-		/// <param name="method">The method to be used</param>
-		protected Test( MethodInfo method )
-			: this( method.ReflectedType )
-		{
-			this.testName.Name = method.DeclaringType == method.ReflectedType 
-				? method.Name : method.DeclaringType.Name + "." + method.Name;
-			this.testName.FullName = method.ReflectedType.FullName + "." + method.Name;
-		}
-
-		/// <summary>
 		/// Sets the runner id of a test and optionally its children
 		/// </summary>
 		/// <param name="runnerID">The runner id to be used</param>
@@ -169,7 +172,11 @@ namespace NUnit.Core
 		/// Gets a string representing the kind of test
 		/// that this object represents, for use in display.
 		/// </summary>
-		public abstract string TestType { get; }
+        public abstract string TestType
+        {
+            get;
+        }
+
 
 		/// <summary>
 		/// Whether or not the test should be run
@@ -185,8 +192,14 @@ namespace NUnit.Core
 		/// </summary>
 		public string IgnoreReason
 		{
-			get { return ignoreReason; }
-			set { ignoreReason = value; }
+			get { return (string)Properties[IGNOREREASON]; }
+			set 
+            {
+                if (value == null)
+                    Properties.Remove(IGNOREREASON);
+                else
+                    Properties[IGNOREREASON] = value;
+            }
 		}
 
 		/// <summary>
@@ -203,17 +216,32 @@ namespace NUnit.Core
 		/// </summary>
 		public IList Categories 
 		{
-			get { return categories; }
-			set { categories = value; }
+			get 
+            {
+                if (Properties[CATEGORIES] == null)
+                    Properties[CATEGORIES] = new ArrayList();
+
+                return (IList)Properties[CATEGORIES]; 
+            }
+			set 
+            {
+                Properties[CATEGORIES] = value; 
+            }
 		}
 
 		/// <summary>
-		/// Gets a desctiption associated with this test.
+		/// Gets a description associated with this test.
 		/// </summary>
 		public String Description
 		{
-			get { return description; }
-			set { description = value; }
+			get { return (string)Properties[DESCRIPTION]; }
+			set 
+            {
+                if (value == null)
+                    Properties.Remove(DESCRIPTION);
+                else
+                    Properties[DESCRIPTION] = value; 
+            }
 		}
 
 		/// <summary>
@@ -237,7 +265,11 @@ namespace NUnit.Core
 		/// <summary>
 		/// Indicates whether this test is a suite
 		/// </summary>
-		public abstract bool IsSuite { get; }
+        public virtual bool IsSuite
+        {
+            get { return false; }
+        }
+
 
 		/// <summary>
 		/// Gets the parent test of this test
@@ -260,23 +292,25 @@ namespace NUnit.Core
 		/// <summary>
 		/// Gets this test's child tests
 		/// </summary>
-		public abstract IList Tests { get; }
+		public virtual IList Tests 
+        {
+            get { return null; } 
+        }
 
 		/// <summary>
 		/// Gets the Type of the fixture used in running this test
 		/// </summary>
-		public Type FixtureType
+		public virtual Type FixtureType
 		{
-			get { return fixtureType; }
+			get { return null; }
 		}
 
 		/// <summary>
 		/// Gets or sets a fixture object for running this test
 		/// </summary>
-		public  object Fixture
+		public  abstract object Fixture
 		{
-			get { return fixture; }
-			set { fixture = value; }
+			get; set;
         }
         #endregion
 
@@ -287,29 +321,26 @@ namespace NUnit.Core
 		/// </summary>
 		/// <param name="filter"></param>
 		/// <returns></returns>
-        public abstract int CountTestCases(ITestFilter filter);
-        #endregion
+        public virtual int CountTestCases(ITestFilter filter)
+        {
+            if (filter.Pass(this))
+                return 1;
 
-        #endregion
+            return 0;
+        }
 
-		#region Abstract Run Methods
-		/// <summary>
-		/// Runs the test, sending notifications to a listener.
-		/// </summary>
-		/// <param name="listener">An event listener to receive notifications</param>
-		/// <returns>A TestResult</returns>
-		public abstract TestResult Run(EventListener listener);
-
-		/// <summary>
-		/// Runs the test under a particular filter, sending
-		/// notifications to a listener.
-		/// </summary>
-		/// <param name="listener">An event listener to receive notifications</param>
-		/// <param name="filter">A filter used in running the test</param>
-		/// <returns></returns>
+        /// <summary>
+        /// Runs the test under a particular filter, sending
+        /// notifications to a listener.
+        /// </summary>
+        /// <param name="listener">An event listener to receive notifications</param>
+        /// <param name="filter">A filter used in running the test</param>
+        /// <returns></returns>
         public abstract TestResult Run(EventListener listener, ITestFilter filter);
-		#endregion
-		
+        #endregion
+
+        #endregion
+
 		#region IComparable Members
 		/// <summary>
 		/// Compares this test to another test for sorting purposes

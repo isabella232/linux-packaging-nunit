@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -112,7 +112,7 @@ namespace NUnit.UiKit
 					if (this.min != value) 
 					{
 						this.min = value;
-						this.PaintBar();
+						this.Invalidate();
 					}
 				}
 				else
@@ -134,7 +134,7 @@ namespace NUnit.UiKit
 					if (this.max != value) 
 					{
 						this.max = value;
-						this.PaintBar();
+						this.Invalidate();
 					}
 				}
 				else
@@ -186,7 +186,7 @@ namespace NUnit.UiKit
 				else if(value <= Maximum && value >= Minimum)
 				{
 					this.val = value;
-					this.PaintBar();
+					this.Invalidate();
 				}
 				else
 				{
@@ -265,14 +265,6 @@ namespace NUnit.UiKit
 			}
 		}
 
-		private void PaintBar()
-		{
-			using(Graphics g = this.CreateGraphics())
-			{
-				this.PaintBar(g);
-			}
-		}
-		
 		private void PaintBar(Graphics g)
 		{
 			Rectangle theBar = Rectangle.Inflate(ClientRectangle, -2, -2);
@@ -339,9 +331,9 @@ namespace NUnit.UiKit
 
 	public class TestProgressBar : ColorProgressBar, TestObserver
 	{
-		private static Color SuccessColor = Color.Lime;
-		private static Color FailureColor = Color.Red;
-		private static Color IgnoredColor = Color.Yellow;
+		private readonly static Color SuccessColor = Color.Lime;
+		private readonly static Color FailureColor = Color.Red;
+		private readonly static Color IgnoredColor = Color.Yellow;
 
 		public TestProgressBar()
 		{
@@ -350,22 +342,30 @@ namespace NUnit.UiKit
 
 		private void Initialize( int testCount )
 		{
-			ForeColor = SuccessColor;
 			Value = 0;
 			Maximum = testCount;
-		}
+            ForeColor = SuccessColor;
+        }
 
 		private void OnRunStarting( object Sender, TestEventArgs e )
 		{
 			Initialize( e.TestCount );
 		}
 
-		private void OnLoadComplete( object sender, TestEventArgs e )
-		{
-			Initialize( e.TestCount );
-		}
+        private void OnTestLoaded(object sender, TestEventArgs e)
+        {
+            Initialize(e.TestCount);
+        }
 
-		private void OnUnloadComplete( object sender, TestEventArgs e )
+        private void OnTestReloaded(object sender, TestEventArgs e)
+        {
+            if (Services.UserSettings.GetSetting("Options.TestLoader.ClearResultsOnReload", false))
+                Initialize(e.TestCount);
+            else
+                Value = Maximum = e.TestCount;
+        }
+
+        private void OnTestUnloaded(object sender, TestEventArgs e)
 		{
 			Initialize( 100 );
 		}
@@ -374,26 +374,35 @@ namespace NUnit.UiKit
 		{
 			PerformStep();
 
-			switch (e.Result.RunState)
-			{
-				case RunState.Executed:
-					if (e.Result.IsFailure)
-						ForeColor = FailureColor;
-					break;
-				case RunState.Ignored:
-					if (ForeColor == SuccessColor)
-						ForeColor = IgnoredColor;
-					break;
-				default:
-					break;
-			}
-		}
+            switch (e.Result.ResultState)
+            {
+                case ResultState.NotRunnable:
+                case ResultState.Failure:
+                case ResultState.Error:
+                case ResultState.Cancelled:
+                    ForeColor = FailureColor;
+                    break;
+                case ResultState.Ignored:
+                    if (ForeColor == SuccessColor)
+                        ForeColor = IgnoredColor;
+                    break;
+                default:
+                    break;
+            }
+        }
 
 		private void OnSuiteFinished( object sender, TestEventArgs e )
 		{
 			TestResult result = e.Result;
-			if ( result.RunState == RunState.Executed && result.IsFailure && result.FailureSite == FailureSite.TearDown )
-				ForeColor = FailureColor;
+            if ( result.FailureSite == FailureSite.TearDown )
+                switch (result.ResultState)
+                {
+                    case ResultState.Error:
+                    case ResultState.Failure:
+                    case ResultState.Cancelled:
+                        ForeColor = FailureColor;
+                        break;
+                }
 		}
 
 		private void OnTestException(object sender, TestEventArgs e)
@@ -405,9 +414,9 @@ namespace NUnit.UiKit
 
 		public void Subscribe(ITestEvents events)
 		{
-			events.TestLoaded	+= new TestEventHandler( OnLoadComplete );
-			events.TestReloaded	+= new TestEventHandler( OnLoadComplete );
-			events.TestUnloaded	+= new TestEventHandler( OnUnloadComplete );
+			events.TestLoaded	+= new TestEventHandler( OnTestLoaded );
+            events.TestReloaded += new TestEventHandler(OnTestReloaded);
+			events.TestUnloaded	+= new TestEventHandler( OnTestUnloaded );
 			events.RunStarting	+= new TestEventHandler( OnRunStarting );
 			events.TestFinished	+= new TestEventHandler( OnTestFinished );
 			events.SuiteFinished += new TestEventHandler( OnSuiteFinished );

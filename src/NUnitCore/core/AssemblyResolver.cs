@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
@@ -17,6 +17,8 @@ namespace NUnit.Core
 	/// </summary>
     public class AssemblyResolver : MarshalByRefObject, IDisposable
 	{
+		static Logger log = InternalTrace.GetLogger(typeof(AssemblyResolver));
+
 		private class AssemblyCache
 		{
 			private Hashtable _resolved = new Hashtable();
@@ -79,15 +81,13 @@ namespace NUnit.Core
 			int index = fullName.IndexOf(',');
 			if(index == -1)							// Only resolve using full name.
 			{
-				NTrace.Debug( string.Format("Not a strong name: {0}", fullName ),
-					"'AssemblyResolver'" );
+				log.Debug( string.Format("Not a strong name: {0}", fullName ) );
 				return null;
 			}
 
 			if ( _cache.Contains( fullName ) )
 			{
-				NTrace.Info( string.Format( "Resolved from Cache: {0}", fullName ), 
-					"'AssemblyResolver'" );
+				log.Info( string.Format( "Resolved from Cache: {0}", fullName ) );
 				return _cache.Resolve(fullName);
 			}
 
@@ -96,26 +96,28 @@ namespace NUnit.Core
 				foreach( string file in Directory.GetFiles( dir, "*.dll" ) )
 				{
 					string fullFile = Path.Combine( dir, file );
+                    AssemblyReader rdr = new AssemblyReader(fullFile);
 					try
 					{
-						if ( AssemblyName.GetAssemblyName( fullFile ).FullName == fullName )
-						{
-							NTrace.Info( string.Format( "Added to Cache: {0}", fullFile ), 
-								"'AssemblyResolver'" );
-							AddFile( fullFile );
-							return _cache.Resolve( fullName );
-						}
+                        if (rdr.IsDotNetFile)
+                        {
+                            if (AssemblyName.GetAssemblyName(fullFile).FullName == fullName)
+                            {
+                                log.Info(string.Format("Added to Cache: {0}", fullFile));
+                                AddFile(fullFile);
+                                return _cache.Resolve(fullName);
+                            }
+                        }
 					}
-					catch
+					catch(Exception ex)
 					{
-						// Keep going if there's a bad assembly
-						NTrace.Debug( string.Format( "Bad assembly: {0}", fullFile  ), "AssemblyResolver");
+                        log.Error( "Unable to load addin assembly", ex );
+                        throw;
 					}
 				}
 			}
 
-			NTrace.Debug( string.Format( "Not in Cache: {0}", fullName), 
-				"'AssemblyResolver'");
+			log.Debug( string.Format( "Not in Cache: {0}", fullName) ); 
 			return null;
 		}
 	}

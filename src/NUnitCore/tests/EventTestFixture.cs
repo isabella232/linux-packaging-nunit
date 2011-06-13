@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -17,7 +17,7 @@ namespace NUnit.Core.Tests
 	[TestFixture(Description="Tests that proper events are generated when running  test")]
 	public class EventTestFixture
 	{
-		private string testsDll = "mock-assembly.dll";
+        private string testsDll = MockAssembly.AssemblyPath;
 
 		internal class EventCounter : EventListener
 		{
@@ -48,7 +48,7 @@ namespace NUnit.Core.Tests
 				testCaseStart++;
 			}
 			
-			public void TestFinished(TestCaseResult result)
+			public void TestFinished(TestResult result)
 			{
 				testCaseFinished++;
 			}
@@ -58,7 +58,7 @@ namespace NUnit.Core.Tests
 				suiteStarted++;
 			}
 
-			public void SuiteFinished(TestSuiteResult result)
+			public void SuiteFinished(TestResult result)
 			{
 				suiteFinished++;
 			}
@@ -79,12 +79,12 @@ namespace NUnit.Core.Tests
 			Test testSuite = builder.Build( new TestPackage( testsDll ) );
 			
 			EventCounter counter = new EventCounter();
-			testSuite.Run(counter);
+            testSuite.Run(counter, TestFilter.Empty);
 			Assert.AreEqual(testSuite.CountTestCases(TestFilter.Empty), counter.testCaseStart);
 			Assert.AreEqual(testSuite.CountTestCases(TestFilter.Empty), counter.testCaseFinished);
 
-			Assert.AreEqual(MockAssembly.Suites - MockAssembly.ExplicitFixtures, counter.suiteStarted);
-			Assert.AreEqual(MockAssembly.Suites - MockAssembly.ExplicitFixtures, counter.suiteFinished);
+			Assert.AreEqual(MockAssembly.SuitesRun, counter.suiteStarted);
+			Assert.AreEqual(MockAssembly.SuitesRun, counter.suiteFinished);
 		}
 	}
 }

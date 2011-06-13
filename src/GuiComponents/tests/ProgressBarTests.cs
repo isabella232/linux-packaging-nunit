@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2002-2003, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 namespace NUnit.UiKit.Tests
@@ -22,8 +22,8 @@ namespace NUnit.UiKit.Tests
 	{
 		private TestProgressBar progressBar;
 		private MockTestEventSource mockEvents;
-		private string testsDll = "mock-assembly.dll";
-		private TestNode suite;
+		private string testsDll = MockAssembly.AssemblyPath;
+		private TestSuite suite;
 		int testCount;
 
 		[SetUp]
@@ -32,7 +32,7 @@ namespace NUnit.UiKit.Tests
 			progressBar = new TestProgressBar();
 
 			TestSuiteBuilder builder = new TestSuiteBuilder();
-			suite = new TestNode( builder.Build( new TestPackage( testsDll ) ) );
+			suite = builder.Build( new TestPackage( testsDll ) );
 
 			mockEvents = new MockTestEventSource( suite );
 		}
@@ -51,8 +51,8 @@ namespace NUnit.UiKit.Tests
 			Assert.AreEqual( 0, progressBar.Minimum );
 			Assert.AreEqual( MockAssembly.Tests, progressBar.Maximum );
 			Assert.AreEqual( 1, progressBar.Step );
-			Assert.AreEqual( MockAssembly.Tests, progressBar.Value );
-			Assert.AreEqual( Color.Yellow, progressBar.ForeColor );
+			Assert.AreEqual( MockAssembly.ResultCount, progressBar.Value );
+			Assert.AreEqual( Color.Red, progressBar.ForeColor );
 		}
 
 		private void OnTestFinished( object sender, TestEventArgs e )

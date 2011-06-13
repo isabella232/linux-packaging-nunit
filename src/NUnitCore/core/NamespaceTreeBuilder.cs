@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System.Collections;
@@ -60,41 +60,45 @@ namespace NUnit.Core
 
 		public void Add( TestSuite fixture )
 		{
-            
-			string ns = fixture.TestName.FullName;
-            int index = ns.LastIndexOf( '.' );
-            ns = index > 0 ? ns.Substring( 0, index ) : string.Empty;
-			TestSuite containingSuite = BuildFromNameSpace( ns );
-
-            if (fixture is SetUpFixture)
+            if (fixture != null)
             {
-                // The SetUpFixture must replace the namespace suite
-                // in which it is "contained". 
-                //
-                // First, add the old suite's children
-                foreach (TestSuite child in containingSuite.Tests)
-                    fixture.Add(child);
+                string ns = fixture.TestName.FullName;
+                int index = ns.IndexOf("[");
+                if (index >= 0) ns = ns.Substring(0, index);
+                index = ns.LastIndexOf('.');
+                ns = index > 0 ? ns.Substring(0, index) : string.Empty;
+                TestSuite containingSuite = BuildFromNameSpace(ns);
 
-                // Make the parent of the containing suite point to this
-                // fixture instead
-                // TODO: Get rid of this somehow?
-                TestSuite parent = (TestSuite)containingSuite.Parent;
-                if (parent == null)
+                if (fixture is SetUpFixture)
                 {
-                    fixture.TestName.Name = rootSuite.TestName.Name;
-                    rootSuite = fixture;
+                    // The SetUpFixture must replace the namespace suite
+                    // in which it is "contained". 
+                    //
+                    // First, add the old suite's children
+                    foreach (TestSuite child in containingSuite.Tests)
+                        fixture.Add(child);
+
+                    // Make the parent of the containing suite point to this
+                    // fixture instead
+                    // TODO: Get rid of this somehow?
+                    TestSuite parent = (TestSuite)containingSuite.Parent;
+                    if (parent == null)
+                    {
+                        fixture.TestName.Name = rootSuite.TestName.Name;
+                        rootSuite = fixture;
+                    }
+                    else
+                    {
+                        parent.Tests.Remove(containingSuite);
+                        parent.Add(fixture);
+                    }
+
+                    // Update the hashtable
+                    namespaceSuites[ns] = fixture;
                 }
                 else
-                {
-                    parent.Tests.Remove(containingSuite);
-                    parent.Add(fixture);
-                }
-
-                // Update the hashtable
-                namespaceSuites[ns] = fixture;
+                    containingSuite.Add(fixture);
             }
-            else
-			    containingSuite.Add( fixture );
 		}
 
         //public void Add( SetUpFixture fixture )
@@ -140,7 +144,7 @@ namespace NUnit.Core
 			//string prefix = string.Format( "[{0}]" );
 			if( index == -1 )
 			{
-				suite = new TestSuite( nameSpace );
+				suite = new NamespaceSuite( nameSpace );
 				if ( rootSuite == null )
 					rootSuite = suite;
 				else
@@ -152,7 +156,7 @@ namespace NUnit.Core
 				string parentNameSpace = nameSpace.Substring( 0,index );
 				TestSuite parent = BuildFromNameSpace( parentNameSpace );
 				string suiteName = nameSpace.Substring( index+1 );
-				suite = new TestSuite( parentNameSpace, suiteName );
+				suite = new NamespaceSuite( parentNameSpace, suiteName );
 				parent.Add( suite );
 				namespaceSuites[nameSpace] = suite;
 			}
