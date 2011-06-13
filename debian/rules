@@ -1,5 +1,7 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
+DEB_CLI_ABI_VERSION = 2.5
+DEB_CLI_API_VERSION = 2.5.10
 
 include /usr/share/cli-common/cli.make
 
@@ -36,6 +38,9 @@ override_dh_install:
 	dh_install
 	cp -a src/ConsoleRunner/nunit-console-exe/Ship.config debian/nunit-console/usr/lib/nunit/nunit-console.exe.config
 	cp -a src/GuiRunner/nunit-gui-exe/Ship.config debian/nunit-gui/usr/lib/nunit/nunit.exe.config
+
+override_dh_make_clilibs:
+	dh_makeclilibs -m $(DEB_CLI_API_VERSION)
 
 upstream_version=$(shell dpkg-parsechangelog | sed -rne 's,^Version: ([^-\+]+)+(\+dfsg)*.*,\1,p')
 get-orig-source::
