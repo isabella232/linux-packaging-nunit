@@ -89,7 +89,7 @@ Description: compiled XML documentation for NUnit
  provides detailed API documentation for all Mono components and the Mono CLI
  implementation.
  .
- This packages contains the compiled XML documentation for NUnit.
+ This package contains the compiled XML documentation for NUnit.
 
 Package: nunit
 Architecture: all
