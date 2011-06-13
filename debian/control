@@ -41,6 +41,7 @@ Description: Unit test framework for CLI
 
 Package: libnunit2.5-cil
 Architecture: all
+Section: cli-mono
 Depends: ${cli:Depends}, ${misc:Depends}
 Replaces: libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil
 Suggests: libnunit-doc, monodoc-nunit-manual
