@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -16,17 +16,16 @@ namespace NUnit.Util.Tests
 	public class NUnitProjectTests
 	{
 		static readonly string xmlfile = "test.nunit";
+        static readonly string mockDll = NUnit.Tests.Assemblies.MockAssembly.AssemblyPath;
 
 		private NUnitProject project;
-		private ProjectEventArgs lastEvent;
+		private ProjectService projectService;
 
 		[SetUp]
 		public void SetUp()
 		{
-			NUnitProject.ProjectSeed = 0;
-			project = NUnitProject.EmptyProject();
-			project.Changed += new ProjectEventHandler( OnProjectChanged );
-			lastEvent = null;
+			projectService = new ProjectService();
+			project = projectService.EmptyProject();
 		}
 
 		[TearDown]
@@ -36,16 +35,11 @@ namespace NUnit.Util.Tests
 				File.Delete( xmlfile );
 		}
 
-		private void OnProjectChanged( object sender, ProjectEventArgs e )
-		{
-			lastEvent = e;
-		}
-
 		[Test]
 		public void IsProjectFile()
 		{
-			Assert.IsTrue( NUnitProject.IsProjectFile( @"\x\y\test.nunit" ) );
-			Assert.IsFalse( NUnitProject.IsProjectFile( @"\x\y\test.junit" ) );
+			Assert.IsTrue( NUnitProject.IsNUnitProjectFile( @"\x\y\test.nunit" ) );
+			Assert.IsFalse( NUnitProject.IsNUnitProjectFile( @"\x\y\test.junit" ) );
 		}
 
 		[Test]
@@ -66,7 +60,7 @@ namespace NUnit.Util.Tests
 		{
 			Assert.AreEqual( Path.GetFullPath( "Project1" ), project.ProjectPath );
 			Assert.AreEqual( "Project1", project.Name );
-			NUnitProject another = NUnitProject.EmptyProject();
+			NUnitProject another = projectService.EmptyProject();
 			Assert.AreEqual( Path.GetFullPath( "Project2" ), another.ProjectPath );
 		}
 
@@ -109,17 +103,17 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void ConfigurationFileFromAssembly() 
 		{
-			NUnitProject project = NUnitProject.FromAssembly("mock-assembly.dll");
+			NUnitProject project = projectService.WrapAssembly(mockDll);
 			string config = Path.GetFileName( project.ConfigurationFile );
-			Assert.AreEqual("mock-assembly.dll.config", config);
+			Assert.That(config, Is.EqualTo("mock-assembly.dll.config").IgnoreCase);
 		}
 
 		[Test]
 		public void ConfigurationFileFromAssemblies() 
 		{
-			NUnitProject project = NUnitProject.FromAssemblies(new string[] {"mock-assembly.dll"});
+			NUnitProject project = projectService.WrapAssemblies(new string[] {mockDll});
 			string config = Path.GetFileName( project.ConfigurationFile );
-			Assert.AreEqual("mock-assembly.dll.config", config);
+			Assert.That(config, Is.EqualTo("mock-assembly.dll.config").IgnoreCase);
 		}
 
 		[Test]
@@ -133,7 +127,7 @@ namespace NUnit.Util.Tests
 		public void LoadMakesProjectNotDirty()
 		{
 			project.Save( xmlfile );
-			NUnitProject project2 = NUnitProject.LoadProject( xmlfile );
+			NUnitProject project2 = new ProjectService().LoadProject( xmlfile );
 			Assert.IsFalse( project2.IsDirty );
 		}
 
@@ -181,7 +175,6 @@ namespace NUnit.Util.Tests
 		{
 			project.Configs.Add("Debug");
 			Assert.IsTrue( project.IsDirty );
-			Assert.AreEqual( ProjectChangeType.AddConfig, lastEvent.type );
 		}
 
 		[Test]
@@ -191,7 +184,6 @@ namespace NUnit.Util.Tests
 			project.IsDirty = false;
 			project.Configs[0].Name = "New";
 			Assert.IsTrue( project.IsDirty );
-			Assert.AreEqual( ProjectChangeType.UpdateConfig, lastEvent.type );
 		}
 
 		[Test]
@@ -217,7 +209,6 @@ namespace NUnit.Util.Tests
 			project.IsDirty = false;
 			project.Configs.Remove("Debug");
 			Assert.IsTrue( project.IsDirty );
-			Assert.AreEqual( ProjectChangeType.RemoveConfig, lastEvent.type );
 		}
 
 		[Test]
@@ -239,7 +230,6 @@ namespace NUnit.Util.Tests
 			project.IsDirty = false;
 			project.SetActiveConfig( "Release" );
 			Assert.IsTrue( project.IsDirty );
-			Assert.AreEqual( ProjectChangeType.ActiveConfig, lastEvent.type );
 		}
 
 		[Test]
@@ -248,7 +238,7 @@ namespace NUnit.Util.Tests
 			project.Save( xmlfile );
 			Assert.IsTrue( File.Exists( xmlfile ) );
 
-			NUnitProject project2 = NUnitProject.LoadProject( xmlfile );
+			NUnitProject project2 = projectService.LoadProject( xmlfile );
 
 			Assert.AreEqual( 0, project2.Configs.Count );
 		}
@@ -262,7 +252,7 @@ namespace NUnit.Util.Tests
 
 			Assert.IsTrue( File.Exists( xmlfile ) );
 
-			NUnitProject project2 = NUnitProject.LoadProject( xmlfile );
+			NUnitProject project2 = projectService.LoadProject( xmlfile );
 
 			Assert.AreEqual( 2, project2.Configs.Count );
 			Assert.IsTrue( project2.Configs.Contains( "Debug" ) );
@@ -286,7 +276,7 @@ namespace NUnit.Util.Tests
 
 			Assert.IsTrue( File.Exists( xmlfile ) );
 
-			NUnitProject project2 = NUnitProject.LoadProject( xmlfile );
+			NUnitProject project2 = projectService.LoadProject( xmlfile );
 
 			Assert.AreEqual( 2, project2.Configs.Count );
 

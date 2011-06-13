@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -11,7 +11,9 @@ using NUnit.Core.Extensibility;
 namespace NUnit.Util
 {
 	/// <summary>
-	/// Summary description for Services
+	/// Services is a utility class, which is used to provide access
+	/// to services in a more simple way than is supported by te
+	/// ServiceManager class itself.
 	/// </summary>
 	public class Services
 	{
@@ -58,13 +60,13 @@ namespace NUnit.Util
 		#endregion
 
 		#region UserSettings
-		private static SettingsService userSettings;
-		public static SettingsService UserSettings
+		private static ISettings userSettings;
+		public static ISettings UserSettings
 		{
 			get 
 			{ 
 				if ( userSettings == null )
-					userSettings = (SettingsService)ServiceManager.Services.GetService( typeof( SettingsService ) );
+					userSettings = (ISettings)ServiceManager.Services.GetService( typeof( ISettings ) );
 
 				// Temporary fix needed to run TestDomain tests in test AppDomain
 				// TODO: Figure out how to set up the test domain correctly
@@ -123,6 +125,21 @@ namespace NUnit.Util
 //				}
 
 				return agency;
+			}
+		}
+		#endregion
+
+		#region ProjectLoader
+		private static ProjectService projectService;
+		public static ProjectService ProjectService
+		{
+			get
+			{
+				if ( projectService == null )
+					projectService = (ProjectService)
+						ServiceManager.Services.GetService( typeof( ProjectService ) );
+
+				return projectService;
 			}
 		}
 		#endregion

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -26,6 +26,8 @@ namespace NUnit.Mocks
 		private IDictionary methods = new Hashtable();
 
 		private Exception lastException;
+
+        private ArrayList unexpected = new ArrayList();
 
 		#endregion
 
@@ -97,11 +99,14 @@ namespace NUnit.Mocks
 
 		#region IVerify Members
 
-		public virtual void Verify()
-		{
-			foreach( IMethod method in methods.Values )
-				method.Verify();
-		}
+        public virtual void Verify()
+        {
+            foreach (IMethod method in methods.Values)
+                method.Verify();
+
+            if (unexpected.Count > 0)
+                Assert.Fail("Unexpected call to " + (string)unexpected[0]);
+        }
 
 		#endregion
 
@@ -124,8 +129,11 @@ namespace NUnit.Mocks
 				}
 			}
 			else // methodName is not listed in methods
-			if ( Strict )
-				Assert.Fail( "Unexpected call to " + methodName );
+                if (Strict)
+                {
+                    unexpected.Add(methodName);
+                    Assert.Fail("Unexpected call to " + methodName);
+                }
 			
 			// not listed but Strict is not specified
 			return null;

@@ -1,6 +1,11 @@
+// ****************************************************************
+// Copyright 2009, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
 using System;
 using NUnit.Framework;
-using NUnit.Framework.SyntaxHelpers;
 using NUnit.Core;
 using NUnit.Core.Filters;
 

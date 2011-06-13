@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -21,15 +21,19 @@ namespace NUnit.UiKit
 	/// </summary>
 	public class ErrorDisplay : System.Windows.Forms.UserControl, TestObserver
 	{
-		private ISettings settings = null;
+        static readonly Font DefaultFixedFont = new Font(FontFamily.GenericMonospace, 8.0F);
+
+        private ISettings settings = null;
 		int hoverIndex = -1;
 		private System.Windows.Forms.Timer hoverTimer;
 		TipWindow tipWindow;
 		private bool wordWrap = false;
 
 		private System.Windows.Forms.ListBox detailList;
-		public CP.Windows.Forms.ExpandingTextBox stackTrace;
-		public System.Windows.Forms.Splitter tabSplitter;
+        public UiException.Controls.StackTraceDisplay stackTraceDisplay;
+        public UiException.Controls.ErrorBrowser errorBrowser;
+        private UiException.Controls.SourceCodeDisplay sourceCode;
+        public System.Windows.Forms.Splitter tabSplitter;
 		private System.Windows.Forms.ContextMenu detailListContextMenu;
 		private System.Windows.Forms.MenuItem copyDetailMenuItem;
 		/// <summary> 
@@ -67,7 +71,6 @@ namespace NUnit.UiKit
 				if ( value != this.wordWrap )
 				{
 					this.wordWrap = value; 
-					this.stackTrace.WordWrap = value;
 					RefillDetailList();
 				}
 			}
@@ -83,7 +86,10 @@ namespace NUnit.UiKit
 		{
 			this.detailList = new System.Windows.Forms.ListBox();
 			this.tabSplitter = new System.Windows.Forms.Splitter();
-			this.stackTrace = new CP.Windows.Forms.ExpandingTextBox();
+
+            this.errorBrowser = new NUnit.UiException.Controls.ErrorBrowser();
+            this.sourceCode = new UiException.Controls.SourceCodeDisplay();
+            this.stackTraceDisplay = new UiException.Controls.StackTraceDisplay();
 			this.detailListContextMenu = new System.Windows.Forms.ContextMenu();
 			this.copyDetailMenuItem = new System.Windows.Forms.MenuItem();
 			this.SuspendLayout();
@@ -92,7 +98,7 @@ namespace NUnit.UiKit
 			// 
 			this.detailList.Dock = System.Windows.Forms.DockStyle.Top;
 			this.detailList.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-			this.detailList.Font = new System.Drawing.Font("Courier New", 8.25F);
+			this.detailList.Font = DefaultFixedFont;
 			this.detailList.HorizontalExtent = 2000;
 			this.detailList.HorizontalScrollbar = true;
 			this.detailList.ItemHeight = 16;
@@ -119,23 +125,27 @@ namespace NUnit.UiKit
 			this.tabSplitter.TabIndex = 3;
 			this.tabSplitter.TabStop = false;
 			this.tabSplitter.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.tabSplitter_SplitterMoved);
-			// 
-			// stackTrace
-			// 
-			this.stackTrace.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.stackTrace.Font = new System.Drawing.Font("Courier New", 9.75F);
-			this.stackTrace.Location = new System.Drawing.Point(0, 137);
-			this.stackTrace.Multiline = true;
-			this.stackTrace.Name = "stackTrace";
-			this.stackTrace.ReadOnly = true;
-			this.stackTrace.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this.stackTrace.Size = new System.Drawing.Size(496, 151);
-			this.stackTrace.TabIndex = 2;
-			this.stackTrace.Text = "";
-			this.stackTrace.WordWrap = false;
-			this.stackTrace.KeyUp += new System.Windows.Forms.KeyEventHandler(this.stackTrace_KeyUp);
-			// 
-			// detailListContextMenu
+            // 
+            // errorBrowser
+            // 
+            this.errorBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.errorBrowser.Location = new System.Drawing.Point(0, 137);
+            this.errorBrowser.Name = "errorBrowser";
+            this.errorBrowser.Size = new System.Drawing.Size(496, 151);
+            this.errorBrowser.StackTraceSource = null;
+            this.errorBrowser.TabIndex = 4;
+            //
+            // configure and register SourceCodeDisplay
+            //
+            this.sourceCode.AutoSelectFirstItem = true;
+            this.sourceCode.ListOrderPolicy = UiException.Controls.ErrorListOrderPolicy.ReverseOrder;
+            this.sourceCode.SplitOrientation = Orientation.Vertical;
+            this.sourceCode.SplitterDistance = 0.3f;
+            this.stackTraceDisplay.Font = DefaultFixedFont;
+            this.errorBrowser.RegisterDisplay(sourceCode);
+            this.errorBrowser.RegisterDisplay(stackTraceDisplay);
+			//
+            // detailListContextMenu
 			// 
 			this.detailListContextMenu.MenuItems.AddRange(new System.Windows.Forms.MenuItem[] {
 																								  this.copyDetailMenuItem});
@@ -148,7 +158,7 @@ namespace NUnit.UiKit
 			// 
 			// ErrorDisplay
 			// 
-			this.Controls.Add(this.stackTrace);
+            this.Controls.Add(this.errorBrowser);
 			this.Controls.Add(this.tabSplitter);
 			this.Controls.Add(this.detailList);
 			this.Name = "ErrorDisplay";
@@ -177,12 +187,55 @@ namespace NUnit.UiKit
 				if ( splitPosition >= tabSplitter.MinSize && splitPosition < this.ClientSize.Height )
 					this.tabSplitter.SplitPosition = splitPosition;
 
-				stackTrace.AutoExpand = settings.GetSetting( "Gui.ResultTabs.ErrorsTab.ToolTipsEnabled", true );
 				this.WordWrap = settings.GetSetting( "Gui.ResultTabs.ErrorsTab.WordWrapEnabled", true );
+
+                this.detailList.Font = this.stackTraceDisplay.Font =
+                    settings.GetSetting( "Gui.FixedFont", DefaultFixedFont );
+
+                Orientation splitOrientation = (Orientation)settings.GetSetting(
+                    "Gui.ResultTabs.ErrorBrowser.SplitterOrientation", Orientation.Vertical);
+                float splitterDistance = splitOrientation == Orientation.Vertical
+                    ? settings.GetSetting( "Gui.ResultTabs.ErrorBrowser.VerticalPosition", 0.3f )
+                    : settings.GetSetting( "Gui.ResultTabs.ErrorBrowser.HorizontalPosition", 0.3f );
+
+                sourceCode.SplitOrientation = splitOrientation;
+                sourceCode.SplitterDistance = splitterDistance;
+
+                sourceCode.SplitOrientationChanged += new EventHandler(sourceCode_SplitOrientationChanged);
+                sourceCode.SplitterDistanceChanged += new EventHandler(sourceCode_SplitterDistanceChanged);
+
+                if ( settings.GetSetting("Gui.ResultTabs.ErrorBrowser.SourceCodeDisplay", false) )
+                    errorBrowser.SelectedDisplay = sourceCode;
+                else
+                    errorBrowser.SelectedDisplay = stackTraceDisplay;
+
+                errorBrowser.StackTraceDisplayChanged += new EventHandler(errorBrowser_StackTraceDisplayChanged);
 			}
 
 			base.OnLoad (e);
 		}
+
+        void errorBrowser_StackTraceDisplayChanged(object sender, EventArgs e)
+        {
+            settings.SaveSetting("Gui.ResultTabs.ErrorBrowser.SourceCodeDisplay",
+                errorBrowser.SelectedDisplay == sourceCode);
+        }
+
+        void sourceCode_SplitterDistanceChanged(object sender, EventArgs e)
+        {
+            string distanceSetting = sourceCode.SplitOrientation == Orientation.Vertical
+                ? "Gui.ResultTabs.ErrorBrowser.VerticalPosition" : "Gui.ResultTabs.ErrorBrowser.HorizontalPosition";
+            settings.SaveSetting(distanceSetting, sourceCode.SplitterDistance);
+        }
+
+        void sourceCode_SplitOrientationChanged(object sender, EventArgs e)
+        {
+            settings.SaveSetting("Gui.ResultTabs.ErrorBrowser.SplitterOrientation", sourceCode.SplitOrientation);
+
+            string distanceSetting = sourceCode.SplitOrientation == Orientation.Vertical
+                ? "Gui.ResultTabs.ErrorBrowser.VerticalPosition" : "Gui.ResultTabs.ErrorBrowser.HorizontalPosition";
+            sourceCode.SplitterDistance = settings.GetSetting(distanceSetting, 0.3f);
+        }
 		#endregion
 
 		#region Public Methods
@@ -190,16 +243,22 @@ namespace NUnit.UiKit
 		{
 			detailList.Items.Clear();
 			detailList.ContextMenu = null;
-			stackTrace.Text = "";
+            errorBrowser.StackTraceSource = "";
 		}
 		#endregion
 
 		#region UserSettings Events
 		private void UserSettings_Changed( object sender, SettingsEventArgs args )
 		{
-			this.stackTrace.AutoExpand = settings.GetSetting( "Gui.ResultTabs.ErrorsTab.ToolTipsEnabled ", false );
 			this.WordWrap = settings.GetSetting( "Gui.ResultTabs.ErrorsTab.WordWrapEnabled", true );
-		}
+            Font newFont = this.stackTraceDisplay.Font = this.sourceCode.CodeDisplayFont
+                = settings.GetSetting("Gui.FixedFont", DefaultFixedFont);
+            if (newFont != this.detailList.Font)
+            {
+                this.detailList.Font = newFont;
+                RefillDetailList();
+            }
+        }
 		#endregion
 
 		#region DetailList Events
@@ -210,10 +269,7 @@ namespace NUnit.UiKit
 		private void detailList_SelectedIndexChanged(object sender, System.EventArgs e)
 		{
 			TestResultItem resultItem = (TestResultItem)detailList.SelectedItem;
-			//string stackTrace = resultItem.StackTrace;
-			stackTrace.Text = resultItem.StackTrace;
-
-			//			toolTip.SetToolTip(detailList,resultItem.GetToolTipMessage());
+            errorBrowser.StackTraceSource = resultItem.StackTrace;
 			detailList.ContextMenu = detailListContextMenu;
 		}
 
@@ -343,14 +399,6 @@ namespace NUnit.UiKit
 			}
 		}
 
-		private void stackTrace_KeyUp(object sender, System.Windows.Forms.KeyEventArgs e)
-		{
-			if ( e.KeyCode == Keys.A && e.Modifiers == Keys.Control )
-			{
-				stackTrace.SelectAll();
-			}
-		}
-
 		private void tabSplitter_SplitterMoved( object sender, SplitterEventArgs e )
 		{
 			settings.SaveSetting( "Gui.ResultTabs.ErrorsTabSplitterPosition", tabSplitter.SplitPosition );
@@ -370,17 +418,33 @@ namespace NUnit.UiKit
 		#region Test Event Handlers
 		private void OnTestFinished(object sender, TestEventArgs args)
 		{
-			TestResult result = args.Result;
-			if( result.Executed && result.IsFailure && result.FailureSite != FailureSite.Parent )
-				InsertTestResultItem( result );
+            TestResult result = args.Result;
+            switch (result.ResultState)
+            {
+                case ResultState.Failure:
+                case ResultState.Error:
+                case ResultState.Cancelled:
+                    if (result.FailureSite != FailureSite.Parent)
+                        InsertTestResultItem(result);
+                    break;
+                case ResultState.NotRunnable:
+                    InsertTestResultItem(result);
+                    break;
+            }
 		}
 		
 		private void OnSuiteFinished(object sender, TestEventArgs args)
 		{
 			TestResult result = args.Result;
-			if( result.Executed && result.IsFailure && 
-				result.FailureSite != FailureSite.Child )
-				InsertTestResultItem( result );
+			if(	result.FailureSite != FailureSite.Child )
+                switch (result.ResultState)
+                {
+                    case ResultState.Failure:
+                    case ResultState.Error:
+                    case ResultState.Cancelled:
+                        InsertTestResultItem(result);
+                        break;
+                }
 		}
 		
 		private void OnTestException(object sender, TestEventArgs args)

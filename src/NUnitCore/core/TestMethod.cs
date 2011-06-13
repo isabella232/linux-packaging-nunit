@@ -1,176 +1,290 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
 {
 	using System;
+    using System.Collections;
+    using System.Runtime.Remoting.Messaging;
+    using System.Threading;
 	using System.Text;
 	using System.Text.RegularExpressions;
 	using System.Reflection;
 
 	/// <summary>
-	/// The TestMethod class represents a TestCase implemented as a method
-	/// call on a fixture object. At the moment, this is the only way we 
-	/// implement a TestCase, but others are expected in the future.
+	/// The TestMethod class represents a Test implemented as a method.
 	/// 
 	/// Because of how exceptions are handled internally, this class
 	/// must incorporate processing of expected exceptions. A change to
-	/// the TestCase interface might make it easier to process exceptions
+	/// the Test interface might make it easier to process exceptions
 	/// in an object that aggregates a TestMethod in the future.
 	/// </summary>
-	public abstract class TestMethod : TestCase
+	public abstract class TestMethod : Test
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(TestMethod));
+        
+        static ContextDictionary context;
+
 		#region Fields
 		/// <summary>
 		/// The test method
 		/// </summary>
-		private MethodInfo method;
+		internal MethodInfo method;
 
 		/// <summary>
 		/// The SetUp method.
 		/// </summary>
-		protected MethodInfo setUpMethod;
+		protected MethodInfo[] setUpMethods;
 
 		/// <summary>
 		/// The teardown method
 		/// </summary>
-		protected MethodInfo tearDownMethod;
+		protected MethodInfo[] tearDownMethods;
 
-		/// <summary>
-		/// The exception handler method
-		/// </summary>
-		internal MethodInfo exceptionHandler;
+        /// <summary>
+        /// The ExpectedExceptionProcessor for this test, if any
+        /// </summary>
+        internal ExpectedExceptionProcessor exceptionProcessor;
 
-		/// <summary>
-		/// True if an exception is expected
-		/// </summary>
-		internal bool exceptionExpected;
+        /// <summary>
+        /// Arguments to be used in invoking the method
+        /// </summary>
+	    internal object[] arguments;
 
-		/// <summary>
-		/// The type of any expected exception
-		/// </summary>
-		internal Type expectedExceptionType;
-        
-		/// <summary>
-		/// The full name of any expected exception type
-		/// </summary>
-		internal string expectedExceptionName;
-        
-		/// <summary>
-		/// The value of any message associated with an expected exception
-		/// </summary>
-		internal string expectedMessage;
-        
-		/// <summary>
-		/// A string indicating how to match the expected message
-		/// </summary>
-		internal string matchType;
+        /// <summary>
+        /// The expected result of the method return value
+        /// </summary>
+	    internal object expectedResult;
 
-		/// <summary>
-		/// A string containing any user message specified for the expected exception
-		/// </summary>
-		internal string userMessage;
+        /// <summary>
+        /// Indicates whether expectedResult was set - thereby allowing null as a value
+        /// </summary>
+        internal bool hasExpectedResult;
+
+        /// <summary>
+        /// The fixture object, if it has been created
+        /// </summary>
+        private object fixture;
+
+        private Exception builderException;
 
 		#endregion
 
 		#region Constructors
 		public TestMethod( MethodInfo method ) 
-			: base( method ) 
+			: base( method.ReflectedType.FullName, method.Name ) 
 		{
-			this.method = method;
+            if( method.DeclaringType != method.ReflectedType)
+                this.TestName.Name = method.DeclaringType.Name + "." + method.Name;
+
+            this.method = method;
 		}
 		#endregion
 
+        #region Static Properties
+	    private static ContextDictionary Context
+	    {
+	        get
+	        {
+	            if (context==null)
+	            {
+	                context = new ContextDictionary();
+	            }
+	            return context;
+	        }
+	    }
+        #endregion
+
 		#region Properties
+
+        public override string TestType
+        {
+            get { return "TestMethod"; }
+        }
+
 		public MethodInfo Method
 		{
 			get { return method; }
 		}
 
+        public override Type FixtureType
+        {
+            get { return method.ReflectedType; }
+        }
+
+        public ExpectedExceptionProcessor ExceptionProcessor
+        {
+            get { return exceptionProcessor; }
+            set { exceptionProcessor = value; }
+        }
+
 		public bool ExceptionExpected
 		{
-			get { return exceptionExpected; }
-			set { exceptionExpected = value; }
+            get { return exceptionProcessor != null; }
 		}
 
-		public MethodInfo ExceptionHandler
-		{
-			get { return exceptionHandler; }
-			set { exceptionHandler = value; }
-		}
+        public override object Fixture
+        {
+            get { return fixture; }
+            set { fixture = value; }
+        }
 
-		public Type ExpectedExceptionType
+        public int Timeout
+        {
+            get
+            {
+                return Properties.Contains("Timeout")
+                    ? (int)Properties["Timeout"]
+                    : TestExecutionContext.CurrentContext.TestCaseTimeout;
+            }
+        }
+		
+		protected override bool ShouldRunOnOwnThread 
 		{
-			get { return expectedExceptionType; }
-			set 
-			{ 
-				expectedExceptionType = value;
-				expectedExceptionName = expectedExceptionType != null
-					? expectedExceptionType.FullName
-					: null;
-			}
-		}
-
-		public string ExpectedExceptionName
-		{
-			get { return expectedExceptionName; }
-			set
+			get 
 			{
-				expectedExceptionType = null;
-				expectedExceptionName = value;
+                return base.ShouldRunOnOwnThread || Timeout > 0;
 			}
 		}
 
-		public string ExpectedMessage
-		{
-			get { return expectedMessage; }
-			set { expectedMessage = value; }
-		}
-
-		public string MatchType
-		{
-			get { return matchType; }
-			set { matchType = value; }
-		}
-
-		public string UserMessage
-		{
-			get { return userMessage; }
-			set { userMessage = value; }
-		}
-		#endregion
+        public Exception BuilderException
+        {
+            get { return builderException; }
+            set { builderException = value; }
+        }
+        #endregion
 
 		#region Run Methods
-		public override void Run(TestCaseResult testResult)
-		{ 
-			try
-			{
-				if ( this.Parent != null)
-					Fixture = this.Parent.Fixture;
+        public override TestResult Run(EventListener listener, ITestFilter filter)
+        {
+            log.Debug("Test Starting: " + this.TestName.FullName);
+            listener.TestStarted(this.TestName);
+            long startTime = DateTime.Now.Ticks;
 
-				if (!testResult.IsFailure)
-				{
-					// Temporary... to allow for tests that directly execute a test case
-					if (Fixture == null)
-						Fixture = Reflect.Construct(this.FixtureType);
+            TestResult testResult = this.RunState == RunState.Runnable || this.RunState == RunState.Explicit
+				? RunTestInContext() : SkipTest();
 
-                    if (this.Properties["_SETCULTURE"] != null)
-                        TestContext.CurrentCulture =
-                            new System.Globalization.CultureInfo((string)Properties["_SETCULTURE"]);
-                    
-                    doRun(testResult);
-				}
-			}
-			catch (Exception ex)
-			{
-				if (ex is NUnitException)
-					ex = ex.InnerException;
+			log.Debug("Test result = " + testResult.ResultState);
 
-				RecordException(ex, testResult);
-			}
+            long stopTime = DateTime.Now.Ticks;
+            double time = ((double)(stopTime - startTime)) / (double)TimeSpan.TicksPerSecond;
+            testResult.Time = time;
+
+            listener.TestFinished(testResult);
+            return testResult;
+        }
+		      
+		private TestResult SkipTest()
+		{
+			TestResult testResult = new TestResult(this);
+			
+            switch (this.RunState)
+            {
+                case RunState.Skipped:
+                default:
+                    testResult.Skip(IgnoreReason);
+                    break;
+                case RunState.NotRunnable:
+                    if (BuilderException != null)
+                        testResult.Invalid(BuilderException);
+                    else
+                        testResult.Invalid(IgnoreReason);
+                    break;
+                case RunState.Ignored:
+                    testResult.Ignore(IgnoreReason);
+                    break;
+            }
+			
+			return testResult;
+		}
+		
+        private TestResult RunTestInContext()
+		{
+			TestExecutionContext.Save();
+
+            TestExecutionContext.CurrentContext.CurrentTest = this;
+
+            ContextDictionary context = Context;
+            context._ec = TestExecutionContext.CurrentContext;
+
+            CallContext.SetData("NUnit.Framework.TestContext", context);
+
+            if (this.Parent != null)
+            {
+                this.Fixture = this.Parent.Fixture;
+                TestSuite suite = this.Parent as TestSuite;
+                if (suite != null)
+                {
+                    this.setUpMethods = suite.GetSetUpMethods();
+                    this.tearDownMethods = suite.GetTearDownMethods();
+                }
+            }
+
+            try
+            {
+                // Temporary... to allow for tests that directly execute a test case
+                if (Fixture == null && !method.IsStatic)
+                    Fixture = Reflect.Construct(this.FixtureType);
+
+                if (this.Properties["_SETCULTURE"] != null)
+                    TestExecutionContext.CurrentContext.CurrentCulture =
+                        new System.Globalization.CultureInfo((string)Properties["_SETCULTURE"]);
+
+                if (this.Properties["_SETUICULTURE"] != null)
+                    TestExecutionContext.CurrentContext.CurrentUICulture =
+                        new System.Globalization.CultureInfo((string)Properties["_SETUICULTURE"]);
+
+				return RunRepeatedTest();
+            }
+            catch (Exception ex)
+            {
+				log.Debug("TestMethod: Caught " + ex.GetType().Name);
+				
+                if (ex is ThreadAbortException)
+                    Thread.ResetAbort();
+
+				TestResult testResult = new TestResult(this);
+                RecordException(ex, testResult, FailureSite.Test);
+				
+				return testResult;
+            }
+            finally
+            {
+                Fixture = null;
+
+                CallContext.FreeNamedDataSlot("NUnit.Framework.TestContext");
+                TestExecutionContext.Restore();
+            }
+		}
+		
+		// TODO: Repeated tests need to be implemented as separate tests
+		// in the tree of tests. Once that is done, this method will no
+		// longer be needed and RunTest can be called directly.
+		private TestResult RunRepeatedTest()
+		{
+			TestResult testResult = null;
+			
+			int repeatCount = this.Properties.Contains("Repeat")
+				? (int)this.Properties["Repeat"] : 1;
+			
+            while (repeatCount-- > 0)
+            {
+                testResult = ShouldRunOnOwnThread
+                    ? new TestMethodThread(this).Run(NullListener.NULL, TestFilter.Empty)
+                    : RunTest();
+
+                if (testResult.ResultState == ResultState.Failure ||
+                    testResult.ResultState == ResultState.Error ||
+                    testResult.ResultState == ResultState.Cancelled)
+                {
+                    break;
+                }
+            }
+			
+			return testResult;
 		}
 
 		/// <summary>
@@ -179,43 +293,84 @@ namespace NUnit.Core
 		/// TestFixtureSetUp and TestFixtureTearDown needed.
 		/// </summary>
 		/// <param name="testResult">The result in which to record success or failure</param>
-		public virtual void doRun( TestCaseResult testResult )
+		public virtual TestResult RunTest()
 		{
 			DateTime start = DateTime.Now;
 
+			TestResult testResult = new TestResult(this);
+			TestExecutionContext.CurrentContext.CurrentResult =  testResult;
+			
 			try 
 			{
-				if ( setUpMethod != null )
-					Reflect.InvokeMethod( setUpMethod, this.Fixture );
+                RunSetUp();
 
-				doTestCase( testResult );
+				RunTestCase( testResult );
 			}
 			catch(Exception ex)
 			{
-				if ( ex is NUnitException )
-					ex = ex.InnerException;
+                // doTestCase handles its own exceptions so
+                // if we're here it's a setup exception
+                if (ex is ThreadAbortException)
+                    Thread.ResetAbort();
 
-				RecordException( ex, testResult );
+                RecordException(ex, testResult, FailureSite.SetUp);
 			}
 			finally 
 			{
-				doTearDown( testResult );
+				RunTearDown( testResult );
 
 				DateTime stop = DateTime.Now;
 				TimeSpan span = stop.Subtract(start);
 				testResult.Time = (double)span.Ticks / (double)TimeSpan.TicksPerSecond;
+
+                if (testResult.IsSuccess)
+				{
+					if (this.Properties.Contains("MaxTime"))
+                	{
+                    int elapsedTime = (int)Math.Round(testResult.Time * 1000.0);
+                    int maxTime = (int)this.Properties["MaxTime"];
+
+                    if (maxTime > 0 && elapsedTime > maxTime)
+                        testResult.Failure(
+                            string.Format("Elapsed time of {0}ms exceeds maximum of {1}ms",
+                                elapsedTime, maxTime),
+                            null);
+					}
+					
+					if (testResult.IsSuccess && testResult.Message == null && 
+					    Environment.CurrentDirectory != TestExecutionContext.CurrentContext.prior.CurrentDirectory)
+					{
+						// TODO: Introduce a warning result state in NUnit 3.0
+						testResult.SetResult(ResultState.Success, "Warning: Test changed the CurrentDirectory", null);
+					}
+				}
 			}
+			
+			log.Debug("Test result = " + testResult.ResultState);
+				
+			return testResult;
 		}
 		#endregion
 
 		#region Invoke Methods by Reflection, Recording Errors
 
-		private void doTearDown( TestCaseResult testResult )
+        private void RunSetUp()
+        {
+            if (setUpMethods != null)
+                foreach( MethodInfo setUpMethod in setUpMethods )
+                    Reflect.InvokeMethod(setUpMethod, setUpMethod.IsStatic ? null : this.Fixture);
+        }
+
+		private void RunTearDown( TestResult testResult )
 		{
 			try
 			{
-				if ( tearDownMethod != null )
-					tearDownMethod.Invoke( this.Fixture, new object[0] );
+                if (tearDownMethods != null)
+                {
+                    int index = tearDownMethods.Length;
+                    while (--index >= 0)
+                        Reflect.InvokeMethod(tearDownMethods[index], tearDownMethods[index].IsStatic ? null : this.Fixture);
+                }
 			}
 			catch(Exception ex)
 			{
@@ -226,172 +381,83 @@ namespace NUnit.Core
 			}
 		}
 
-		private void doTestCase( TestCaseResult testResult )
+		private void RunTestCase( TestResult testResult )
 		{
-			try
-			{
-				RunTestMethod(testResult);
-				ProcessNoException(testResult);
-			}
-			catch( Exception ex )
-			{
-				if ( ex is NUnitException )
-					ex = ex.InnerException;
+            try
+            {
+                RunTestMethod(testResult);
+                if (testResult.IsSuccess && exceptionProcessor != null)
+                    exceptionProcessor.ProcessNoException(testResult);
+            }
+            catch (Exception ex)
+            {
+                if (ex is ThreadAbortException)
+                    Thread.ResetAbort();
 
-				if ( IsIgnoreException( ex ) )
-					testResult.Ignore( ex );
-				else
-					ProcessException(ex, testResult);
-			}
+                if (exceptionProcessor == null)
+                    RecordException(ex, testResult, FailureSite.Test);
+                else
+                    exceptionProcessor.ProcessException(ex, testResult);
+            }
 		}
 
-		public virtual void RunTestMethod(TestCaseResult testResult)
+		private void RunTestMethod(TestResult testResult)
 		{
-			Reflect.InvokeMethod( this.method, this.Fixture );
-		}
+		    object fixture = this.method.IsStatic ? null : this.Fixture;
+
+			object result = Reflect.InvokeMethod( this.method, fixture, this.arguments );
+
+            if (this.hasExpectedResult)
+                NUnitFramework.Assert.AreEqual(expectedResult, result);
+
+            testResult.Success();
+        }
 
 		#endregion
 
 		#region Record Info About An Exception
-
-		protected void RecordException( Exception ex, TestResult testResult )
+		protected virtual void RecordException( Exception exception, TestResult testResult, FailureSite failureSite )
 		{
-			if ( IsIgnoreException( ex ) )
-				testResult.Ignore( ex.Message );
-			else if ( IsAssertException( ex ) )
-				testResult.Failure( ex.Message, ex.StackTrace );
-			else	
-				testResult.Error( ex );
-		}
+            if (exception is NUnitException)
+                exception = exception.InnerException;
 
-		protected string GetStackTrace(Exception exception)
-		{
-			try
-			{
-				return exception.StackTrace;
-			}
-			catch( Exception )
-			{
-				return "No stack trace available";
-			}
-		}
-
-		#endregion
-
-		#region Exception Processing
-		protected internal virtual void ProcessNoException(TestCaseResult testResult)
-		{
-			if ( ExceptionExpected )
-				testResult.Failure(NoExceptionMessage(), null);
-			else
-				testResult.Success();
-		}
-		
-		protected internal virtual void ProcessException(Exception exception, TestCaseResult testResult)
-		{
-			if (!ExceptionExpected)
-			{
-				RecordException(exception, testResult); 
-				return;
-			}
-
-			if (IsExpectedExceptionType(exception))
-			{
-				if (IsExpectedMessageMatch(exception))
-				{
-					if ( exceptionHandler != null )
-						Reflect.InvokeMethod( exceptionHandler, this.Fixture, exception );
-
-					testResult.Success();
-				}
-				else
-				{
-					testResult.Failure(WrongTextMessage(exception), GetStackTrace(exception));
-				}
-			}
-			else if (IsAssertException(exception))
-			{
-				testResult.Failure(exception.Message, exception.StackTrace);
-			}
-			else
-			{
-				testResult.Failure(WrongTypeMessage(exception), GetStackTrace(exception));
-			}
+            testResult.SetResult(NUnitFramework.GetResultState(exception), exception, failureSite);
 		}
 		#endregion
 
-		#region Abstract Methods
-		protected abstract bool IsAssertException(Exception ex);
+        #region Inner Classes
+        public class ContextDictionary : Hashtable
+        {
+            internal TestExecutionContext _ec;
 
-		protected abstract bool IsIgnoreException(Exception ex);
-		#endregion
-
-		#region Helper Methods
-		protected bool IsExpectedExceptionType(Exception exception)
-		{
-			return expectedExceptionName == null || expectedExceptionName.Equals(exception.GetType().FullName);
-		}
-
-		protected bool IsExpectedMessageMatch(Exception exception)
-		{
-			if (expectedMessage == null)
-				return true;
-
-			switch (matchType)
-			{
-				case "Exact":
-				default:
-					return expectedMessage.Equals(exception.Message);
-				case "Contains":
-					return exception.Message.IndexOf(expectedMessage) >= 0;
-				case "Regex":
-					return Regex.IsMatch(exception.Message, expectedMessage);
-			}
-		}
-
-		protected string NoExceptionMessage()
-		{
-			string expectedType = expectedExceptionName == null ? "An Exception" : expectedExceptionName;
-			return CombineWithUserMessage( expectedType + " was expected" );
-		}
-
-		protected string WrongTypeMessage(Exception exception)
-		{
-			return CombineWithUserMessage(
-				"An unexpected exception type was thrown" + Environment.NewLine +
-				"Expected: " + expectedExceptionName + Environment.NewLine +
-				" but was: " + exception.GetType().FullName + " : " + exception.Message );
-		}
-
-		protected string WrongTextMessage(Exception exception)
-		{
-			string expectedText;
-			switch (matchType)
-			{
-				default:
-				case "Exact":
-					expectedText = "Expected: ";
-					break;
-				case "Contains":
-					expectedText = "Expected message containing: ";
-					break;
-				case "Regex":
-					expectedText = "Expected message matching: ";
-					break;
-			}
-
-			return CombineWithUserMessage(
-				"The exception message text was incorrect" + Environment.NewLine +
-				expectedText + expectedMessage + Environment.NewLine +
-				" but was: " + exception.Message );
-		}
-
-		private string CombineWithUserMessage( string message )
-		{
-			if ( userMessage == null )
-				return message;
-			return userMessage + Environment.NewLine + message;
-		}
+            public override object this[object key]
+            {
+                get
+                {
+                    // Get Result values dynamically, since
+                    // they may change as execution proceeds
+                    switch (key as string)
+                    {
+                        case "Test.Name":
+                            return _ec.CurrentTest.TestName.Name;
+                        case "Test.FullName":
+                            return _ec.CurrentTest.TestName.FullName;
+                        case "Test.Properties":
+                            return _ec.CurrentTest.Properties;
+                        case "Result.State":
+                            return (int)_ec.CurrentResult.ResultState;
+                        case "TestDirectory":
+                            return AssemblyHelper.GetDirectoryName(_ec.CurrentTest.FixtureType.Assembly);
+                        default:
+                            return base[key];
+                    }
+                }
+                set
+                {
+                    base[key] = value;
+                }
+            }
+        }
         #endregion
     }
 }

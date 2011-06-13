@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -14,8 +14,11 @@ using NUnit.Util;
 namespace NUnit.UiKit
 {
 	/// <summary>
-	/// Summary description for AssemblyNameDialog.
-	/// </summary>
+    /// Displays a dialog for entry of a new name for an
+    /// existing configuration. This dialog collects and
+    /// validates the name. The caller is responsible for
+    /// actually renaming the cofiguration.
+    /// </summary>
 	public class RenameConfigurationDialog : System.Windows.Forms.Form
 	{
 		#region Instance Variables
@@ -115,7 +118,6 @@ namespace NUnit.UiKit
 			// RenameConfigurationDialog
 			// 
 			this.AcceptButton = this.okButton;
-			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.CancelButton = this.cancelButton;
 			this.ClientSize = new System.Drawing.Size(291, 79);
 			this.Controls.Add(this.cancelButton);

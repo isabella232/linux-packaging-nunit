@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -29,6 +29,8 @@ namespace NUnit.Util.Tests
 		}
 
 		private TestEventArgsCollection events;
+
+        public bool GotRunFinished = false;
 
 		public TestEventCatcher( ITestEvents source )
 		{
@@ -71,6 +73,8 @@ namespace NUnit.Util.Tests
 		private void OnTestEvent( object sender, TestEventArgs e )
 		{
 			events.Add( e );
+            if (e.Action == TestAction.RunFinished)
+                GotRunFinished = true;
 		}
 	}
 }

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using System.Reflection;
@@ -36,12 +36,22 @@ namespace NUnit.Core.Tests
 		[Test]
 		public void IgnoreWorksForTestCase()
 		{
-			Type fixtureType = typeof(IgnoredTestCaseFixture);
-			Test test = TestBuilder.MakeTestCase( fixtureType, "CallsIgnore" );
-			TestResult result = test.Run( NullListener.NULL);
-			Assert.IsFalse( result.Executed, "TestCase should not run" );
-			Assert.AreEqual( "Ignore me", result.Message );
-		}
+            Type fixtureType = typeof(IgnoredTestCaseFixture);
+            Test test = TestBuilder.MakeTestCase(fixtureType, "CallsIgnore");
+            TestResult result = test.Run(NullListener.NULL, TestFilter.Empty);
+            Assert.IsFalse(result.Executed, "Test should not run");
+            Assert.AreEqual("Ignore me", result.Message);
+        }
+
+        [Test]
+        public void IgnoreTakesPrecedenceOverExpectedException()
+        {
+            Type fixtureType = typeof(IgnoredTestCaseFixture);
+            Test test = TestBuilder.MakeTestCase(fixtureType, "CallsIgnoreWithExpectedException");
+            TestResult result = test.Run(NullListener.NULL, TestFilter.Empty);
+            Assert.IsFalse(result.Executed, "Test should not run");
+            Assert.AreEqual("Ignore me", result.Message);
+        }
 
 		[Test]
 		public void IgnoreWorksForTestSuite()
@@ -49,9 +59,9 @@ namespace NUnit.Core.Tests
 			//IgnoredTestSuiteFixture testFixture = new IgnoredTestSuiteFixture();
 			TestSuite suite = new TestSuite("IgnoredTestFixture");
 			suite.Add( TestBuilder.MakeFixture( typeof( IgnoredTestSuiteFixture ) ) );
-			TestSuiteResult result = (TestSuiteResult)suite.Run( NullListener.NULL);
+            TestResult result = suite.Run(NullListener.NULL, TestFilter.Empty);
 
-			TestSuiteResult fixtureResult = (TestSuiteResult)result.Results[0];
+			TestResult fixtureResult = (TestResult)result.Results[0];
 			Assert.IsFalse( fixtureResult.Executed, "Fixture should not have been executed" );
 			
 			foreach( TestResult testResult in fixtureResult.Results )
@@ -62,7 +72,7 @@ namespace NUnit.Core.Tests
 		public void IgnoreWorksFromSetUp()
 		{
 			TestSuite testFixture = TestBuilder.MakeFixture( typeof( IgnoreInSetUpFixture ) );
-			TestSuiteResult fixtureResult = (TestSuiteResult)testFixture.Run( NullListener.NULL);
+            TestResult fixtureResult = testFixture.Run(NullListener.NULL, TestFilter.Empty);
 
 			Assert.IsTrue( fixtureResult.Executed, "Fixture should have been executed" );
 			

@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -15,7 +15,7 @@ namespace NUnit.UiKit
 	{
 		private MenuItem menu;
 		private RecentFiles recentFiles;
-        private bool showMissingFiles = false;
+        private bool checkFilesExist = true;
 		private bool showNonRunnableFiles = false;
 
 		public RecentFileMenuHandler( MenuItem menu, RecentFiles recentFiles )
@@ -24,10 +24,10 @@ namespace NUnit.UiKit
 			this.recentFiles = recentFiles;
 		}
 
-		public bool ShowMissingFiles
+		public bool CheckFilesExist
 		{
-			get { return showMissingFiles; }
-			set { showMissingFiles = value; }
+			get { return checkFilesExist; }
+			set { checkFilesExist = value; }
 		}
 
 		public bool ShowNonRunnableFiles
@@ -61,7 +61,7 @@ namespace NUnit.UiKit
                     // new recent files are opened, they will be pushed down and
                     // eventually fall off the list unless the file is re-created
 					// and subsequently opened.
-                    if ( showMissingFiles || entry.Exists )
+                    if ( !checkFilesExist || entry.Exists )
                     {
 						// NOTE: In the current version, all the files listed should
 						// have a compatible version, since we are using separate

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -50,7 +50,7 @@ namespace NUnit.Fixtures
 
 		public int Skipped()
 		{
-			return testRunner.Test.TestCount - testSummary.ResultCount - testSummary.IgnoreCount;
+			return testRunner.Test.TestCount - testSummary.TestsRun - testSummary.Ignored;
 		}
 
 		public int Tests()
@@ -60,17 +60,17 @@ namespace NUnit.Fixtures
 
 		public int Run()
 		{
-			return testSummary.ResultCount;
+			return testSummary.TestsRun;
 		}
 
 		public int Failures()
 		{
-			return testSummary.FailureCount;
+			return testSummary.Failures;
 		}
 
 		public int Ignored()
 		{
-			return testSummary.IgnoreCount;
+			return testSummary.Ignored;
 		}
 	}
 }

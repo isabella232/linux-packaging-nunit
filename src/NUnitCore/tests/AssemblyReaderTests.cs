@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using NUnit.Framework;
@@ -32,14 +32,15 @@ namespace NUnit.Core.Tests
 		[Test]
 		public void CreateFromPath()
 		{
-			Assert.AreEqual( "nunit.core.tests.dll", new AssemblyReader( "nunit.core.tests.dll" ).AssemblyPath );
+            string path = AssemblyHelper.GetAssemblyPath(System.Reflection.Assembly.GetAssembly(GetType()));
+            Assert.AreEqual(path, new AssemblyReader(path).AssemblyPath);
 		}
 
 		[Test]
 		public void CreateFromAssembly()
 		{
-			Assert.IsTrue( NUnit.Util.PathUtils.SamePath( Path.GetFullPath( "nunit.core.tests.dll" ), rdr.AssemblyPath ) );
-			//StringAssert.AreEqualIgnoringCase( Path.GetFullPath("nunit.core.tests.dll"), rdr.AssemblyPath );
+            string path = AssemblyHelper.GetAssemblyPath(System.Reflection.Assembly.GetAssembly(GetType()));
+            Assert.AreEqual(path, rdr.AssemblyPath);
 		}
 
 		[Test]
@@ -67,7 +68,7 @@ namespace NUnit.Core.Tests
 			string runtimeVersion = rdr.ImageRuntimeVersion;
 
 			StringAssert.StartsWith( "v", runtimeVersion );
-			Version version = new Version( runtimeVersion.Substring( 1 ) );
+			new Version( runtimeVersion.Substring( 1 ) );
 			// This fails when we force running under a prior version
 			// Assert.LessOrEqual( version, Environment.Version );
 		}

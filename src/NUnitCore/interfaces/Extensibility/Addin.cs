@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using System.Reflection;
@@ -106,5 +106,28 @@ namespace NUnit.Core.Extensibility
 			set { message = value; }
 		}
 		#endregion
-	}
+
+        #region Object Overrides
+        /// <summary>
+        /// Return true if two Addins have teh same type name
+        /// </summary>
+        /// <param name="obj">The other addin to be compared</param>
+        public override bool Equals(object obj)
+        {
+            Addin addin = obj as Addin;
+            if (addin == null)
+                return false;
+
+            return this.typeName.Equals(addin.typeName);
+        }
+
+        /// <summary>
+        /// Return a hash code for this addin
+        /// </summary>
+        public override int GetHashCode()
+        {
+            return this.typeName.GetHashCode();
+        }
+        #endregion
+    }
 }

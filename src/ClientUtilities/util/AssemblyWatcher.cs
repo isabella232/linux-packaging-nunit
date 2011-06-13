@@ -1,14 +1,13 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
 using System.IO;
-using System.Text;
 using System.Timers;
-using System.Collections;
+using NUnit.Core;
 
 namespace NUnit.Util
 {
@@ -20,46 +19,56 @@ namespace NUnit.Util
 	/// an argument to the event handler so that one routine can
 	/// be used to handle events from multiple watchers.
 	/// </summary>
-	public class AssemblyWatcher
+	public class AssemblyWatcher : IAssemblyWatcher
 	{
-		FileSystemWatcher[] fileWatcher;
-		FileInfo[] fileInfo;
+        static Logger log = InternalTrace.GetLogger(typeof(AssemblyWatcher));
+
+        private FileSystemWatcher[] fileWatchers;
+		private FileInfo[] files;
+		private bool isWatching;
 
 		protected System.Timers.Timer timer;
-		protected string changedAssemblyPath; 
+		protected string changedAssemblyPath;
 
-		public delegate void AssemblyChangedHandler(String fullPath);
-		public event AssemblyChangedHandler AssemblyChangedEvent;
-
-		public AssemblyWatcher( int delay, string assemblyFileName )
-			: this( delay, new string[]{ assemblyFileName } ) { }
-
-		public AssemblyWatcher( int delay, IList assemblies )
+		protected FileInfo GetFileInfo(int index)
 		{
-			fileInfo = new FileInfo[assemblies.Count];
-			fileWatcher = new FileSystemWatcher[assemblies.Count];
-
-			for( int i = 0; i < assemblies.Count; i++ )
-			{
-				fileInfo[i] = new FileInfo( (string)assemblies[i] );
-
-				fileWatcher[i] = new FileSystemWatcher();
-				fileWatcher[i].Path = fileInfo[i].DirectoryName;
-				fileWatcher[i].Filter = fileInfo[i].Name;
-				fileWatcher[i].NotifyFilter = NotifyFilters.Size | NotifyFilters.LastWrite;
-				fileWatcher[i].Changed+=new FileSystemEventHandler(OnChanged);
-				fileWatcher[i].EnableRaisingEvents = false;
-			}
-
-			timer = new System.Timers.Timer( delay );
-			timer.AutoReset=false;
-			timer.Enabled=false;
-			timer.Elapsed+=new ElapsedEventHandler(OnTimer);
+			return files[index];
 		}
 
-		public FileInfo GetFileInfo( int index )
+		public void Setup(int delay, string assemblyFileName)
 		{
-			return fileInfo[index];
+			Setup(delay, new string[] {assemblyFileName});
+		}
+
+#if NET_2_0 || NET_4_0
+		public void Setup(int delay, System.Collections.Generic.IList<string> assemblies)
+#else
+        public void Setup(int delay, System.Collections.IList assemblies)
+#endif
+		{
+            log.Info("Setting up watcher");
+
+			files = new FileInfo[assemblies.Count];
+			fileWatchers = new FileSystemWatcher[assemblies.Count];
+
+			for (int i = 0; i < assemblies.Count; i++)
+			{
+                log.Debug("Setting up FileSystemWatcher for {0}", assemblies[i]);
+                
+				files[i] = new FileInfo((string)assemblies[i]);
+
+				fileWatchers[i] = new FileSystemWatcher();
+				fileWatchers[i].Path = files[i].DirectoryName;
+				fileWatchers[i].Filter = files[i].Name;
+				fileWatchers[i].NotifyFilter = NotifyFilters.Size | NotifyFilters.LastWrite;
+				fileWatchers[i].Changed += new FileSystemEventHandler(OnChanged);
+				fileWatchers[i].EnableRaisingEvents = false;
+			}
+
+			timer = new System.Timers.Timer(delay);
+			timer.AutoReset = false;
+			timer.Enabled = false;
+			timer.Elapsed += new ElapsedEventHandler(OnTimer);
 		}
 
 		public void Start()
@@ -74,14 +83,48 @@ namespace NUnit.Util
 
 		private void EnableWatchers( bool enable )
 		{
-			foreach( FileSystemWatcher watcher in fileWatcher )
-				watcher.EnableRaisingEvents = enable;
+            if (fileWatchers != null)
+    			foreach( FileSystemWatcher watcher in fileWatchers )
+	    			watcher.EnableRaisingEvents = enable;
+
+			isWatching = enable;
 		}
+
+		public void FreeResources()
+		{
+            log.Info("FreeResources");
+
+            Stop();
+
+			if (fileWatchers != null)
+			{
+				foreach (FileSystemWatcher watcher in fileWatchers)
+				{
+                    if (watcher != null)
+                    {
+                        watcher.Changed -= new FileSystemEventHandler(OnChanged);
+                        watcher.Dispose();
+                    }
+				}
+			}
+
+			if (timer != null)
+			{
+				timer.Stop();
+				timer.Close();
+			}
+
+			fileWatchers = null;
+			timer = null;
+		}
+
+		public event AssemblyChangedHandler AssemblyChanged;
 
 		protected void OnTimer(Object source, ElapsedEventArgs e)
 		{
 			lock(this)
 			{
+                log.Info("Timer expired");
 				PublishEvent();
 				timer.Enabled=false;
 			}
@@ -89,6 +132,8 @@ namespace NUnit.Util
 		
 		protected void OnChanged(object source, FileSystemEventArgs e)
 		{
+            log.Info("File {0} changed", e.Name);
+
 			changedAssemblyPath = e.FullPath;
 			if ( timer != null )
 			{
@@ -96,6 +141,7 @@ namespace NUnit.Util
 				{
 					if(!timer.Enabled)
 						timer.Enabled=true;
+                    log.Info("Setting timer");
 					timer.Start();
 				}
 			}
@@ -107,8 +153,11 @@ namespace NUnit.Util
 	
 		protected void PublishEvent()
 		{
-			if ( AssemblyChangedEvent != null )
-				AssemblyChangedEvent( changedAssemblyPath );
+            if (AssemblyChanged != null)
+            {
+                log.Debug("Publishing Event to {0} listeners", AssemblyChanged.GetInvocationList().Length);
+                AssemblyChanged(changedAssemblyPath);
+            }
 		}
 	}
 }

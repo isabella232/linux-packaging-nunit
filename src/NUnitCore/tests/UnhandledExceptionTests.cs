@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -26,7 +26,7 @@ namespace NUnit.Core.Tests
         {
             Type fixtureType = typeof(NUnit.TestData.UnhandledExceptions);
             Test test = TestBuilder.MakeTestCase(fixtureType, dummyName);
-            TestResult result = test.Run(NullListener.NULL);
+            TestResult result = test.Run(NullListener.NULL, TestFilter.Empty);
             if (shouldPass)
                 Assert.IsTrue(result.IsSuccess, "{0} test should have passed", dummyName);
             else

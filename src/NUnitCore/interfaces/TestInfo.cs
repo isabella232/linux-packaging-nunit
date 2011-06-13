@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using System.Collections;
@@ -111,11 +111,16 @@ namespace NUnit.Core
 			this.description = null;
 			this.isSuite = true;
 
-			foreach( ITest test in tests )
-			{
-				this.testCaseCount += test.TestCount;
-			}
+            if ( tests != null )
+			    foreach( ITest test in tests )
+    				this.testCaseCount += test.TestCount;
 		}
+
+		/// <summary>
+		/// Construct given a test name
+		/// </summary>
+		/// <param name="testName">The TestName for the new test</param>
+		public TestInfo( TestName testName ) : this( testName, null) { }
 		#endregion
 
 		#region Properties

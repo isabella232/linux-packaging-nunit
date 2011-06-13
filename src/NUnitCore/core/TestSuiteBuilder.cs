@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
@@ -60,6 +60,7 @@ namespace NUnit.Core
 		{
 			bool autoNamespaceSuites = package.GetSetting( "AutoNamespaceSuites", true );
 			bool mergeAssemblies = package.GetSetting( "MergeAssemblies", false );
+            TestExecutionContext.CurrentContext.TestCaseTimeout = package.GetSetting("DefaultTimeout", 0);
 
 			if ( package.IsSingleAssembly )
 				return BuildSingleAssembly( package );
@@ -70,7 +71,7 @@ namespace NUnit.Core
 				package.TestName = null;
 			}
 			
-			TestSuite rootSuite = new TestSuite( package.FullName );
+			TestSuite rootSuite = new ProjectRootSuite( package.FullName );
 			NamespaceTreeBuilder namespaceTree = 
 				new NamespaceTreeBuilder( rootSuite );
 
@@ -104,7 +105,9 @@ namespace NUnit.Core
 				}
 			}
 
-			if ( rootSuite.Tests.Count == 0 )
+            ProviderCache.Clear();
+            
+            if (rootSuite.Tests.Count == 0)
 				return null;
 
 			return rootSuite;
@@ -116,9 +119,13 @@ namespace NUnit.Core
 			builders.Clear();
 			builders.Add( builder );
 
-			return (TestSuite)builder.Build( 
+			TestSuite suite = (TestSuite)builder.Build( 
 				package.FullName, 
 				package.TestName, package.GetSetting( "AutoNamespaceSuites", true ) );
+
+            ProviderCache.Clear();
+
+            return suite;
 		}
 		#endregion
 	}

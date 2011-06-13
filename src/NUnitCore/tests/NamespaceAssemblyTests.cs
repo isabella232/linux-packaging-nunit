@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -10,14 +10,15 @@ using System.Reflection;
 using NUnit.Framework;
 using NUnit.Core;
 using NUnit.Tests.Assemblies;
+using NUnit.TestUtilities;
 
 namespace NUnit.Core.Tests
 {
 	[TestFixture]
 	public class NamespaceAssemblyTests
 	{
-		private string testsDll = "mock-assembly.dll";
-		private string nonamespaceDLL = "nonamespace-assembly.dll";
+        private string testsDll = MockAssembly.AssemblyPath;
+        private string nonamespaceDLL = NoNamespaceTestFixture.AssemblyPath;
 		
 		[Test]
 		public void LoadTestFixtureFromAssembly()
@@ -42,39 +43,26 @@ namespace NUnit.Core.Tests
 		{
 			TestSuiteBuilder builder = new TestSuiteBuilder();
 			Test suite = builder.Build( new TestPackage( testsDll ) );
-			IList tests = suite.Tests;
-			Assert.AreEqual(1, tests.Count);
 
-			Assert.IsTrue(tests[0] is TestSuite, "TestSuite:NUnit - is not correct");
-			TestSuite testSuite = (TestSuite)tests[0];
-			Assert.AreEqual("NUnit", testSuite.TestName.Name);
+            suite = (Test)suite.Tests[0];
+            Assert.AreEqual("NUnit", suite.TestName.Name);
 
-			tests = testSuite.Tests;
-			Assert.IsTrue(tests[0] is TestSuite, "TestSuite:Tests - is invalid");
-			testSuite = (TestSuite)tests[0];
-			Assert.AreEqual(1, tests.Count);
-			Assert.AreEqual("Tests", testSuite.TestName.Name);
+            suite = (Test)suite.Tests[0];
+            Assert.AreEqual("Tests", suite.TestName.Name);
+			Assert.AreEqual(MockAssembly.Classes, suite.Tests.Count);
 
-			tests = testSuite.Tests;
-			// TODO: Get rid of constants in this test
-			Assert.AreEqual(MockAssembly.Fixtures, tests.Count);
-
-			Assert.IsTrue(tests[3] is TestSuite, "TestSuite:singletons - is invalid");
-			TestSuite singletonSuite = (TestSuite)tests[3];
-			Assert.AreEqual("Singletons", singletonSuite.TestName.Name);
+			Test singletonSuite = TestFinder.Find("Singletons", suite, false);
 			Assert.AreEqual(1, singletonSuite.Tests.Count);
 
-			Assert.IsTrue(tests[0] is TestSuite, "TestSuite:assemblies - is invalid");
-			TestSuite mockSuite = (TestSuite)tests[0];
-			Assert.AreEqual("Assemblies", mockSuite.TestName.Name);
+			Test mockSuite = TestFinder.Find("Assemblies", suite, false);
+			Assert.AreEqual(1, mockSuite.Tests.Count);
 
-			TestSuite mockFixtureSuite = (TestSuite)mockSuite.Tests[0];
+			Test mockFixtureSuite = TestFinder.Find("MockTestFixture", mockSuite, false);
 			Assert.AreEqual(MockTestFixture.Tests, mockFixtureSuite.Tests.Count);
-			
-			IList mockTests = mockFixtureSuite.Tests;
-			foreach(Test t in mockTests)
+
+			foreach(Test t in mockFixtureSuite.Tests)
 			{
-				Assert.IsTrue(t is NUnit.Core.TestCase, "should be a TestCase");
+				Assert.IsFalse(t.IsSuite, "Should not be a suite");
 			}
 		}
 			

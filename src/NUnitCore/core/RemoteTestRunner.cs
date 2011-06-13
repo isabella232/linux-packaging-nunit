@@ -1,13 +1,15 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core
 {
-	using System.Collections;
 	using System;
+    using System.Reflection;
+	using System.Collections;
+	using System.Diagnostics;
 
 	/// <summary>
 	/// RemoteTestRunner is tailored for use as the initial runner to
@@ -17,6 +19,32 @@ namespace NUnit.Core
 	/// </summary>
 	public class RemoteTestRunner : ProxyTestRunner
 	{
+		/// <summary>
+		/// Returns a RemoteTestRunner in the target domain. This method
+		/// is used in the domain that wants to get a reference to 
+		/// a RemoteTestRunnner and not in the test domain itself.
+		/// </summary>
+		/// <param name="targetDomain">AppDomain in which to create the runner</param>
+		/// <param name="ID">Id for the new runner to use</param>
+		/// <returns></returns>
+        public static RemoteTestRunner CreateInstance(AppDomain targetDomain, int ID)
+        {
+#if NET_2_0
+            System.Runtime.Remoting.ObjectHandle oh = Activator.CreateInstance(
+                targetDomain,
+#else
+			System.Runtime.Remoting.ObjectHandle oh = targetDomain.CreateInstance(
+#endif
+                Assembly.GetExecutingAssembly().FullName,
+                typeof(RemoteTestRunner).FullName,
+                false, BindingFlags.Default, null, new object[] { ID }, null, null, null);
+
+            object obj = oh.Unwrap();
+            return (RemoteTestRunner)obj;
+        }
+
+		static Logger log = InternalTrace.GetLogger("RemoteTestRunner");
+
 		#region Constructors
 		public RemoteTestRunner() : this( 0 ) { }
 
@@ -26,7 +54,7 @@ namespace NUnit.Core
 		#region Method Overrides
 		public override bool Load(TestPackage package)
 		{
-			NTrace.Info( "Loading test package " + package.Name );
+			log.Info("Loading Test Package " + package.Name );
 
 			// Initialize ExtensionHost if not already done
 			if ( !CoreExtensions.Host.Initialized )
@@ -42,18 +70,34 @@ namespace NUnit.Core
 
 			this.TestRunner = runner;
 
-			return base.Load (package);
+			if( base.Load (package) )
+			{
+				log.Info("Loaded package successfully" );
+				return true;
+			}
+			else
+			{
+				log.Info("Package load failed" );
+				return false;
+			}
 		}
 
-		public override TestResult Run( EventListener listener )
+        public override void Unload()
+        {
+            log.Info("Unloading test package");
+            base.Unload();
+        }
+
+        public override TestResult Run(EventListener listener)
 		{
 			return Run( listener, TestFilter.Empty );
 		}
 
 		public override TestResult Run( EventListener listener, ITestFilter filter )
 		{
-			NTrace.Debug( "Running test synchronously" );
-			QueuingEventListener queue = new QueuingEventListener();
+            log.Debug("Run");
+
+            QueuingEventListener queue = new QueuingEventListener();
 
 			StartTextCapture( queue );
 
@@ -71,7 +115,8 @@ namespace NUnit.Core
 
 		public override void BeginRun( EventListener listener, ITestFilter filter )
 		{
-			NTrace.Debug( "Running test asynchronously" );
+            log.Debug("BeginRun");
+
 			QueuingEventListener queue = new QueuingEventListener();
 
 			StartTextCapture( queue );
@@ -85,13 +130,19 @@ namespace NUnit.Core
 
 		private void StartTextCapture( EventListener queue )
 		{
-			TestContext.Out = new EventListenerTextWriter( queue, TestOutputType.Out );
-			TestContext.Error = new EventListenerTextWriter( queue, TestOutputType.Error );
-			TestContext.TraceWriter = new EventListenerTextWriter( queue, TestOutputType.Trace );
-			TestContext.Tracing = true;
-			TestContext.LogWriter = new EventListenerTextWriter( queue, TestOutputType.Log );
-			TestContext.Logging = true;
+            TestExecutionContext.CurrentContext.Out = new EventListenerTextWriter(queue, TestOutputType.Out);
+            TestExecutionContext.CurrentContext.Error = new EventListenerTextWriter(queue, TestOutputType.Error);
+            TestExecutionContext.CurrentContext.TraceWriter = new EventListenerTextWriter(queue, TestOutputType.Trace);
+            TestExecutionContext.CurrentContext.Tracing = true;
+            TestExecutionContext.CurrentContext.LogWriter = new EventListenerTextWriter(queue, TestOutputType.Log);
+            TestExecutionContext.CurrentContext.Logging = true;
 		}
 		#endregion
+
+		private void CurrentDomain_DomainUnload(object sender, EventArgs e)
+		{
+			log.Debug(AppDomain.CurrentDomain.FriendlyName + " unloaded");
+			InternalTrace.Flush();
+		}
 	}
 }

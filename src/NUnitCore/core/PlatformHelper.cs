@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -11,22 +11,17 @@ namespace NUnit.Core
 {
 	public class PlatformHelper
 	{
-		private OperatingSystem os;
+		private OSPlatform os;
 		private RuntimeFramework rt;
 
 		// Set whenever we fail to support a list of platforms
 		private string reason = string.Empty;
 
-		// Defined here and used in tests. We can't use PlatformID.Unix
-		// if we are building on .NET 1.0 or 1.1 and the values are different on Mono
-		public static readonly PlatformID UnixPlatformID_Microsoft = (PlatformID) 4;
-        public static readonly PlatformID UnixPlatformID_Mono = (PlatformID)128;
-
-		/// <summary>
+        /// <summary>
 		/// Comma-delimited list of all supported OS platform constants
 		/// </summary>
 		public static readonly string OSPlatforms =
-			"Win,Win32,Win32S,Win32NT,Win32Windows,WinCE,Win95,Win98,WinMe,NT3,NT4,NT5,Win2K,WinXP,Unix,Linux";
+			"Win,Win32,Win32S,Win32NT,Win32Windows,WinCE,Win95,Win98,WinMe,NT3,NT4,NT5,NT6,Win2K,WinXP,Win2003Server,Vista,Win2008Server,Win2008ServerR2,Windows7,Unix,Linux";
 		
 		/// <summary>
 		/// Comma-delimited list of all supported Runtime platform constants
@@ -40,7 +35,7 @@ namespace NUnit.Core
 		/// </summary>
 		public PlatformHelper()
 		{
-			this.os = Environment.OSVersion;
+			this.os = OSPlatform.CurrentPlatform;
 			this.rt = RuntimeFramework.CurrentFramework;
 		}
 
@@ -49,7 +44,7 @@ namespace NUnit.Core
 		/// system and common language runtime. Used in testing.
 		/// </summary>
 		/// <param name="os">OperatingSystem to be used</param>
-		public PlatformHelper( OperatingSystem os, RuntimeFramework rt )
+		public PlatformHelper( OSPlatform os, RuntimeFramework rt )
 		{
 			this.os = os;
 			this.rt = rt;
@@ -114,7 +109,7 @@ namespace NUnit.Core
 		/// Test to determine if the a particular platform or comma-
 		/// delimited set of platforms is in use.
 		/// </summary>
-		/// <param name="platform">Name of the platform or comma-separated list of platfomr names</param>
+		/// <param name="platform">Name of the platform or comma-separated list of platform names</param>
 		/// <returns>True if the platform is in use on the system</returns>
 		public bool IsPlatformSupported( string platform )
 		{
@@ -137,51 +132,65 @@ namespace NUnit.Core
 			{
 				case "WIN":
 				case "WIN32":
-					nameOK = os.Platform.ToString().StartsWith( "Win" );
+					nameOK = os.IsWindows;
 					break;
 				case "WIN32S":
-					nameOK = os.Platform == PlatformID.Win32S;
+                    nameOK = os.IsWin32S;
 					break;
 				case "WIN32WINDOWS":
-					nameOK = os.Platform == PlatformID.Win32Windows;
+					nameOK = os.IsWin32Windows;
 					break;
 				case "WIN32NT":
-					nameOK = os.Platform == PlatformID.Win32NT;
+					nameOK = os.IsWin32NT;
 					break;
 				case "WINCE":
-					nameOK = (int)os.Platform == 3;  // Not defined in .NET 1.0
+                    nameOK = os.IsWinCE;
 					break;
 				case "WIN95":
-					nameOK = os.Platform == PlatformID.Win32Windows && os.Version.Major == 4 && os.Version.Minor == 0;
+                    nameOK = os.IsWin95;
 					break;
-				case "WIN98": 
-					nameOK = os.Platform == PlatformID.Win32Windows && os.Version.Major == 4 && os.Version.Minor == 10;
+				case "WIN98":
+                    nameOK = os.IsWin98;
 					break;
 				case "WINME":
-					nameOK = os.Platform == PlatformID.Win32Windows && os.Version.Major == 4 && os.Version.Minor == 90;
+					nameOK = os.IsWinME;
 					break;
 				case "NT3":
-					nameOK = os.Platform == PlatformID.Win32NT && os.Version.Major == 3;
+                    nameOK = os.IsNT3;
 					break;
 				case "NT4":
-					nameOK = os.Platform == PlatformID.Win32NT && os.Version.Major == 4;
+                    nameOK = os.IsNT4;
 					break;
-				case "NT5":
-					nameOK = os.Platform == PlatformID.Win32NT && os.Version.Major == 5;
-					break;
-				case "WIN2K":
-					nameOK = os.Platform == PlatformID.Win32NT && os.Version.Major == 5 && os.Version.Minor == 0;
+                case "NT5":
+                    nameOK = os.IsNT5;
+                    break;
+                case "WIN2K":
+                    nameOK = os.IsWin2K;
 					break;
 				case "WINXP":
-					nameOK = os.Platform == PlatformID.Win32NT && os.Version.Major == 5 && os.Version.Minor == 1;
+                    nameOK = os.IsWinXP;
 					break;
 				case "WIN2003SERVER":
-					nameOK = os.Platform == PlatformID.Win32NT && os.Version.Major == 5 && os.Version.Minor == 2;
+                    nameOK = os.IsWin2003Server;
 					break;
-				case "UNIX":
+                case "NT6":
+                    nameOK = os.IsNT6;
+                    break;
+                case "VISTA":
+                    nameOK = os.IsVista;
+                    break;
+                case "WIN2008SERVER":
+                    nameOK = os.IsWin2008Server;
+                    break;
+                case "WIN2008SERVERR2":
+                    nameOK = os.IsWin2008ServerR2;
+                    break;
+				case "WINDOWS7":
+					nameOK = os.IsWindows7;
+					break;
+                case "UNIX":
 				case "LINUX":
-					nameOK = os.Platform == UnixPlatformID_Microsoft
-                          || os.Platform == UnixPlatformID_Mono;
+                    nameOK = os.IsUnix;
 					break;
 				case "NET":
 					nameOK = rt.Runtime == RuntimeType.Net;
@@ -194,7 +203,7 @@ namespace NUnit.Core
 					nameOK = rt.Runtime == RuntimeType.SSCLI;
 					break;
 				case "MONO":
-					nameOK = rt.Runtime == RuntimeType.Mono;
+                    nameOK = rt.Runtime == RuntimeType.Mono;
 					// Special handling because Mono 1.0 profile has version 1.1
 					if ( versionSpecification == "1.0" )
 						versionSpecification = "1.1";
@@ -210,10 +219,10 @@ namespace NUnit.Core
 
 				Version version = new Version( versionSpecification );
 
-				if ( rt.Version.Major == version.Major &&
-					 rt.Version.Minor == version.Minor &&
-				   ( version.Build == -1 || rt.Version.Build == version.Build ) &&
-				   ( version.Revision == -1 || rt.Version.Revision == version.Revision ) )
+				if ( rt.ClrVersion.Major == version.Major &&
+					 rt.ClrVersion.Minor == version.Minor &&
+				   ( version.Build == -1 || rt.ClrVersion.Build == version.Build ) &&
+				   ( version.Revision == -1 || rt.ClrVersion.Revision == version.Revision ) )
 						return true;
 			}
 

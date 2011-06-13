@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -29,11 +29,6 @@ namespace NUnit.Core
 		/// The System.Threading.Thread created by the object
 		/// </summary>
 		private Thread thread;
-
-		/// <summary>
-		/// Collection of TestRunner settings from the config file
-		/// </summary>
-		private NameValueCollection settings;
 
 		/// <summary>
 		/// The EventListener interface to receive test events
@@ -81,31 +76,13 @@ namespace NUnit.Core
 			this.thread = new Thread( new ThreadStart( TestRunnerThreadProc ) );
 			thread.IsBackground = true;
 			thread.Name = "TestRunnerThread";
-
-			this.settings = (NameValueCollection)
-				ConfigurationSettings.GetConfig( "NUnit/TestRunner" );
-	
-			if ( settings != null )
-			{
-				try
-				{
-					string apartment = settings["ApartmentState"];
-					if ( apartment != null )
-						thread.ApartmentState = (ApartmentState)
-							System.Enum.Parse( typeof( ApartmentState ), apartment, true );
-		
-					string priority = settings["ThreadPriority"];
-					if ( priority != null )
-						thread.Priority = (ThreadPriority)
-							System.Enum.Parse( typeof( ThreadPriority ), priority, true );
-				}
-				catch( ArgumentException ex )
-				{
-					string msg = string.Format( "Invalid configuration setting in {0}", 
-						AppDomain.CurrentDomain.SetupInformation.ConfigurationFile );
-					throw new ArgumentException( msg, ex );
-				}
-			}
+            thread.Priority = NUnitConfiguration.ThreadPriority;
+            if (NUnitConfiguration.ApartmentState != ApartmentState.Unknown)
+#if NET_2_0
+                thread.SetApartmentState(NUnitConfiguration.ApartmentState);
+#else
+                thread.ApartmentState = NUnitConfiguration.ApartmentState;
+#endif
 		}
 
 		#endregion
@@ -154,7 +131,8 @@ namespace NUnit.Core
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("Exception in TestRunnerThread", ex);
+                if ( !(ex is ThreadAbortException) )
+                    throw new ApplicationException("Exception in TestRunnerThread", ex);
             }
 		}
 		#endregion

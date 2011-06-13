@@ -3,21 +3,26 @@
 
   <target name="build">
     <csc target="library" 
-       output="${current.build.dir}/nonamespace-assembly.dll" 
+       output="${current.test.dir}/nonamespace-assembly.dll" 
        debug="${build.debug}" define="${build.defines}">
       <sources>
         <include name="NoNamespaceTestFixture.cs"/>
-        <include name="../../CommonAssemblyInfo.cs"/>
+        <include name="../../GeneratedAssemblyInfo.cs"/>
       </sources>
       <references>
-        <include name="${current.build.dir}/nunit.framework.dll"/>
+        <include name="${current.framework.dir}/nunit.framework.dll"/>
+        <include name="${current.lib.dir}/nunit.core.dll"/>
       </references>
     </csc>
   </target>
 
   <target name="package">
     <copy todir="${package.src.dir}/tests/nonamespace-assembly">
-      <fileset refid="source-files" />
+      <fileset>
+        <include name="NoNamespaceTestFixture.cs"/>
+        <include name="nonamespace-assembly.csproj"/>
+        <include name="nonamespace-assembly.build"/>
+      </fileset>
     </copy>
   </target>
 

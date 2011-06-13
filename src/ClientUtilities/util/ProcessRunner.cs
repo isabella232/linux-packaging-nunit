@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -20,9 +20,13 @@ namespace NUnit.Util
 	/// <summary>
 	/// Summary description for ProcessRunner.
 	/// </summary>
-	public class ProcessRunner : ProxyTestRunner, IDisposable
+	public class ProcessRunner : ProxyTestRunner
 	{
+        static Logger log = InternalTrace.GetLogger(typeof(ProcessRunner));
+
 		private TestAgent agent;
+
+        private RuntimeFramework runtimeFramework;
 
 		#region Constructors
 		public ProcessRunner() : base( 0 ) { }
@@ -30,29 +34,78 @@ namespace NUnit.Util
 		public ProcessRunner( int runnerID ) : base( runnerID ) { }
 		#endregion
 
-		public override bool Load(TestPackage package)
-		{
-			if ( this.agent == null )
-				this.agent = Services.TestAgency.GetAgent( AgentType.ProcessAgent, 5000 );		
-	
-			if ( this.TestRunner == null )
-				this.TestRunner = agent.CreateRunner(this.runnerID);
+        #region Properties
+        public RuntimeFramework RuntimeFramework
+        {
+            get { return runtimeFramework; }
+        }
+        #endregion
 
-			return base.Load (package);
+        public override bool Load(TestPackage package)
+		{
+            log.Info("Loading " + package.Name);
+			Unload();
+
+            runtimeFramework = package.Settings["RuntimeFramework"] as RuntimeFramework;
+            if ( runtimeFramework == null )
+                 runtimeFramework = RuntimeFramework.CurrentFramework;
+
+            bool enableDebug = package.GetSetting("EnableDebug", false);
+
+            bool loaded = false;
+
+			try
+			{
+                if (this.agent == null)
+                {
+                    this.agent = Services.TestAgency.GetAgent(
+                        runtimeFramework,
+                        30000,
+                        enableDebug);
+
+                    if (this.agent == null)
+                        return false;
+                }
+	
+				if ( this.TestRunner == null )
+					this.TestRunner = agent.CreateRunner(this.runnerID);
+
+				loaded = base.Load (package);
+                return loaded;
+			}
+			finally
+			{
+                // Clean up if the load failed
+				if ( !loaded ) Unload();
+			}
+		}
+
+        public override void Unload()
+        {
+            if (Test != null)
+            {
+                log.Info("Unloading " + Path.GetFileName(Test.TestName.Name));
+                this.TestRunner.Unload();
+                this.TestRunner = null;
+            }
 		}
 
 		#region IDisposable Members
-		public void Dispose()
+
+		public override void Dispose()
 		{
-			if ( TestRunner != null )
-				this.TestRunner.Unload();
+            // Do this first, because the next step will
+            // make the downstream runner inaccessible.
+            base.Dispose();
 
-			if ( this.agent != null )
-				Services.TestAgency.ReleaseAgent(this.agent);
+            if (this.agent != null)
+            {
+                log.Info("Stopping remote agent");
+                agent.Stop();
+                this.agent = null;
+            }
+        }
 
-			this.TestRunner = null;
-			this.agent = null;
-		}
 		#endregion
 	}
 }

@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System.IO;
@@ -20,8 +20,8 @@ namespace NUnit.Util.Tests
 		private TestDomain domain; 
 		private ITest loadedSuite;
 
-		private static string path1 = Path.GetFullPath( "nonamespace-assembly.dll" );
-		private static string path2 = Path.GetFullPath( "mock-assembly.dll" );
+		private static string path1 = NoNamespaceTestFixture.AssemblyPath;
+		private static string path2 = MockAssembly.AssemblyPath;
 
 		private string name = "Multiple Assemblies Test";
 
@@ -77,8 +77,8 @@ namespace NUnit.Util.Tests
 			TestResult result = domain.Run(NullListener.NULL);
 			ResultSummarizer summary = new ResultSummarizer(result);
 			Assert.AreEqual(
-				NoNamespaceTestFixture.Tests + MockAssembly.Tests - MockAssembly.NotRun, 
-				summary.ResultCount);
+				NoNamespaceTestFixture.Tests + MockAssembly.TestsRun, 
+				summary.TestsRun);
 		}
 	}
 
@@ -90,9 +90,9 @@ namespace NUnit.Util.Tests
 		{
 			TestDomain domain = new TestDomain();
 			TestPackage package = new TestPackage( "Multiple Assemblies Test" );
-			package.Assemblies.Add( Path.GetFullPath( "nonamespace-assembly.dll" ) );
-			package.Assemblies.Add( Path.GetFullPath( "mock-assembly.dll" ) );
-			package.TestName = "NUnit.Tests.Assemblies.MockTestFixture";
+			package.Assemblies.Add(NoNamespaceTestFixture.AssemblyPath);
+			package.Assemblies.Add(MockAssembly.AssemblyPath);
+            package.TestName = "NUnit.Tests.Assemblies.MockTestFixture";
             try
             {
                 domain.Load(package);

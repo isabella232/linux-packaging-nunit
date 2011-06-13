@@ -1,3 +1,8 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using System.Drawing;
 using System.Collections;
@@ -125,7 +130,6 @@ namespace NUnit.UiKit
 			// EditTabPagesDialog
 			// 
 			this.AcceptButton = this.closeButton;
-			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.CancelButton = this.closeButton;
 			this.ClientSize = new System.Drawing.Size(292, 260);
 			this.ControlBox = false;

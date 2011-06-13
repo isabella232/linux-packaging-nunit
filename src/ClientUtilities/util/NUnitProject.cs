@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -15,55 +15,17 @@ using NUnit.Core;
 namespace NUnit.Util
 {
 	/// <summary>
-	/// Types of changes that may occur to a config
-	/// </summary>
-	public enum ProjectChangeType
-	{
-		ActiveConfig,
-		AddConfig,
-		RemoveConfig,
-		UpdateConfig,
-		Other
-	}
-
-	/// <summary>
-	///  Arguments for a project event
-	/// </summary>
-	public class ProjectEventArgs : EventArgs
-	{
-		public ProjectChangeType type;
-		public string configName;
-
-		public ProjectEventArgs( ProjectChangeType type, string configName )
-		{
-			this.type = type;
-			this.configName = configName;
-		}
-	}
-
-	/// <summary>
-	/// Delegate to be used to handle project events
-	/// </summary>
-	public delegate void ProjectEventHandler( object sender, ProjectEventArgs e );
-
-	/// <summary>
 	/// Class that represents an NUnit test project
 	/// </summary>
 	public class NUnitProject
-	{
-		#region Static and instance variables
+    {
+        #region Constants
+        public static readonly string Extension = ".nunit";
+        #endregion
 
-		/// <summary>
-		/// Used to generate default names for projects
-		/// </summary>
-		private static int projectSeed = 0;
+        #region Instance variables
 
-		/// <summary>
-		/// The extension used for test projects
-		/// </summary>
-		private static readonly string nunitExtension = ".nunit";
-
-		/// <summary>
+        /// <summary>
 		/// Path to the file storing this project
 		/// </summary>
 		private string projectPath;
@@ -79,11 +41,22 @@ namespace NUnit.Util
 		///  Whether the project is dirty
 		/// </summary>
 		private bool isDirty = false;
+
+        /// <summary>
+        /// Whether canges have been made requiring a reload
+        /// </summary>
+        private bool reloadRequired = false;
 		
 		/// <summary>
 		/// Collection of configs for the project
 		/// </summary>
 		private ProjectConfigCollection configs;
+
+        /// <summary>
+        /// True for NUnit-related projects that follow the config
+        /// of the NUnit build under which they are running.
+        /// </summary>
+        private bool autoConfig;
 
 		/// <summary>
 		/// The currently active configuration
@@ -95,6 +68,16 @@ namespace NUnit.Util
 		/// temporary wrapper for an assembly.
 		/// </summary>
 		private bool isAssemblyWrapper = false;
+
+        /// <summary>
+        /// The ProcessModel to be used in loading this project
+        /// </summary>
+        private ProcessModel processModel;
+
+        /// <summary>
+        /// The DomainUsage setting to be used in loading this project
+        /// </summary>
+        private DomainUsage domainUsage;
 
 		#endregion
 
@@ -108,186 +91,7 @@ namespace NUnit.Util
 
 		#endregion
 
-		#region Static Methods
-		// True if it's one of our project types
-		public static bool IsProjectFile( string path )
-		{
-			return Path.GetExtension( path ) == nunitExtension;
-		}
-
-		// True if it's ours or one we can load
-		public static bool CanLoadAsProject( string path )
-		{
-			return	IsProjectFile( path ) ||
-					VSProject.IsProjectFile( path ) ||
-					VSProject.IsSolutionFile( path );
-		}
-
-		public static string GenerateProjectName()
-		{
-			return string.Format( "Project{0}", ++projectSeed );
-		}
-
-		public static NUnitProject EmptyProject()
-		{
-			return new NUnitProject( GenerateProjectName() );
-		}
-
-		public static NUnitProject NewProject()
-		{
-			NUnitProject project = EmptyProject();
-
-			project.Configs.Add( "Debug" );
-			project.Configs.Add( "Release" );
-			project.IsDirty = false;
-
-			return project;
-		}
-
-		/// <summary>
-		/// Return a test project by either loading it from
-		/// the supplied path, creating one from a VS file
-		/// or wrapping an assembly.
-		/// </summary>
-		public static NUnitProject LoadProject( string path )
-		{
-			if ( NUnitProject.IsProjectFile( path ) )
-			{
-				NUnitProject project = new NUnitProject( path );
-				project.Load();
-				return project;
-			}
-			else if ( VSProject.IsProjectFile( path ) )
-				return NUnitProject.FromVSProject( path );
-			else if ( VSProject.IsSolutionFile( path ) )
-				return NUnitProject.FromVSSolution( path );
-			else
-				return NUnitProject.FromAssembly( path );
-			
-		}
-
-		/// <summary>
-		/// Creates a project to wrap a list of assemblies
-		/// </summary>
-		public static NUnitProject FromAssemblies( string[] assemblies )
-		{
-			// if only one assembly is passed in then the configuration file
-			// should follow the name of the assembly. This will only happen
-			// if the LoadAssembly method is called. Currently the console ui
-			// does not differentiate between having one or multiple assemblies
-			// passed in.
-			if ( assemblies.Length == 1)
-				return NUnitProject.FromAssembly(assemblies[0]);
-
-
-			NUnitProject project = NUnitProject.EmptyProject();
-			ProjectConfig config = new ProjectConfig( "Default" );
-			foreach( string assembly in assemblies )
-			{
-				string fullPath = Path.GetFullPath( assembly );
-
-				if ( !File.Exists( fullPath ) )
-					throw new FileNotFoundException( string.Format( "Assembly not found: {0}", fullPath ) );
-				
-				config.Assemblies.Add( fullPath );
-			}
-
-			project.Configs.Add( config );
-
-			// TODO: Deduce application base, and provide a
-			// better value for loadpath and project path
-			// analagous to how new projects are handled
-			string basePath = Path.GetDirectoryName( Path.GetFullPath( assemblies[0] ) );
-			project.projectPath = Path.Combine( basePath, project.Name + ".nunit" );
-
-			project.IsDirty = true;
-
-			return project;
-		}
-
-		/// <summary>
-		/// Creates a project to wrap an assembly
-		/// </summary>
-		public static NUnitProject FromAssembly( string assemblyPath )
-		{
-			if ( !File.Exists( assemblyPath ) )
-				throw new FileNotFoundException( string.Format( "Assembly not found: {0}", assemblyPath ) );
-
-			string fullPath = Path.GetFullPath( assemblyPath );
-
-			NUnitProject project = new NUnitProject( fullPath );
-			
-			ProjectConfig config = new ProjectConfig( "Default" );
-			config.Assemblies.Add( fullPath );
-			project.Configs.Add( config );
-
-			project.isAssemblyWrapper = true;
-			project.IsDirty = false;
-
-			return project;
-		}
-
-		public static NUnitProject FromVSProject( string vsProjectPath )
-		{
-			NUnitProject project = new NUnitProject( Path.GetFullPath( vsProjectPath ) );
-
-			VSProject vsProject = new VSProject( vsProjectPath );
-			project.Add( vsProject );
-
-			project.isDirty = false;
-
-			return project;
-		}
-
-		public static NUnitProject FromVSSolution( string solutionPath )
-		{
-			NUnitProject project = new NUnitProject( Path.GetFullPath( solutionPath ) );
-
-			string solutionDirectory = Path.GetDirectoryName( solutionPath );
-			using(StreamReader reader = new StreamReader( solutionPath ))
-			{
-				char[] delims = { '=', ',' };
-				char[] trimchars = { ' ', '"' };
-
-				string line = reader.ReadLine();
-				while ( line != null )
-				{
-					if ( line.StartsWith( "Project" ) )
-					{
-						string[] parts = line.Split( delims );
-						string vsProjectPath = parts[2].Trim(trimchars);
-						
-						if ( VSProject.IsProjectFile( vsProjectPath ) )
-							project.Add( new VSProject( Path.Combine( solutionDirectory, vsProjectPath ) ) );
-					}
-
-					line = reader.ReadLine();
-				}
-			}
-
-			project.isDirty = false;
-
-			return project;
-		}
-
-		/// <summary>
-		/// Figure out the proper name to be used when saving a file.
-		/// </summary>
-		public static string ProjectPathFromFile( string path )
-		{
-			string fileName = Path.GetFileNameWithoutExtension( path ) + nunitExtension;
-			return Path.Combine( Path.GetDirectoryName( path ), fileName );
-		}
-
-		#endregion
-
 		#region Properties and Events
-
-		public static int ProjectSeed
-		{
-			get { return projectSeed; }
-			set { projectSeed = value; }
-		}
 
 		/// <summary>
 		/// The path to which a project will be saved.
@@ -330,21 +134,21 @@ namespace NUnit.Util
 					return DefaultBasePath; 
 				return basePath;
 			}
-			set	
-			{ 
-				basePath = value;
-				
-				if ( basePath != null && basePath != string.Empty 
-					&& !Path.IsPathRooted( basePath ) )
-				{
-					basePath = Path.Combine( 
-						DefaultBasePath, 
-						basePath );	
-				}
+            set
+            {
+                basePath = value;
 
-				basePath = PathUtils.Canonicalize( basePath );
-				OnProjectChange( ProjectChangeType.Other, null );
-			}
+                if (basePath != null && basePath != string.Empty
+                    && !Path.IsPathRooted(basePath))
+                {
+                    basePath = Path.Combine(
+                        DefaultBasePath,
+                        basePath);
+                }
+
+                basePath = PathUtils.Canonicalize(basePath);
+                HasChangesRequiringReload = IsDirty = true;
+            }
 		}
 
 		/// <summary>
@@ -355,6 +159,12 @@ namespace NUnit.Util
 			get { return Path.GetFileNameWithoutExtension( projectPath ); }
 		}
 
+        public bool AutoConfig
+        {
+            get { return autoConfig; }
+            set { autoConfig = value; }
+        }
+
 		public ProjectConfig ActiveConfig
 		{
 			get 
@@ -364,8 +174,8 @@ namespace NUnit.Util
 					activeConfig = null;
 				
 				// In case no active config is set or it was removed
-				if ( activeConfig == null && configs.Count > 0 )
-					activeConfig = configs[0];
+                if (activeConfig == null && configs.Count > 0)
+                    activeConfig = configs[0];
 				
 				return activeConfig; 
 			}
@@ -396,6 +206,7 @@ namespace NUnit.Util
 		public bool IsAssemblyWrapper
 		{
 			get { return isAssemblyWrapper; }
+			set { isAssemblyWrapper = value; }
 		}
 
 		public string ConfigurationFile
@@ -412,24 +223,70 @@ namespace NUnit.Util
 		public bool IsDirty
 		{
 			get { return isDirty; }
-			set { isDirty = value; }
+			set 
+            { 
+                isDirty = value;
+
+                if (isAssemblyWrapper && value == true)
+                {
+                    projectPath = Path.ChangeExtension(projectPath, ".nunit");
+                    isAssemblyWrapper = false;
+                    HasChangesRequiringReload = true;
+                }
+            }
 		}
+
+        public bool HasChangesRequiringReload
+        {
+            get { return reloadRequired; }
+            set { reloadRequired = value; }
+        }
+
+        public ProcessModel ProcessModel
+        {
+            get { return processModel; }
+            set
+            {
+                processModel = value;
+                HasChangesRequiringReload = IsDirty = true;
+            }
+        }
+
+        public DomainUsage DomainUsage
+        {
+            get { return domainUsage; }
+            set
+            {
+                domainUsage = value;
+                HasChangesRequiringReload = IsDirty = true;
+            }
+        }
 
 		public ProjectConfigCollection Configs
 		{
 			get { return configs; }
 		}
-
-		public event ProjectEventHandler Changed;
-
 		#endregion
 
-		#region Instance Methods
+        #region Static Methods
+        public static bool IsNUnitProjectFile(string path)
+        {
+            return Path.GetExtension(path) == Extension;
+        }
 
-		public void SetActiveConfig( int index )
+        public static string ProjectPathFromFile(string path)
+        {
+            string fileName = Path.GetFileNameWithoutExtension(path) + NUnitProject.Extension;
+            return Path.Combine(Path.GetDirectoryName(path), fileName);
+        }
+        #endregion
+
+        #region Instance Methods
+
+        public void SetActiveConfig( int index )
 		{
 			activeConfig = configs[index];
-			OnProjectChange( ProjectChangeType.ActiveConfig, activeConfig.Name );
+            HasChangesRequiringReload = IsDirty = true;
 		}
 
 		public void SetActiveConfig( string name )
@@ -439,40 +296,8 @@ namespace NUnit.Util
 				if ( config.Name == name )
 				{
 					activeConfig = config;
-					OnProjectChange( ProjectChangeType.ActiveConfig, activeConfig.Name );
-					break;
-				}
-			}
-		}
-
-//		public int IndexOf( string name )
-//		{
-//			for( int index = 0; index < configs.Count; index++ )
-//				if( configs[index].Name == name )
-//					return index;
-//
-//			return -1;
-//		}
-
-		public void OnProjectChange( ProjectChangeType type, string configName )
-		{
-			isDirty = true;
-
-			if ( isAssemblyWrapper )
-			{
-				projectPath = Path.ChangeExtension( projectPath, ".nunit" );
-				isAssemblyWrapper = false;
-			}
-
-			if ( Changed != null )
-				Changed( this, new ProjectEventArgs( type, configName ) );
-
-			if ( type == ProjectChangeType.RemoveConfig )
-			{
-				if ( activeConfig == null || activeConfig.Name == configName )
-				{
-					if ( configs.Count > 0 )
-						SetActiveConfig( 0 );
+                    HasChangesRequiringReload = IsDirty = true;
+                    break;
 				}
 			}
 		}
@@ -516,12 +341,25 @@ namespace NUnit.Util
 								if ( reader.NodeType == XmlNodeType.Element )
 								{
 									activeConfigName = reader.GetAttribute( "activeconfig" );
-                                    if (activeConfigName == "NUnitAutoConfig")
-										activeConfigName = NUnitFramework.BuildConfiguration;
-									string appbase = reader.GetAttribute( "appbase" );
+
+                                    string autoConfig = reader.GetAttribute("autoconfig");
+                                    if (autoConfig != null)
+                                        this.AutoConfig = autoConfig.ToLower() == "true";
+                                    if (this.AutoConfig)
+										activeConfigName = NUnitConfiguration.BuildConfiguration;
+									
+                                    string appbase = reader.GetAttribute( "appbase" );
 									if ( appbase != null )
 										this.BasePath = appbase;
-								}
+
+                                    string processModel = reader.GetAttribute("processModel");
+                                    if (processModel != null)
+                                        this.ProcessModel = (ProcessModel)Enum.Parse(typeof(ProcessModel), processModel);
+
+                                    string domainUsage = reader.GetAttribute("domainUsage");
+                                    if (domainUsage != null)
+                                        this.DomainUsage = (DomainUsage)Enum.Parse(typeof(DomainUsage), domainUsage);
+                                }
 								break;
 
 							case "Config":
@@ -542,7 +380,12 @@ namespace NUnit.Util
 											currentConfig.BinPathType = BinPathType.Manual;
 									else
 										currentConfig.BinPathType = (BinPathType)Enum.Parse( typeof( BinPathType ), type, true );
-									Configs.Add( currentConfig );
+
+                                    string runtime = reader.GetAttribute("runtimeFramework");
+                                    if ( runtime != null )
+                                        currentConfig.RuntimeFramework = RuntimeFramework.Parse(runtime);
+
+                                    Configs.Add(currentConfig);
 									if ( configName == activeConfigName )
 										activeConfig = currentConfig;
 								}
@@ -564,6 +407,7 @@ namespace NUnit.Util
 						}
 
 				this.IsDirty = false;
+                this.reloadRequired = false;
 			}
 			catch( FileNotFoundException )
 			{
@@ -604,6 +448,12 @@ namespace NUnit.Util
 					writer.WriteAttributeString( "activeconfig", ActiveConfigName );
 				if ( this.BasePath != this.DefaultBasePath )
 					writer.WriteAttributeString( "appbase", this.BasePath );
+                if (this.AutoConfig)
+                    writer.WriteAttributeString("autoconfig", "true");
+                if (this.ProcessModel != ProcessModel.Default)
+                    writer.WriteAttributeString("processModel", this.ProcessModel.ToString());
+                if (this.DomainUsage != DomainUsage.Default)
+                    writer.WriteAttributeString("domainUsage", this.DomainUsage.ToString());
 				writer.WriteEndElement();
 			}
 			
@@ -625,6 +475,9 @@ namespace NUnit.Util
 					writer.WriteAttributeString( "binpath", config.PrivateBinPath );
 				else
 					writer.WriteAttributeString( "binpathtype", config.BinPathType.ToString() );
+
+                if (config.RuntimeFramework != null)
+                    writer.WriteAttributeString("runtimeFramework", config.RuntimeFramework.ToString());
 
 				foreach( string assembly in config.Assemblies )
 				{

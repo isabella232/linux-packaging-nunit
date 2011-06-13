@@ -1,12 +1,13 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
 using NUnit.Framework;
 using System.Reflection;
+using NUnit.Core.Extensibility;
 
 namespace NUnit.Core.Tests
 {
@@ -19,7 +20,8 @@ namespace NUnit.Core.Tests
 		[Test]
 		public void NUnitFrameworkIsKnownAndReferenced()
 		{
-			foreach( AssemblyName assemblyName in CoreExtensions.Host.TestFrameworks.GetReferencedFrameworks( Assembly.GetExecutingAssembly() ) )
+			FrameworkRegistry frameworks = (FrameworkRegistry)CoreExtensions.Host.GetExtensionPoint("FrameworkRegistry");
+			foreach( AssemblyName assemblyName in frameworks.GetReferencedFrameworks( Assembly.GetExecutingAssembly() ) )
 				if ( assemblyName.Name == "nunit.framework" ) return;
 			Assert.Fail("Cannot find nunit.framework");
 		}

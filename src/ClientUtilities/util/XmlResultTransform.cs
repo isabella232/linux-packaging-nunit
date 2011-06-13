@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -17,9 +17,13 @@ namespace NUnit.Util
 	/// </summary>
 	public class XmlResultTransform
 	{
-		private XslTransform xslTransform = new XslTransform();
+#if NET_2_0
+		private XslCompiledTransform xslTransform = new XslCompiledTransform();
+#else
+        private XslTransform xslTransform = new XslTransform();
+#endif
 
-		public XmlResultTransform() { }
+        public XmlResultTransform() { }
 
 		public XmlResultTransform( string stylesheet )
 		{

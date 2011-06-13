@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -44,36 +44,21 @@ namespace NUnit.Core
 		public static Test BuildFrom( object fixture )
 		{
 			Test suite = BuildFrom( fixture.GetType() );
+			
 			if( suite != null)
+			{
 				suite.Fixture = fixture;
+				
+				// TODO: Integrate building from an object as part of NUnitTestFixtureBuilder
+				if (suite.RunState == RunState.NotRunnable &&
+					Reflect.GetConstructor(fixture.GetType()) == null)
+				{
+					suite.RunState = RunState.Runnable;
+					suite.IgnoreReason = null;
+				}
+			}
+			
 			return suite;
-		}
-
-		public static string GetAssemblyPath( Type fixtureType )
-		{
-			return GetAssemblyPath( fixtureType.Assembly );
-		}
-
-		// TODO: This logic should be in shared source
-		public static string GetAssemblyPath( Assembly assembly )
-		{
-			string path = assembly.CodeBase;
-			Uri uri = new Uri( path );
-			
-			// If it wasn't loaded locally, use the Location
-			if ( !uri.IsFile )
-				return assembly.Location;
-
-			if ( uri.IsUnc )
-				return path.Substring( Uri.UriSchemeFile.Length+1 );
-
-
-			int start = Uri.UriSchemeFile.Length + Uri.SchemeDelimiter.Length;
-			
-			if ( path[start] == '/' && path[start+2] == ':' )
-				++start;
-
-			return path.Substring( start );
 		}
 
 		/// <summary>

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -22,8 +22,8 @@ namespace NUnit.Framework.Tests
 
 			Assert.AreNotEqual(array1, array2);
 			Assert.AreNotEqual(array2, array1);
-			Expect(array1, Not.EqualTo(array2));
-			Expect(array2, Not.EqualTo(array1));
+            Expect(array1, Not.EqualTo(array2));
+            Expect(array2, Not.EqualTo(array1));
 		}
 
 		[Test]
@@ -33,8 +33,8 @@ namespace NUnit.Framework.Tests
 			string[] array2 = { "one", "two", "ten" };
 			Assert.AreNotEqual(array1, array2);
 			Assert.AreNotEqual(array2, array1);
-			Expect(array1, Not.EqualTo(array2));
-			Expect(array2, Not.EqualTo(array1));
+            Expect(array1, Not.EqualTo(array2));
+            Expect(array2, Not.EqualTo(array1));
 		}
 
 		[Test]
@@ -43,8 +43,8 @@ namespace NUnit.Framework.Tests
 			string[] array1 = { "one", "two", "three" };
 			object[] array2 = { "one", "three", "two" };
 			Assert.AreNotEqual(array1, array2);
-			Expect(array1, Not.EqualTo(array2));
-			Expect(array2, Not.EqualTo(array1));
+            Expect(array1, Not.EqualTo(array2));
+            Expect(array2, Not.EqualTo(array1));
 		}
 
 	}

@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -316,7 +316,7 @@ namespace NUnit.TestData.SetupFixture
         public class NUnitNamespaceSetUpFixture
         {
             [SetUp]
-            public void DoNamespaceSetUp()
+            public static void DoNamespaceSetUp()
             {
                 TestUtilities.SimpleEventRecorder.RegisterEvent("NamespaceSetup");
             }
@@ -425,6 +425,61 @@ namespace NUnit.TestData.SetupFixture
 			public void SomeMethod() { }				
 		}
 	}
+
+    namespace Namespace5
+    {
+        #region SomeTestFixture
+        [TestFixture]
+        public class SomeTestFixture
+        {
+            [TestFixtureSetUp]
+            public void FixtureSetup()
+            {
+                TestUtilities.SimpleEventRecorder.RegisterEvent("FixtureSetup");
+            }
+
+            [SetUp]
+            public void Setup()
+            {
+                TestUtilities.SimpleEventRecorder.RegisterEvent("Setup");
+            }
+
+            [Test]
+            public void Test()
+            {
+                TestUtilities.SimpleEventRecorder.RegisterEvent("Test");
+            }
+
+            [TearDown]
+            public void TearDown()
+            {
+                TestUtilities.SimpleEventRecorder.RegisterEvent("TearDown");
+            }
+
+            [TestFixtureTearDown]
+            public void FixtureTearDown()
+            {
+                TestUtilities.SimpleEventRecorder.RegisterEvent("FixtureTearDown");
+            }
+        }
+        #endregion SomeTestFixture
+
+        [SetUpFixture]
+        public class NUnitNamespaceSetUpFixture
+        {
+            [SetUp]
+            public static void DoNamespaceSetUp()
+            {
+                TestUtilities.SimpleEventRecorder.RegisterEvent("NamespaceSetup");
+            }
+
+            [TearDown]
+            public static void DoNamespaceTearDown()
+            {
+                TestUtilities.SimpleEventRecorder.RegisterEvent("NamespaceTearDown");
+            }
+        }
+    }
 }
 #region NoNamespaceSetupFixture
 [SetUpFixture]

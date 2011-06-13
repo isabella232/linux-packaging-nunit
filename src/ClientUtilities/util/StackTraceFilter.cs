@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Util
@@ -46,7 +46,8 @@ namespace NUnit.Util
 				"NUnit.Core.TestResult",
 				"NUnit.Core.TestSuite",
 				"NUnit.Framework.Assertion", 
-				"NUnit.Framework.Assert" 
+				"NUnit.Framework.Assert",
+                "System.Reflection.MonoMethod"
 			};
 
 			for (int i = 0; i < patterns.Length; i++) 

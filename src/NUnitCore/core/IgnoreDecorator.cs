@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 using System;
 using System.Reflection;
@@ -20,16 +20,6 @@ namespace NUnit.Core
 		}
 
 		#region ITestDecorator Members
-
-//		public Test Decorate(Test test, MethodInfo method)
-//		{
-//			return DecorateTest( test, method );
-//		}
-//
-//		public Test Decorate(Test test, Type fixtureType)
-//		{
-//			return DecorateTest( test, fixtureType );
-//		}
 
 		public Test Decorate( Test test, MemberInfo member )
 		{

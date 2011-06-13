@@ -1,3 +1,9 @@
+// ****************************************************************
+// Copyright 2009, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
 using System;
 using NUnit.Framework;
 
@@ -19,9 +25,10 @@ namespace NUnit.Util.Tests
 		[SetUp]
 		public void CreateServicesForTestDomain()
 		{
-			ServiceManager.Services.AddService( new SettingsService() );
+			ServiceManager.Services.AddService( new DummySettingsService() );
 			ServiceManager.Services.AddService( new DomainManager() );
-			ServiceManager.Services.AddService( new TestAgency( "TestDomain_TestAgency", 9200 ) );
+			ServiceManager.Services.AddService( new ProjectService() );
+			ServiceManager.Services.AddService( new TestAgency( "TestDomain_TestAgency", 0 ) );
 			Services.TestAgency.Start();
 		}
 
@@ -32,4 +39,24 @@ namespace NUnit.Util.Tests
 			ServiceManager.Services.ClearServices();
 		}
 	}
+
+    class DummySettingsService : SettingsGroup, NUnit.Core.IService
+    {
+        public DummySettingsService()
+        {
+            this.storage = new MemorySettingsStorage();
+        }
+
+        #region IService Members
+
+        public void InitializeService()
+        {
+        }
+
+        public void UnloadService()
+        {
+        }
+
+        #endregion
+    }
 }

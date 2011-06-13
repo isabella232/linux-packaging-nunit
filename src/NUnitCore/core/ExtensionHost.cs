@@ -1,9 +1,10 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 using System;
+using System.Collections;
 using NUnit.Core.Extensibility;
 
 namespace NUnit.Core
@@ -17,27 +18,23 @@ namespace NUnit.Core
 	/// </summary>
 	public abstract class ExtensionHost : IExtensionHost
 	{
-		protected FrameworkRegistry frameworks;
+		#region Protected Fields
 
-		protected IExtensionPoint[] extensions;
+	    protected ArrayList extensions;
 
 		protected ExtensionType supportedTypes;
-
-		public ExtensionHost()
-		{
-			frameworks = new FrameworkRegistry();
-		}
+		#endregion
 
 		#region IExtensionHost Interface
 		public IExtensionPoint[] ExtensionPoints
 		{
-			get { return extensions; }
+			get { return (IExtensionPoint[])extensions.ToArray(typeof(IExtensionPoint)); }
 		}
 
-		public IFrameworkRegistry FrameworkRegistry
-		{
-			get { return frameworks; }
-		}
+        public IFrameworkRegistry FrameworkRegistry
+        {
+            get { return (IFrameworkRegistry)GetExtensionPoint("FrameworkRegistry"); }
+        }
 
 		public IExtensionPoint GetExtensionPoint( string name )
 		{

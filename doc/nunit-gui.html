@@ -1,4 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<!-- saved from url=(0014)about:internet --><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
 <html>
 <!-- Standard Head Part -->
 <head>
@@ -30,7 +30,7 @@
 	failure of the tests. It allows you to selectively run single tests or suites 
 	and reloads automatically as you modify and re-compile your code. The following 
 	is a screenshot of NUnit running the same mock-assembly.dll shown in the 
-	previous example.</p>
+	nunit-console example.</p>
 
 <div class="screenshot-left">
      <img src="img/gui-screenshot.jpg"></div>
@@ -60,57 +60,65 @@ some tests were ignored and green for success.
 <p>The tabs along the bottom of the display show the results of running
 a test. The <b>Errors and Failures</b> tab displays the error message
 and stack trace for both unexpected exceptions and assertion failures.
-The <b>Tests Not Run</b> tab provides a list of all tests that were
-selected for running but were not run, together with the reason. The
-remaining tabs display text output from the tests. In the image above,
-there are four of them: <b>Console.Out</b>, <b>Console.Error</b>,
-<b>Trace</b> and <b>Log</b>. This is the default display, but these
-output tabs are actually under user control and may be removed or 
-modified or have new tabs added. 
-For more information, see the documentation for the 
-<a href="optionsDialog.html">Options Dialog</a>.
+Beginning with NUnit 2.5, source code for each stack location can be displayed
+in this tab - as is seen above - provided that the program was compiled with 
+debug information.
+
+<p>The <b>Tests Not Run</b> tab provides a list of all tests that were
+selected for running but were not run, together with the reason.
+
+<p>The Text Output tab displays text output from the tests, potentially
+including console output, trace output and log output. The default display
+provides a single tab, but additional tabs may be created by the user to
+hold specific kinds of output. For more information on creating new tabs, 
+see the documentation for the 
+<a href="settingsDialog.html">Settings Dialog</a>.
    
+
 <h3>Mini-Gui</h3>
 
-<p>With the release of NUnit 2.4, an alternate "mini-gui" is also available. It 
-   may be selected from the View menu. The following screenshot shows the mini
-   gui displaying the NUnit tests.</p>
+<p>Since the release of NUnit 2.4, an alternate "mini-gui" is also available. It 
+   may be selected from the View menu. In the following screenshot, the mini
+   gui window has been positioned next to the Visual Studio IDE so
+   that both windows can be seen.</p>
    
-<div class="screenshot">
+<div class="screenshot-left">
      <img src="img/miniGui.jpg"></div>
-
-<h3>NUnit on 64-Bit Platforms</h3>
-
-<p>The .NET 2.0 version of nunit.exe is built using /platform:anycpu,
-which causes it to be jit-compiled to 32-bit code on a 32-bit system and 64-bit code 
-on a 64 bit system. This causes an exception when NUnit is used to test a 32-bit
-application on a 64-bit system. To avoid this problem, use nunit-x86.exe , 
-which is built using /platform:x86, when testing 32-bit code on a 
-64-bit system.
 
 </div>
 
 <!-- Submenu -->
 <div id="subnav">
 <ul>
-<li><a href="index.html">NUnit 2.4.7</a></li>
+<li><a href="index.html">NUnit 2.5.10</a></li>
 <ul>
 <li><a href="getStarted.html">Getting&nbsp;Started</a></li>
 <li><a href="assertions.html">Assertions</a></li>
+<li><a href="constraintModel.html">Constraints</a></li>
 <li><a href="attributes.html">Attributes</a></li>
+<li><a href="runningTests.html">Running&nbsp;Tests</a></li>
+<ul>
 <li><a href="nunit-console.html">Console&nbsp;Runner</a></li>
 <li id="current"><a href="nunit-gui.html">Gui&nbsp;Runner</a></li>
 <ul>
 <li><a href="guiCommandLine.html">Command-Line</a></li>
 <li><a href="mainMenu.html">Main&nbsp;Menu</a></li>
 <li><a href="contextMenu.html">Context&nbsp;Menu</a></li>
-<li><a href="optionsDialog.html">Options&nbsp;Dialog</a></li>
+<li><a href="settingsDialog.html">Settings&nbsp;Dialog</a></li>
 <li><a href="addinsDialog.html">Addins&nbsp;Dialog</a></li>
 <li><a href="testProperties.html">Test&nbsp;Properties</a></li>
 <li><a href="configEditor.html">Configuration&nbsp;Editor</a></li>
 <li><a href="projectEditor.html">Project&nbsp;Editor</a></li>
 </ul>
-<li><a href="features.html">Other&nbsp;Features</a></li>
+<li><a href="pnunit.html">PNUnit&nbsp;Runner</a></li>
+<li><a href="nunit-agent.html">NUnit&nbsp;Agent</a></li>
+<li><a href="runtimeSelection.html">Runtime&nbsp;Selection</a></li>
+<li><a href="assemblyIsolation.html">Assembly&nbsp;Isolation</a></li>
+<li><a href="configFiles.html">Configuration&nbsp;Files</a></li>
+<li><a href="multiAssembly.html">Multiple&nbsp;Assemblies</a></li>
+<li><a href="vsSupport.html">Visual&nbsp;Studio&nbsp;Support</a></li>
+</ul>
+<li><a href="extensibility.html">Extensibility</a></li>
 <li><a href="releaseNotes.html">Release&nbsp;Notes</a></li>
 <li><a href="samples.html">Samples</a></li>
 <li><a href="license.html">License</a></li>
@@ -122,7 +130,7 @@ which is built using /platform:x86, when testing 32-bit code on a
 
 <!-- Standard Footer for NUnit.org -->
 <div id="footer">
-  Copyright &copy; 2008 Charlie Poole. All Rights Reserved.
+  Copyright &copy; 2010 Charlie Poole. All Rights Reserved.
 </div>
 <!-- End of Footer -->
 

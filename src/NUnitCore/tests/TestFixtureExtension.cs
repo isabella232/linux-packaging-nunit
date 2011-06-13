@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -24,15 +24,15 @@ namespace NUnit.Core.Tests
 		private void RunTestOnFixture( object fixture )
 		{
 			Test suite = TestBuilder.MakeFixture( fixture );
-			suite.Run( NullListener.NULL );
+            suite.Run(NullListener.NULL, TestFilter.Empty);
 		}
 
 		[SetUp] public void LoadFixture()
 		{
-			string testsDll = "test-assembly.dll";
+            string testsDll = AssemblyHelper.GetAssemblyPath(typeof(DerivedTestFixture));
 			TestSuiteBuilder builder = new TestSuiteBuilder();
 			TestPackage package = new TestPackage( testsDll );
-			package.TestName = "NUnit.TestData.TestFixtureExtension.DerivedTestFixture";
+			package.TestName = typeof(DerivedTestFixture).FullName;
 			suite= builder.Build( package );
 		}
 
@@ -49,7 +49,7 @@ namespace NUnit.Core.Tests
 		{
 			Assert.IsNotNull(suite);
 
-			TestResult result = suite.Run(NullListener.NULL);
+            TestResult result = suite.Run(NullListener.NULL, TestFilter.Empty);
 			Assert.IsTrue(result.IsSuccess);
 		}
 

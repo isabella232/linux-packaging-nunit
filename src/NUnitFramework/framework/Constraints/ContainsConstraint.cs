@@ -1,10 +1,14 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
+using System.Collections;
+#if NET_2_0
+using System.Collections.Generic;
+#endif
 
 namespace NUnit.Framework.Constraints
 {
@@ -20,6 +24,9 @@ namespace NUnit.Framework.Constraints
 	{
 		object expected;
 		Constraint realConstraint;
+        bool ignoreCase;
+
+        private EqualityAdapter adapter = null;
 
 		private Constraint RealConstraint
 		{
@@ -27,12 +34,24 @@ namespace NUnit.Framework.Constraints
 			{
 				if ( realConstraint == null )
 				{
-					if ( actual is string )
-						this.realConstraint = new SubstringConstraint( (string)expected );
-					else
-						this.realConstraint = new CollectionContainsConstraint( expected );
+                    if (actual is string)
+                    {
+                        StringConstraint constraint = new SubstringConstraint((string)expected);
+                        if (this.ignoreCase)
+                            constraint = constraint.IgnoreCase;
+                        this.realConstraint = constraint;
+                    }
+                    else
+					{
+                        CollectionContainsConstraint constraint = new CollectionContainsConstraint(expected);
+						
+						if (this.adapter != null)
+							constraint.comparer.ExternalComparer = adapter;
+							
+						this.realConstraint = constraint;
+					}
 				}
-
+				
 				return realConstraint;
 			}
 			set 
@@ -46,9 +65,18 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         /// <param name="expected">The expected.</param>
 		public ContainsConstraint( object expected )
+			: base(expected)
 		{
 			this.expected = expected;
 		}
+
+        /// <summary>
+        /// Flag the constraint to ignore case and return self.
+        /// </summary>
+        public ContainsConstraint IgnoreCase
+        {
+            get { this.ignoreCase = true; return this; }
+        }
 
         /// <summary>
         /// Test whether the constraint is satisfied by a given value
@@ -57,11 +85,7 @@ namespace NUnit.Framework.Constraints
         /// <returns>True for success, false for failure</returns>
 		public override bool Matches(object actual)
 		{
-			this.actual = actual;
-
-			if ( this.caseInsensitive )
-				this.RealConstraint = RealConstraint.IgnoreCase;
-
+            this.actual = actual;
 			return this.RealConstraint.Matches( actual );
 		}
 
@@ -73,5 +97,62 @@ namespace NUnit.Framework.Constraints
 		{
 			this.RealConstraint.WriteDescriptionTo(writer);
 		}
+
+        /// <summary>
+        /// Flag the constraint to use the supplied IComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public ContainsConstraint Using(IComparer comparer)
+        {
+            this.adapter = EqualityAdapter.For(comparer);
+            return this;
+        }
+
+#if NET_2_0
+        /// <summary>
+        /// Flag the constraint to use the supplied IComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public ContainsConstraint Using<T>(IComparer<T> comparer)
+        {
+            this.adapter = EqualityAdapter.For(comparer);
+            return this;
+        }
+
+        /// <summary>
+        /// Flag the constraint to use the supplied Comparison object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public ContainsConstraint Using<T>(Comparison<T> comparer)
+        {
+            this.adapter = EqualityAdapter.For(comparer);
+            return this;
+        }
+
+        /// <summary>
+        /// Flag the constraint to use the supplied IEqualityComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public ContainsConstraint Using(IEqualityComparer comparer)
+        {
+            this.adapter = EqualityAdapter.For(comparer);
+            return this;
+        }
+
+        /// <summary>
+        /// Flag the constraint to use the supplied IEqualityComparer object.
+        /// </summary>
+        /// <param name="comparer">The IComparer object to use.</param>
+        /// <returns>Self.</returns>
+        public ContainsConstraint Using<T>(IEqualityComparer<T> comparer)
+        {
+            this.adapter = EqualityAdapter.For(comparer);
+            return this;
+        }
+#endif
 	}
 }

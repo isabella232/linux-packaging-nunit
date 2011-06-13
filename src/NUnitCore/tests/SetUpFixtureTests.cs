@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -13,7 +13,7 @@ namespace NUnit.Core.Tests
     [TestFixture]
     public class SetUpFixtureTests
     {
-        private static readonly string testAssembly = "test-assembly.dll";
+        private static readonly string testAssembly = AssemblyHelper.GetAssemblyPath(typeof(NUnit.TestData.EmptyFixture));
 
         #region SetUp
         [SetUp]
@@ -63,7 +63,7 @@ namespace NUnit.Core.Tests
                 Assert.AreEqual(1, suite.Tests.Count);
             }
 
-            Assert.IsInstanceOfType(typeof(SetUpFixture), suite);
+            Assert.IsInstanceOf(typeof(SetUpFixture), suite);
 
             suite = suite.Tests[0] as TestSuite;
             Assert.AreEqual("SomeTestFixture", suite.TestName.Name);
@@ -83,7 +83,7 @@ namespace NUnit.Core.Tests
             Test suite = builder.Build( new TestPackage( testAssembly ) );
 
             Assert.IsNotNull(suite);
-            Assert.IsInstanceOfType(typeof(SetUpFixture), suite);
+            Assert.IsInstanceOf(typeof(SetUpFixture), suite);
 
             suite = suite.Tests[1] as TestSuite;
             Assert.AreEqual("SomeTestFixture", suite.TestName.Name);
@@ -102,6 +102,17 @@ namespace NUnit.Core.Tests
                                   "NamespaceTearDown");
         }
         #endregion Simple
+
+        #region Static
+        [Test]
+        public void NamespaceSetUpMethodsMayBeStatic()
+        {
+            Assert.IsTrue(runTests("NUnit.TestData.SetupFixture.Namespace5").IsSuccess);
+            TestUtilities.SimpleEventRecorder.Verify("NamespaceSetup",
+                                    "FixtureSetup", "Setup", "Test", "TearDown", "FixtureTearDown",
+                                  "NamespaceTearDown");
+        }
+        #endregion
 
         #region TwoTestFixtures
         [NUnit.Framework.Test]
@@ -146,7 +157,7 @@ namespace NUnit.Core.Tests
         {
             TestResult result = runTests(null, new Filters.SimpleNameFilter("SomeTestFixture"));
             ResultSummarizer summ = new ResultSummarizer(result);
-            Assert.AreEqual(1, summ.ResultCount);
+            Assert.AreEqual(1, summ.TestsRun);
             Assert.IsTrue(result.IsSuccess);
             TestUtilities.SimpleEventRecorder.Verify("RootNamespaceSetup",
                                     "Test",

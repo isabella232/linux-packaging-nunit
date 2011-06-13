@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core.Tests
@@ -9,6 +9,7 @@ namespace NUnit.Core.Tests
 	using System;
 	using NUnit.Framework;	
 	using NUnit.Core;
+	using NUnit.TestUtilities;
 
 	/// <summary>
 	/// Summary description for TestResultTests.
@@ -16,18 +17,20 @@ namespace NUnit.Core.Tests
 	[TestFixture]
 	public class TestCaseResultFixture
 	{
-		private TestCaseResult caseResult;
+		private TestResult caseResult;
 
 		[SetUp]
 		public void SetUp()
 		{
-			caseResult = new TestCaseResult("test case result");
+			caseResult = new TestResult( new TestInfo(new NUnitTestMethod(Reflect.GetNamedMethod( this.GetType(), "DummyMethod" ) ) ) );
 		}
+
+		public void DummyMethod() { }
 		
 		[Test]
 		public void TestCaseDefault()
 		{
-			Assert.AreEqual( RunState.Runnable, caseResult.RunState );
+			Assert.AreEqual( ResultState.Inconclusive, caseResult.ResultState );
 		}
 
 		[Test]

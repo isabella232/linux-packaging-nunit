@@ -9,7 +9,7 @@
         <Reference Name="System" AssemblyName="System" />
         <Reference Name="System.Data" AssemblyName="System.Data" />
         <Reference Name="System.XML" AssemblyName="System.Xml" />
-        <Reference Name="nunit.framework" AssemblyName="nunit.framework, Version=2.4.4.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" HintPath="..\..\..\bin\nunit.framework.dll" />
+        <Reference Name="nunit.framework" AssemblyName="nunit.framework, Version=2.5, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77" HintPath="..\..\..\bin\net-1.1\framework\nunit.framework.dll" />
       </References>
       <Imports>
         <Import Namespace="Microsoft.VisualBasic" />

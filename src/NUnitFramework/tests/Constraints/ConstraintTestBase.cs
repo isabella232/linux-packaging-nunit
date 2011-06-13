@@ -1,56 +1,85 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
-
 using System;
 
-namespace NUnit.Framework.Constraints.Tests
+namespace NUnit.Framework.Constraints
 {
-    public abstract class ConstraintTestBase
+    public abstract class ConstraintTestBaseNoData
     {
-        protected Constraint Matcher;
-        protected object[] GoodValues;
-        protected object[] BadValues;
-        protected string Description;
+        protected Constraint theConstraint;
+        protected string expectedDescription = "<NOT SET>";
+        protected string stringRepresentation = "<NOT SET>";
 
         [Test]
-		public void SucceedsOnGoodValues()
-        {
-            foreach (object value in GoodValues)
-                Assert.That(value, Matcher, "Test should succeed with {0}", value);
-        }
-
-        [Test]
-		public void FailsOnBadValues()
-        {
-            foreach (object value in BadValues)
-            {
-                Assert.That(Matcher.Matches(value), new EqualConstraint(false), "Test should fail with value {0}", value);
-            }
-        }
-
-		[Test]
         public void ProvidesProperDescription()
         {
             TextMessageWriter writer = new TextMessageWriter();
-            Matcher.WriteDescriptionTo(writer);
-            Assert.That(writer.ToString(), new EqualConstraint(Description), null);
+            theConstraint.WriteDescriptionTo(writer);
+            Assert.AreEqual(expectedDescription, writer.ToString());
         }
 
-		[Test]
-        public void ProvidesProperFailureMessage()
+        [Test]
+        public void ProvidesProperStringRepresentation()
         {
-			object badValue = BadValues[0];
-			string badString = badValue == null ? "null" : badValue.ToString();
+            Assert.AreEqual(stringRepresentation, theConstraint.ToString());
+        }
+    }
 
-			TextMessageWriter writer = new TextMessageWriter();
-            Matcher.Matches(badValue);
-            Matcher.WriteMessageTo(writer);
-            Assert.That(writer.ToString(), new SubstringConstraint(Description));
-			Assert.That(writer.ToString(), new SubstringConstraint(badString));
-            Assert.That(writer.ToString(), new NotConstraint(new SubstringConstraint("<UNSET>")));
+    public abstract class ConstraintTestBase : ConstraintTestBaseNoData
+    {
+        [Test, TestCaseSource("SuccessData")]
+        public void SucceedsWithGoodValues(object value)
+        {
+            Assert.That(theConstraint.Matches(value));
+        }
+
+        [Test, TestCaseSource("FailureData")]
+        public void FailsWithBadValues(object badValue)
+        {
+            Assert.IsFalse(theConstraint.Matches(badValue));
+        }
+
+        [Test, Sequential]
+        public void ProvidesProperFailureMessage(
+            [ValueSource("FailureData")] object badValue,
+            [ValueSource("ActualValues")] string message)
+        {
+            theConstraint.Matches(badValue);
+            TextMessageWriter writer = new TextMessageWriter();
+            theConstraint.WriteMessageTo(writer);
+            Assert.AreEqual(
+                TextMessageWriter.Pfx_Expected + expectedDescription + Environment.NewLine +
+                TextMessageWriter.Pfx_Actual + message + Environment.NewLine,
+                writer.ToString());
+        }
+    }
+
+    /// <summary>
+    /// Base class for testing constraints that can throw an ArgumentException
+    /// </summary>
+    public abstract class ConstraintTestBaseWithArgumentException : ConstraintTestBase
+    {
+        [Test, TestCaseSource("InvalidData")]
+        [ExpectedException(typeof(ArgumentException))]
+        public void InvalidDataThrowsArgumentException(object value)
+        {
+            theConstraint.Matches(value);
+        }
+    }
+
+    /// <summary>
+    /// Base class for tests that can throw multiple exceptions. Use
+    /// TestCaseData class to specify the expected exception type.
+    /// </summary>
+    public abstract class ConstraintTestBaseWithExceptionTests : ConstraintTestBase
+    {
+        [Test, TestCaseSource("InvalidData")]
+        public void InvalidDataThrowsException(object value)
+        {
+            theConstraint.Matches(value);
         }
     }
 }

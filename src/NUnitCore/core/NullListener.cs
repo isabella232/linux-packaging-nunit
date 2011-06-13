@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -23,11 +23,11 @@ namespace NUnit.Core
 
 		public void TestStarted(TestName testName){}
 			
-		public void TestFinished(TestCaseResult result){}
+		public void TestFinished(TestResult result){}
 
 		public void SuiteStarted(TestName testName){}
 
-		public void SuiteFinished(TestSuiteResult result){}
+		public void SuiteFinished(TestResult result){}
 
 		public void UnhandledException( Exception exception ) {}
 

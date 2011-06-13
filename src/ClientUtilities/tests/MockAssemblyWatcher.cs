@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -21,9 +21,6 @@ namespace NUnit.Util.Tests
 		private DateTime triggerTime;
 		private DateTime publishTime;
 
-		public MockAssemblyWatcher( int delay, string assemblyFileName )
-			: base( delay, assemblyFileName ) { }
-		
 		public bool EventPublished
 		{
 			get { return eventPublished; }

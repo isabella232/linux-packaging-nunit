@@ -1,129 +1,306 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
 using System.Collections;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Text;
 
 namespace NUnit.Core.Builders
 {
 	/// <summary>
 	/// Built-in SuiteBuilder for NUnit TestFixture
 	/// </summary>
-	public class NUnitTestFixtureBuilder : AbstractFixtureBuilder
+	public class NUnitTestFixtureBuilder : Extensibility.ISuiteBuilder
 	{
-		public NUnitTestFixtureBuilder()
-		{
-			this.testCaseBuilders.Install( new NUnitTestCaseBuilder() );
-		}
-
-		#region AbstractFixtureBuilder Overrides
+		#region Instance Fields
 		/// <summary>
-		/// Makes an NUnitTestFixture instance
+		/// The NUnitTestFixture being constructed;
 		/// </summary>
-		/// <param name="type">The type to be used</param>
-		/// <returns>An NUnitTestFixture as a TestSuite</returns>
-		protected override TestSuite MakeSuite( Type type )
-		{
-			return new NUnitTestFixture( type );
-		}
+		private NUnitTestFixture fixture;
 
-		/// <summary>
-		/// Method that sets properties of the test suite based on the
-		/// information in the provided Type.
-		/// </summary>
-		/// <param name="type">The type to examine</param>
-		/// <param name="suite">The test suite being constructed</param>
-		protected override void SetTestSuiteProperties( Type type, TestSuite suite )
-		{
-			base.SetTestSuiteProperties( type, suite );
+	    private Extensibility.ITestCaseBuilder2 testBuilders = CoreExtensions.Host.TestBuilders;
 
-            NUnitFramework.ApplyCommonAttributes( type, suite );
-		}
+	    private Extensibility.ITestDecorator testDecorators = CoreExtensions.Host.TestDecorators;
 
+		#endregion
+
+        #region ISuiteBuilder Methods
         /// <summary>
-        /// Checks to see if the fixture type has the test fixture
-        /// attribute type specified in the parameters. Override
-        /// to allow additional types - based on name, for example.
-        /// </summary>
-        /// <param name="type">The fixture type to check</param>
-        /// <returns>True if the fixture can be built, false if not</returns>
-        public override bool CanBuildFrom(Type type)
+		/// Checks to see if the fixture type has the TestFixtureAttribute
+		/// </summary>
+		/// <param name="type">The fixture type to check</param>
+		/// <returns>True if the fixture can be built, false if not</returns>
+		public bool CanBuildFrom(Type type)
+		{
+            if (type.IsAbstract && !type.IsSealed)
+                return false;
+
+			return Reflect.HasAttribute( type, NUnitFramework.TestFixtureAttribute, true ) ||
+                   Reflect.HasMethodWithAttribute(type, NUnitFramework.TestAttribute, true) ||
+                   Reflect.HasMethodWithAttribute(type, NUnitFramework.TestCaseAttribute, true) ||
+                   Reflect.HasMethodWithAttribute(type, NUnitFramework.TheoryAttribute, true);
+		}
+
+		/// <summary>
+		/// Build a TestSuite from type provided.
+		/// </summary>
+		/// <param name="type"></param>
+		/// <returns></returns>
+		public Test BuildFrom(Type type)
+		{
+            Attribute[] attrs = GetTestFixtureAttributes(type);
+
+#if NET_2_0
+            if (type.IsGenericType)
+                return BuildMultipleFixtures(type, attrs);
+#endif
+
+            switch (attrs.Length)
+            {
+                case 0:
+                    return BuildSingleFixture(type, null);
+                case 1:
+                    object[] args = (object[])Reflect.GetPropertyValue(attrs[0], "Arguments");
+                    return args == null || args.Length == 0
+                        ? BuildSingleFixture(type, attrs[0])
+                        : BuildMultipleFixtures(type, attrs);
+                default:
+                    return BuildMultipleFixtures(type, attrs);
+            }
+        }
+
+		#endregion
+
+		#region Helper Methods
+
+        private Test BuildMultipleFixtures(Type type, Attribute[] attrs)
         {
-            return Reflect.HasAttribute( type, NUnitFramework.TestFixtureAttribute, true );
+            TestSuite suite = new ParameterizedFixtureSuite(type);
+
+            if (attrs.Length > 0)
+            {
+                foreach (Attribute attr in attrs)
+                    suite.Add(BuildSingleFixture(type, attr));
+            }
+            else
+            {
+                suite.RunState = RunState.NotRunnable;
+                suite.IgnoreReason = "Generic fixture has no type arguments provided";
+            }
+
+            return suite;
+        }
+
+        private Test BuildSingleFixture(Type type, Attribute attr)
+        {
+            object[] arguments = null;
+            IList categories = null;
+
+            if (attr != null)
+            {
+                arguments = (object[])Reflect.GetPropertyValue(attr, "Arguments");
+
+                categories = Reflect.GetPropertyValue(attr, "Categories") as IList;
+#if NET_2_0
+                if (type.ContainsGenericParameters)
+                {
+                    Type[] typeArgs = (Type[])Reflect.GetPropertyValue(attr, "TypeArgs");
+                    if( typeArgs.Length > 0 || 
+                        TypeHelper.CanDeduceTypeArgsFromArgs(type, arguments, ref typeArgs))
+                    {
+                        type = TypeHelper.MakeGenericType(type, typeArgs);
+                    }
+                }
+#endif
+            }
+
+            this.fixture = new NUnitTestFixture(type, arguments);
+            CheckTestFixtureIsValid(fixture);
+
+            NUnitFramework.ApplyCommonAttributes(type, fixture);
+
+            if (categories != null)
+                foreach (string category in categories)
+                    fixture.Categories.Add(category);
+
+            if (fixture.RunState == RunState.Runnable && attr != null)
+            {
+                object objIgnore = Reflect.GetPropertyValue(attr, "Ignore");
+                if (objIgnore != null && (bool)objIgnore == true)
+                {
+                    fixture.RunState = RunState.Ignored;
+                    fixture.IgnoreReason = (string)Reflect.GetPropertyValue(attr, "IgnoreReason");
+                }
+            }
+
+            AddTestCases(type);
+
+            return this.fixture;
         }
 
         /// <summary>
-        /// Check that the fixture is valid. In addition to the base class
-        /// check for a valid constructor, this method ensures that there 
-        /// is no more than one of each setup or teardown method and that
-        /// their signatures are correct.
+		/// Method to add test cases to the newly constructed fixture.
+		/// The default implementation looks at each candidate method
+		/// and tries to build a test case from it. It will only need
+		/// to be overridden if some other approach, such as reading a 
+		/// datafile is used to generate test cases.
+		/// </summary>
+		/// <param name="fixtureType"></param>
+		protected virtual void AddTestCases( Type fixtureType )
+		{
+			IList methods = fixtureType.GetMethods( 
+				BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static );
+
+			foreach(MethodInfo method in methods)
+			{
+				Test test = BuildTestCase(method, this.fixture);
+
+				if(test != null)
+				{
+					this.fixture.Add( test );
+				}
+			}
+		}
+
+		/// <summary>
+		/// Method to create a test case from a MethodInfo and add
+		/// it to the fixture being built. It first checks to see if
+		/// any global TestCaseBuilder addin wants to build the
+		/// test case. If not, it uses the internal builder
+		/// collection maintained by this fixture builder. After
+		/// building the test case, it applies any decorators
+		/// that have been installed.
+		/// 
+		/// The default implementation has no test case builders.
+		/// Derived classes should add builders to the collection
+		/// in their constructor.
+		/// </summary>
+		/// <param name="method"></param>
+		/// <returns></returns>
+		private Test BuildTestCase( MethodInfo method, TestSuite suite )
+		{
+            Test test = testBuilders.BuildFrom( method, suite );
+
+			if ( test != null )
+				test = testDecorators.Decorate( test, method );
+
+			return test;
+		}
+
+        private void CheckTestFixtureIsValid(TestFixture fixture)
+        {
+            Type fixtureType = fixture.FixtureType;
+
+            string reason = null;
+            if (!IsValidFixtureType(fixtureType, ref reason))
+            {
+                fixture.RunState = RunState.NotRunnable;
+                fixture.IgnoreReason = reason;
+            }
+            else if( !IsStaticClass( fixtureType ) )
+            {
+                // Postpone checking for constructor with arguments till we invoke it
+                // since Type.GetConstructor doesn't handle null arguments well.
+                if ( fixture.arguments == null || fixture.arguments.Length == 0 )
+                    if (Reflect.GetConstructor(fixtureType) == null)
+                    {
+                        fixture.RunState = RunState.NotRunnable;
+                        fixture.IgnoreReason = "No suitable constructor was found";
+                    }
+            }
+        }
+
+        private static bool IsStaticClass(Type type)
+        {
+            return type.IsAbstract && type.IsSealed;
+        }
+
+		/// <summary>
+        /// Check that the fixture type is valid. This method ensures that 
+        /// the type is not abstract and that there is no more than one of 
+        /// each setup or teardown method and that their signatures are correct.
         /// </summary>
         /// <param name="fixtureType">The type of the fixture to check</param>
         /// <param name="reason">A message indicating why the fixture is invalid</param>
         /// <returns>True if the fixture is valid, false if not</returns>
-        protected override bool IsValidFixtureType(Type fixtureType, ref string reason)
+        private bool IsValidFixtureType(Type fixtureType, ref string reason)
         {
-            if (!base.IsValidFixtureType(fixtureType, ref reason))
-                return false;
+            //if (fixtureType.IsAbstract && !fixtureType.IsSealed)
+            //{
+            //    reason = string.Format("{0} is an abstract class", fixtureType.FullName);
+            //    return false;
+            //}
 
-            if (!fixtureType.IsPublic && !fixtureType.IsNestedPublic)
+#if NET_2_0
+            if ( fixtureType.ContainsGenericParameters )
             {
-                reason = "Fixture class is not public";
+                reason = "Fixture type contains generic parameters. You must either provide "
+                        + "Type arguments or specify constructor arguments that allow NUnit "
+                        + "to deduce the Type arguments.";
                 return false;
             }
+#endif
 
-            return CheckSetUpTearDownMethod(fixtureType, "SetUp", NUnitFramework.SetUpAttribute, ref reason)
-                && CheckSetUpTearDownMethod(fixtureType, "TearDown", NUnitFramework.TearDownAttribute, ref reason)
-                && CheckSetUpTearDownMethod(fixtureType, "TestFixtureSetUp", NUnitFramework.FixtureSetUpAttribute, ref reason)
-                && CheckSetUpTearDownMethod(fixtureType, "TestFixtureTearDown", NUnitFramework.FixtureTearDownAttribute, ref reason);
+            return NUnitFramework.CheckSetUpTearDownMethods(fixtureType, NUnitFramework.SetUpAttribute, ref reason)
+                && NUnitFramework.CheckSetUpTearDownMethods(fixtureType, NUnitFramework.TearDownAttribute, ref reason)
+                && NUnitFramework.CheckSetUpTearDownMethods(fixtureType, NUnitFramework.FixtureSetUpAttribute, ref reason)
+                && NUnitFramework.CheckSetUpTearDownMethods(fixtureType, NUnitFramework.FixtureTearDownAttribute, ref reason);
         }
 
         /// <summary>
-        /// Internal helper to check a single setup or teardown method
+        /// Get TestFixtureAttributes following a somewhat obscure
+        /// set of rules to eliminate spurious duplication of fixtures.
+        /// 1. If there are any attributes with args, they are the only
+        ///    ones returned and those without args are ignored.
+        /// 2. No more than one attribute without args is ever returned.
         /// </summary>
-        /// <param name="fixtureType">The type to be checked</param>
-        /// <param name="attributeName">The short name of the attribute to be checked</param>
-        /// <returns>True if the method is present no more than once and has a valid signature</returns>
-        private bool CheckSetUpTearDownMethod(Type fixtureType, string name, string attributeName, ref string reason)
+        private static Attribute[] GetTestFixtureAttributes(Type type)
         {
-            int count = Reflect.CountMethodsWithAttribute(
-                fixtureType, attributeName,
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly,
-                true);
+            Attribute[] attrs = Reflect.GetAttributes(type, NUnitFramework.TestFixtureAttribute, true);
+            
+            // Just return - no possibility of duplication
+            if (attrs.Length <= 1) 
+                return attrs;
 
-            if (count == 0) return true;
+            int withArgs = 0;
+            bool[] hasArgs = new bool[attrs.Length];
 
-            if (count > 1)
+            // Count and record those attrs with arguments            
+            for (int i = 0; i < attrs.Length; i++)
             {
-                reason = string.Format("More than one {0} method", name);
-                return false;
-            }
+                object[] args = (object[])Reflect.GetPropertyValue(attrs[i], "Arguments");
+                object[] typeArgs = (object[])Reflect.GetPropertyValue(attrs[i], "TypeArgs");
 
-            MethodInfo theMethod = Reflect.GetMethodWithAttribute(
-                fixtureType, attributeName,
-                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly,
-                true);
-
-            if (theMethod != null)
-            {
-                if (theMethod.IsStatic ||
-                    theMethod.IsAbstract ||
-                    !theMethod.IsPublic && !theMethod.IsFamily ||
-                    theMethod.GetParameters().Length != 0 ||
-                    !theMethod.ReturnType.Equals(typeof(void)))
+                if (args.Length > 0 || typeArgs != null && typeArgs.Length > 0)
                 {
-                    reason = string.Format("Invalid {0} method signature", name);
-                    return false;
+                    withArgs++;
+                    hasArgs[i] = true;
                 }
             }
 
-            return true;
+            // If all attributes have args, just return them
+            if (withArgs == attrs.Length)
+                return attrs;
+
+            // If all attributes are without args, just return the first found
+            if (withArgs == 0)
+                return new Attribute[] { attrs[0] };
+
+            // Some of each type, so extract those with args
+            int count = 0;
+            Attribute[] result = new Attribute[withArgs];
+            for (int i = 0; i < attrs.Length; i++)
+                if (hasArgs[i])
+                    result[count++] = attrs[i];
+
+            return result;
         }
-		#endregion
+        
+        #endregion
 	}
 }

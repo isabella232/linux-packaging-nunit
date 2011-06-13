@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using System.Threading;
@@ -31,12 +31,12 @@ namespace NUnit.Core.Tests
 //			CallContext.FreeNamedDataSlot(CONTEXT_DATA);
 //		}
 
-//		[TestFixtureTearDown]
-//		public void FreeCallContextDataSlot()
-//		{
-//			// NOTE: We don't want possible side effects on other cross context tests.
-//			CallContext.FreeNamedDataSlot(CONTEXT_DATA);
-//		}
+        [TestFixtureTearDown]
+        public void FreeCallContextDataSlot()
+        {
+            // NOTE: We don't want possible side effects on other cross context tests.
+            CallContext.FreeNamedDataSlot(CONTEXT_DATA);
+        }
 
 		[Test]
 		public void ILogicalThreadAffinativeTest()

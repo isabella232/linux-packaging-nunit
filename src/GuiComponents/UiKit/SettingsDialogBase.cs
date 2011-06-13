@@ -1,3 +1,8 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using System.Drawing;
 using System.Collections;
@@ -90,7 +95,6 @@ namespace NUnit.UiKit
 			// 
 			// SettingsDialogBase
 			// 
-			this.AutoScaleBaseSize = new System.Drawing.Size(6, 15);
 			this.ClientSize = new System.Drawing.Size(336, 458);
 			this.Controls.Add(this.cancelButton);
 			this.Controls.Add(this.okButton);
@@ -101,7 +105,7 @@ namespace NUnit.UiKit
 			this.Name = "SettingsDialogBase";
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "Options";
+			this.Text = "Settings";
 			this.Closed += new System.EventHandler(this.SettingsDialogBase_Closed);
 			this.ResumeLayout(false);
 

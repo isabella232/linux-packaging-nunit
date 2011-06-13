@@ -1,43 +1,47 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 
-using System;
-using NUnit.Framework.SyntaxHelpers;
+using NUnit.Framework.Constraints;
 
-namespace NUnit.Framework.Constraints.Tests
+namespace NUnit.Framework.Constraints
 {
     [TestFixture]
     public class NotTest : ConstraintTestBase
     {
-		[SetUp]
+        [SetUp]
         public void SetUp()
         {
-            Matcher = new NotConstraint( new EqualConstraint(null) );
-            GoodValues = new object[] { 42, "Hello" };
-            BadValues = new object [] { null };
-            Description = "not null";
+            theConstraint = new NotConstraint( new EqualConstraint(null) );
+            expectedDescription = "not null";
+            stringRepresentation = "<not <equal null>>";
         }
 
-		[Test,ExpectedException(typeof(AssertionException),ExpectedMessage="ignoring case",MatchType=MessageMatch.Contains)]
-		public void NotHonorsIgnoreCaseUsingConstructors()
-		{
-			Assert.That( "abc", new NotConstraint( new EqualConstraint( "ABC" ).IgnoreCase ) );
-		}
+        internal object[] SuccessData = new object[] { 42, "Hello" };
+            
+        internal object[] FailureData = new object [] { null };
 
-		[Test,ExpectedException(typeof(AssertionException),ExpectedMessage="ignoring case",MatchType=MessageMatch.Contains)]
-		public void NotHonorsIgnoreCaseUsingPrefixNotation()
-		{
-			Assert.That( "abc", Is.Not.EqualTo( "ABC" ).IgnoreCase );
-		}
+        internal string[] ActualValues = new string[] { "null" };
 
-		[Test,ExpectedException(typeof(AssertionException),ExpectedMessage="+/-",MatchType=MessageMatch.Contains)]
-		public void NotHonorsTolerance()
-		{
-			Assert.That( 4.99d, Is.Not.EqualTo( 5.0d ).Within( .05d ) );
-		}
+        [Test, ExpectedException(typeof(AssertionException), ExpectedMessage = "ignoring case", MatchType = MessageMatch.Contains)]
+        public void NotHonorsIgnoreCaseUsingConstructors()
+        {
+            Assert.That("abc", new NotConstraint(new EqualConstraint("ABC").IgnoreCase));
+        }
+
+        [Test,ExpectedException(typeof(AssertionException),ExpectedMessage="ignoring case",MatchType=MessageMatch.Contains)]
+        public void NotHonorsIgnoreCaseUsingPrefixNotation()
+        {
+            Assert.That( "abc", Is.Not.EqualTo( "ABC" ).IgnoreCase );
+        }
+
+        [Test,ExpectedException(typeof(AssertionException),ExpectedMessage="+/-",MatchType=MessageMatch.Contains)]
+        public void NotHonorsTolerance()
+        {
+            Assert.That( 4.99d, Is.Not.EqualTo( 5.0d ).Within( .05d ) );
+        }
 
         [Test]
         public void CanUseNotOperator()

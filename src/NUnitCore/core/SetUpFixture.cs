@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -26,15 +26,25 @@ namespace NUnit.Core
             if (index > 0)
                 this.TestName.Name = this.TestName.Name.Substring(index + 1);
             
-			this.fixtureSetUp = NUnitFramework.GetSetUpMethod( type );
-			this.fixtureTearDown = NUnitFramework.GetTearDownMethod( type );
+			this.fixtureSetUpMethods = Reflect.GetMethodsWithAttribute( type, NUnitFramework.SetUpAttribute, true );
+			this.fixtureTearDownMethods = Reflect.GetMethodsWithAttribute( type, NUnitFramework.TearDownAttribute, true );
 		}
 		#endregion
 
 		#region TestSuite Overrides
+
+        /// <summary>
+        /// Gets a string representing the kind of test
+        /// that this object represents, for use in display.
+        /// </summary>
+        public override string TestType
+        {
+            get { return "SetUpFixture"; }
+        }
+
 		public override TestResult Run(EventListener listener, ITestFilter filter)
 		{
-			using ( new DirectorySwapper( Path.GetDirectoryName( TestFixtureBuilder.GetAssemblyPath( FixtureType ) ) ) )
+			using ( new DirectorySwapper( AssemblyHelper.GetDirectoryName( FixtureType.Assembly ) ) )
 			{
 				return base.Run(listener, filter);
 			}

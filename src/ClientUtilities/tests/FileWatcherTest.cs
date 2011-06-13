@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -14,25 +14,29 @@ namespace NUnit.Util.Tests
 {
 	[TestFixture]
 	[Platform( Exclude = "Win95,Win98,WinMe" )]
-	[Platform( Exclude = "Mono", Reason = "NYI on Mono under Windows" )]
 	public class FileWatcherTest
 	{
 		private AssemblyWatcher watcher;
 		private CounterEventHandler handler;
 		private static int watcherDelayMs = 100;
-		private static readonly String fileName = "temp.txt";
-		private static readonly String tempFileName = "newTempFile.txt";
+		private string fileName;
+		private string tempFileName;
 
 		[SetUp]
 		public void CreateFile()
 		{
+            string tempDir = Path.GetTempPath();
+            fileName = Path.Combine(tempDir, "temp.txt");
+            tempFileName = Path.Combine(tempDir, "newTempFile.txt");
+
 			StreamWriter writer = new StreamWriter( fileName );
 			writer.Write( "Hello" );
 			writer.Close();
 
 			handler = new CounterEventHandler();
-			watcher = new AssemblyWatcher(watcherDelayMs, fileName);
-			watcher.AssemblyChangedEvent += new AssemblyWatcher.AssemblyChangedHandler( handler.OnChanged );
+			watcher = new AssemblyWatcher();
+			watcher.Setup(watcherDelayMs, fileName);
+			watcher.AssemblyChanged += new AssemblyChangedHandler( handler.OnChanged );
 			watcher.Start();
 		}
 
@@ -48,7 +52,9 @@ namespace NUnit.Util.Tests
 		}
 
 		[Test]
-		public void MultipleCloselySpacedChangesTriggerWatcherOnlyOnce()
+        // TODO: Exclusion should really only apply to Mono on Windows
+        [Platform(Exclude = "Mono")]
+        public void MultipleCloselySpacedChangesTriggerWatcherOnlyOnce()
 		{
 			for(int i=0; i<3; i++)
 			{
@@ -63,7 +69,9 @@ namespace NUnit.Util.Tests
 		}
 
 		[Test]
-		public void ChangingFileTriggersWatcher()
+        // TODO: Exclusion should really only apply to Mono on Windows
+        [Platform(Exclude = "Mono")]
+        public void ChangingFileTriggersWatcher()
 		{
 			StreamWriter writer = new StreamWriter( fileName );
 			writer.Write( "Goodbye" );
@@ -75,6 +83,7 @@ namespace NUnit.Util.Tests
 		}
 
 		[Test]
+		[Platform( Exclude = "Linux", Reason = "Attribute change triggers watcher" )]	
 		public void ChangingAttributesDoesNotTriggerWatcher()
 		{
 			FileInfo fi = new FileInfo(fileName);

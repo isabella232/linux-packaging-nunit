@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -36,7 +36,7 @@ namespace NUnit.Core
     /// result of the last run may be obtained by querying the TestResult property.
     /// 
     /// </summary>
-	public interface TestRunner
+	public interface TestRunner : IDisposable
 	{
 		#region Properties
 		/// <summary>
@@ -52,8 +52,8 @@ namespace NUnit.Core
 		}
 
 		/// <summary>
-		/// IsTestRunning indicates whether a test is in progress. To retrieve the
-		/// results from an asynchronous test run, wait till IsTestRunning is false.
+		/// Running indicates whether a test is in progress. To retrieve the
+		/// results from an asynchronous test run, wait till Running is false.
 		/// </summary>
 		bool Running
 		{

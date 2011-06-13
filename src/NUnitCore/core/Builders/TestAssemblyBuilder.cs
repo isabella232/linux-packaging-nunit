@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 using System;
@@ -17,6 +17,7 @@ namespace NUnit.Core.Builders
 	/// </summary>
 	public class TestAssemblyBuilder
 	{
+		static Logger log = InternalTrace.GetLogger("TestAssemblyBuilder");
 
 		#region Instance Fields
 		/// <summary>
@@ -46,11 +47,10 @@ namespace NUnit.Core.Builders
 			{ 
 				if ( assemblyInfo == null && assembly != null )
 				{
-					string path = TestFixtureBuilder.GetAssemblyPath( assembly );
-					AssemblyReader rdr = new AssemblyReader( path );
-					Version runtimeVersion = new Version( rdr.ImageRuntimeVersion.Substring( 1 ) );
+					AssemblyReader rdr = new AssemblyReader( assembly );
+					Version imageRuntimeVersion = new Version( rdr.ImageRuntimeVersion.Substring( 1 ) );
 					IList frameworks = CoreExtensions.Host.TestFrameworks.GetReferencedFrameworks( assembly );
-					assemblyInfo = new TestAssemblyInfo( path, runtimeVersion, frameworks );
+					assemblyInfo = new TestAssemblyInfo( rdr.AssemblyPath, imageRuntimeVersion, RuntimeFramework.CurrentFramework, frameworks );
 				}
 
 				return assemblyInfo;
@@ -75,29 +75,40 @@ namespace NUnit.Core.Builders
 			if ( testName == null || testName == string.Empty )
 				return Build( assemblyName, autoSuites );
 
-			this.assembly = Load( assemblyName );
-			if ( assembly == null ) return null;
+            // Change currentDirectory in case assembly references unmanaged dlls
+            // and so that any addins are able to access the directory easily.
+            using (new DirectorySwapper(Path.GetDirectoryName(assemblyName)))
+            {
+                this.assembly = Load(assemblyName);
+                if (assembly == null) return null;
 
-			// If provided test name is actually the name of
-			// a type, we handle it specially
-			Type testType = assembly.GetType(testName);
-			if( testType != null )
-				return Build( assemblyName, testType, autoSuites );
-		
-			// Assume that testName is a namespace and get all fixtures in it
-			IList fixtures = GetFixtures( assembly, testName );
-			if ( fixtures.Count > 0 ) 
-				return BuildTestAssembly( assemblyName, fixtures, autoSuites );
-			return null;
+                // If provided test name is actually the name of
+                // a type, we handle it specially
+                Type testType = assembly.GetType(testName);
+                if (testType != null)
+                    return Build(assemblyName, testType, autoSuites);
+
+                // Assume that testName is a namespace and get all fixtures in it
+                IList fixtures = GetFixtures(assembly, testName);
+                if (fixtures.Count > 0)
+                    return BuildTestAssembly(assemblyName, fixtures, autoSuites);
+
+                return null;
+            }
 		}
 
 		public TestSuite Build( string assemblyName, bool autoSuites )
 		{
-			this.assembly = Load( assemblyName );
-			if ( this.assembly == null ) return null;
+            // Change currentDirectory in case assembly references unmanaged dlls
+            // and so that any addins are able to access the directory easily.
+            using (new DirectorySwapper(Path.GetDirectoryName(assemblyName)))
+            {
+                this.assembly = Load(assemblyName);
+                if (this.assembly == null) return null;
 
-			IList fixtures = GetFixtures( assembly, null );
-			return BuildTestAssembly( assemblyName, fixtures, autoSuites );
+                IList fixtures = GetFixtures(assembly, null);
+                return BuildTestAssembly(assemblyName, fixtures, autoSuites);
+            }
 		}
 
 		private Test Build( string assemblyName, Type testType, bool autoSuites )
@@ -115,7 +126,7 @@ namespace NUnit.Core.Builders
 
 		private TestSuite BuildTestAssembly( string assemblyName, IList fixtures, bool autoSuites )
 		{
-			TestSuite testAssembly = new TestSuite( assemblyName );
+			TestSuite testAssembly = new TestAssembly( assemblyName );
 
 			if ( autoSuites )
 			{
@@ -127,22 +138,23 @@ namespace NUnit.Core.Builders
 			else 
 			foreach( TestSuite fixture in fixtures )
 			{
-				if ( fixture is SetUpFixture )
-				{
-					fixture.RunState = RunState.NotRunnable;
-					fixture.IgnoreReason = "SetUpFixture cannot be used when loading tests as a flat list of fixtures";
-				}
+                if (fixture != null)
+                {
+                    if (fixture is SetUpFixture)
+                    {
+                        fixture.RunState = RunState.NotRunnable;
+                        fixture.IgnoreReason = "SetUpFixture cannot be used when loading tests as a flat list of fixtures";
+                    }
 
-				testAssembly.Add( fixture );
+                    testAssembly.Add(fixture);
+                }
 			}
 
-			if ( fixtures.Count == 0 )
-			{
-				testAssembly.RunState = RunState.NotRunnable;
-				testAssembly.IgnoreReason = "Has no TestFixtures";
-			}
-			
             NUnitFramework.ApplyCommonAttributes( assembly, testAssembly );
+
+            testAssembly.Properties["_PID"] = System.Diagnostics.Process.GetCurrentProcess().Id;
+            testAssembly.Properties["_APPDOMAIN"] = AppDomain.CurrentDomain.FriendlyName;
+
 
 			// TODO: Make this an option? Add Option to sort assemblies as well?
 			testAssembly.Sort();
@@ -156,38 +168,46 @@ namespace NUnit.Core.Builders
 
 		private Assembly Load(string path)
 		{
-			Assembly assembly = null;
+            Assembly assembly = null;
 
-			// Change currentDirectory in case assembly references unmanaged dlls
-			using( new DirectorySwapper( Path.GetDirectoryName( path ) ) )
-			{
-                // Throws if this isn't a managed assembly or if it was built
-				// with a later version of the same assembly. 
-				AssemblyName.GetAssemblyName( Path.GetFileName( path ) );
-				
-				// TODO: Figure out why we can't load using the assembly name
-				// in all cases. Might be a problem with the tests themselves.
-                assembly = Assembly.Load(Path.GetFileNameWithoutExtension(path));
-				
-                if ( assembly != null )
-                    CoreExtensions.Host.InstallAdhocExtensions( assembly );
+            // Throws if this isn't a managed assembly or if it was built
+			// with a later version of the same assembly. 
+			AssemblyName assemblyName = AssemblyName.GetAssemblyName( Path.GetFileName( path ) );
+			
+            assembly = Assembly.Load(assemblyName);
+			
+            if ( assembly != null )
+                CoreExtensions.Host.InstallAdhocExtensions( assembly );
 
-				NTrace.Info( "Loaded assembly " + assembly.FullName, "'TestAssemblyBuilder'" );
+			log.Info( "Loaded assembly " + assembly.FullName );
 
-				return assembly;
-			}
+			return assembly;
 		}
 
 		private IList GetFixtures( Assembly assembly, string ns )
 		{
 			ArrayList fixtures = new ArrayList();
+            log.Debug("Examining assembly for test fixtures");
 
 			IList testTypes = GetCandidateFixtureTypes( assembly, ns );
+
+            log.Debug("Found {0} classes to examine", testTypes.Count);
+#if NET_2_0
+            System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
+            timer.Start();
+#endif
+
 			foreach(Type testType in testTypes)
 			{
 				if( TestFixtureBuilder.CanBuildFrom( testType ) )
 					fixtures.Add( TestFixtureBuilder.BuildFrom( testType ) );
 			}
+
+#if NET_2_0
+            log.Debug("Found {0} fixtures in {1} seconds", fixtures.Count, timer.Elapsed);
+#else
+            log.Debug("Found {0} fixtures", fixtures.Count);
+#endif
 
 			return fixtures;
 		}

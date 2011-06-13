@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 using System;
 using NUnit.Framework;
@@ -33,15 +33,36 @@ namespace NUnit.Core.Tests
 		[Test]
 		public void CategoryOnTestCase()
 		{
-			TestCase test1 = (TestCase)fixture.Tests[0];
+			Test test1 = (Test)fixture.Tests[0];
 			Assert.Contains( "Long", test1.Categories );
 		}
 
 		[Test]
 		public void CanDeriveFromCategoryAttribute()
 		{
-			TestCase test2 = (TestCase)fixture.Tests[1];
+			Test test2 = (Test)fixture.Tests[1];
 			Assert.Contains( "Critical", test2.Categories );
 		}
-	}
+		
+		[Test]
+		public void DerivedCategoryMayBeInherited()
+		{
+			Assert.Contains("MyCategory", fixture.Categories);
+		}
+
+        [Test]
+        public void CountTestsWithoutCategoryFilter()
+        {
+            Assert.That(fixture.CountTestCases(TestFilter.Empty), Is.EqualTo(2));
+        }
+
+        [TestCase("Database", Result = 0)]
+        [TestCase("Long", Result = 1)]
+        [TestCase("Critical", Result = 1)]
+        public int CountTestsUsingCategoryFilter(string name)
+        {
+            TestFilter filter = new Filters.CategoryFilter(name);
+            return fixture.CountTestCases(filter);
+        }
+    }
 }

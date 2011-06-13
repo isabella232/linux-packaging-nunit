@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -16,13 +16,6 @@ namespace NUnit.UiKit
 	/// </summary>
 	public class NotRunTree : TreeView, TestObserver
 	{
-//		public void Add( TestResult result )
-//		{
-//			Invoke( new AddNodeHandler( AddNode ), new object[] { result } );
-//		}
-
-//		private delegate void AddNodeHandler( TestResult result );
-
 		#region TestObserver Members and TestEventHandlers
 
 		public void Subscribe(ITestEvents events)
@@ -38,7 +31,7 @@ namespace NUnit.UiKit
 		private void OnTestFinished( object sender, TestEventArgs args )
 		{
 			TestResult result = args.Result;
-			if ( !result.Executed )
+			if ( result.ResultState == ResultState.Skipped || result.ResultState == ResultState.Ignored)
 				this.AddNode( args.Result );
 		}
 

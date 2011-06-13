@@ -1,3 +1,8 @@
+// ****************************************************************
+// Copyright 2008, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
 using System;
 using NUnit.Framework;
 
@@ -8,7 +13,7 @@ namespace NUnit.TestData
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple=false)]
 	class ConcernAttribute : TestFixtureAttribute
 	{
-		private Type typeOfConcern;
+		public Type typeOfConcern;
 
 		public ConcernAttribute( Type typeOfConcern )
 		{
@@ -32,4 +37,25 @@ namespace NUnit.TestData
 		{
 		}
 	}
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    class NYIAttribute : IgnoreAttribute
+    {
+        public NYIAttribute() : base("Not yet implemented") { }
+    }
+
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    class WorkInProcessAttribute : ExplicitAttribute
+    {
+        public WorkInProcessAttribute() : base("Work in progress") { }
+    }
+
+    public class AttributeInheritanceFixture
+    {
+        [Test, WorkInProcess]
+        public void ShouldBeExplicit() { }
+
+        [Test, NYI]
+        public void ShouldBeIgnored() { }
+    }
 }

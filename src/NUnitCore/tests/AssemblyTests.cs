@@ -1,7 +1,7 @@
 // ****************************************************************
 // This is free software licensed under the NUnit license. You
 // may obtain a copy of the license as well as information regarding
-// copyright ownership at http://nunit.org/?p=license&r=2.4.
+// copyright ownership at http://nunit.org.
 // ****************************************************************
 
 namespace NUnit.Core.Tests
@@ -18,12 +18,14 @@ namespace NUnit.Core.Tests
 	[TestFixture]
 	public class AssemblyTests 
 	{
-		private string thisDll;
+        private string thisDll;
+	    private string noTestFixturesDll;
 
 		[SetUp]
 		public void InitStrings()
 		{
-			thisDll = this.GetType().Module.Name;
+            thisDll = AssemblyHelper.GetAssemblyPath(this.GetType());
+            noTestFixturesDll = AssemblyHelper.GetAssemblyPath(typeof(NUnit.TestUtilities.TestBuilder));
 		}
 
 		// TODO: Review and remove unnecessary tests
@@ -45,8 +47,7 @@ namespace NUnit.Core.Tests
 		{
 			TestSuiteBuilder builder = new TestSuiteBuilder();
 			Test suite = builder.Build( new TestPackage( thisDll ) );
-			Assert.IsNotNull( suite );
-			//Assert.IsNotNull(testAssembly, "should be able to load assembly");
+            Assert.IsNotNull(suite, "Unable to load " + thisDll);
 			Assert.IsTrue( File.Exists( thisDll ), "Load does not set current Directory" );
 		}
 
@@ -55,18 +56,16 @@ namespace NUnit.Core.Tests
 		public void LoadAssemblyNotFound()
 		{
 			TestSuiteBuilder builder = new TestSuiteBuilder();
-			builder.Build( new TestPackage( "XXXX.dll" ) );
+			builder.Build( new TestPackage( "/XXXX.dll" ) );
 		}
 
 		[Test]
 		public void LoadAssemblyWithoutTestFixtures()
 		{
-			string fileName = "notestfixtures-assembly.dll";
 			TestSuiteBuilder builder = new TestSuiteBuilder();
-			Test suite = builder.Build( new TestPackage( fileName ) );
-			Assert.IsNotNull( suite,"Should not be null" );
-			Assert.AreEqual( RunState.NotRunnable, suite.RunState );
-			Assert.AreEqual( suite.IgnoreReason, "Has no TestFixtures" );
+			Test suite = builder.Build( new TestPackage( noTestFixturesDll ) );
+            Assert.IsNotNull(suite, "Unable to load " + noTestFixturesDll);
+            Assert.AreEqual(RunState.Runnable, suite.RunState);
 			Assert.AreEqual( 0, suite.Tests.Count );
 		}
 

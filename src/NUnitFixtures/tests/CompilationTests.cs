@@ -1,7 +1,7 @@
 // ****************************************************************
 // Copyright 2007, Charlie Poole
 // This is free software licensed under the NUnit license. You may
-// obtain a copy of the license at http://nunit.org/?p=license&r=2.4
+// obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
 using System;
@@ -16,12 +16,15 @@ namespace NUnit.Fixtures.Tests
 	/// <summary>
 	/// Summary description for CompilationTests.
 	/// </summary>
-	[TestFixture,Platform(Exclude="Mono",Reason="Holds output file open")]
-	public class CompilationTests
+	[TestFixture]
+    // TODO: Exclusion should really only apply to Mono on Windows
+    //[Platform(Exclude = "Mono")]
+    [Explicit]
+    public class CompilationTests
 	{
 		private TestCompiler compiler;
 		private static string[] references = new string[] { "System.dll", "nunit.framework.dll" };
-		private static string outputName = "test.dll";
+		private static string outputName = Path.GetFullPath("test.dll");
 		private static string goodCode = 
 @"using System;
 using NUnit.Framework;
