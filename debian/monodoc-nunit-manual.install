@@ -1,6 +1,6 @@
-build/linux/mono/2.0/release/nunit.core.tree		/usr/lib/monodoc/sources/
-build/linux/mono/2.0/release/nunit.core.zip		/usr/lib/monodoc/sources/
-build/linux/mono/2.0/release/nunit.framework.tree	/usr/lib/monodoc/sources/
-build/linux/mono/2.0/release/nunit.framework.zip	/usr/lib/monodoc/sources/
+nunit.core.tree						/usr/lib/monodoc/sources/
+nunit.core.zip						/usr/lib/monodoc/sources/
+nunit.framework.tree					/usr/lib/monodoc/sources/
+nunit.framework.zip					/usr/lib/monodoc/sources/
 debian/nunit.core.source				/usr/lib/monodoc/sources/
 debian/nunit.framework.source				/usr/lib/monodoc/sources/

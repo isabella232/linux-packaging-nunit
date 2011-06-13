@@ -20,6 +20,16 @@ override_dh_auto_build:
 	xbuild /property:Configuration=Release ./src/GuiComponents/UiKit/nunit.uikit.dll.csproj
 	xbuild /property:Configuration=Release ./src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
 
+	rm -rf monodocer;
+	mdoc update -i ./src/bin/Release/framework/nunit.framework.xml \
+	  -o monodocer bin/Release/framework/nunit.framework.dll;
+	mdoc assemble -o nunit.framework monodocer;
+
+	rm -rf monodocer;
+	mdoc update -i ./src/bin/Release/lib/nunit.core.xml \
+	  -o monodocer bin/Release/lib/nunit.core.dll;
+	mdoc assemble -o nunit.core monodocer;
+
 override_dh_install:
 	install -D -m 755 debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
 	install -D -m 755 debian/nunit-gui.sh debian/nunit-gui/usr/bin/nunit-gui
