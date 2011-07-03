@@ -1,8 +1,35 @@
-nunit (2.5.10.11092+dfsg-1) UNRELEASED; urgency=low
+nunit (2.5.10.11092+dfsg-1) experimental; urgency=low
 
-  * new upstream release
+  * [91dc8f1] update get-orig-source
+  * [821bfe5] Imported Upstream version 2.5.10.11092+dfsg
+  * [e1547c8] change to 3.0 (quilt)
+  * [1d92bd0] remove obsolete nant patches 02-04
+  * [5d79c0e] remove obsolete patches 06 and 07
+  * [8518731] refresh 05_build_xml_doc_for_nunit.core.dpatch
+  * [a26d39f] add patch to use default debian framework
+  * [3be4a45] dh-7 rules
+  * [90878b4] adapt install paths
+  * [ea8e296] build and install docs
+  * [b264abe] fix libmono2.4-cil install paths
+  * [344973b] set api version in dh_makeclilibs
+  * [8c64068] wrap-and-sort control
+  * [542bf92] remove dpatch and nant b-d, add mono-xbuild
+  * [1bdcae5] add misc:Depends
+  * [cd7a4e2] fix permissions of dll's
+  * [c9d153f] bump debhelper dep to >= 7.0.50~
+  * [26e3baa] fix typo in description
+  * [2791b43] rename libnunit2.4-cil -> libnunit2.5-cil
+  * [5b55e0d] move libnunit2.5-cil to cli-mono section as per ftpmaster override
+  * [bfc6351] fix core.interfaces install
+  * [d9eb65f] build and install uiexception.dll
+  * [99a8289] bump standard to 3.9.2, no further changes required
+  * [9191fb8] delete the obsolete patches
+  * [217698b] add me to uploaders
+  * [bbcd491] remove DM-Upload-Allowed flag
+  * [fba061f] convert copyright to DEP5 format and sync license text with upstreams
+  * [3f47220] update pkg-config file to 2.5 libs
 
- -- Julian Taylor <jtaylor.debian@googlemail.com>  Mon, 13 Jun 2011 14:30:50 +0200
+ -- Julian Taylor <jtaylor.debian@googlemail.com>  Sun, 03 Jul 2011 16:11:47 +0100
 
 nunit (2.4.7+dfsg-6) unstable; urgency=medium
 
