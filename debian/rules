@@ -6,7 +6,7 @@ DEB_CLI_API_VERSION = 2.5.10
 include /usr/share/cli-common/cli.make
 
 %:
-	dh $@ --with-cli
+	dh $@ --with cli
 
 override_dh_auto_build:
 	xbuild /property:Configuration=Release ./src/NUnitCore/core/nunit.core.dll.csproj
