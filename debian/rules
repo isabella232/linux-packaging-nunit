@@ -3,8 +3,6 @@ export DH_VERBOSE=1
 DEB_CLI_ABI_VERSION = 2.5
 DEB_CLI_API_VERSION = 2.5.10
 
-include /usr/share/cli-common/cli.make
-
 %:
 	dh $@ --with cli
 
