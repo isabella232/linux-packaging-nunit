@@ -1,2 +1,2 @@
-bin/Release/nunit-console.exe                  /usr/lib/nunit/
-bin/Release/lib/nunit-console-runner.dll       /usr/lib/nunit/
+bin/Debug/nunit-console.exe*                  /usr/lib/nunit/
+bin/Debug/lib/nunit-console-runner.dll*       /usr/lib/nunit/
