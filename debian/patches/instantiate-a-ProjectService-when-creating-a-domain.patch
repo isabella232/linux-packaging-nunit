@@ -1,0 +1,26 @@
+From: Julian Taylor <jtaylor.debian@googlemail.com>
+Date: Mon, 30 Jan 2012 23:40:42 +0100
+Subject: instantiate a ProjectService when creating a domain
+
+required for Services.ProjectService.CanLoadProject used later.
+fixes monodevelop's nunit addin.
+Issue introduced in upstream revision 3127.
+Forwarded: no
+---
+ src/ClientUtilities/util/Services/DomainManager.cs |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/src/ClientUtilities/util/Services/DomainManager.cs b/src/ClientUtilities/util/Services/DomainManager.cs
+index 3c86207..1993e37 100644
+--- a/src/ClientUtilities/util/Services/DomainManager.cs
++++ b/src/ClientUtilities/util/Services/DomainManager.cs
+@@ -55,6 +55,8 @@ namespace NUnit.Util
+ 		public AppDomain CreateDomain( TestPackage package )
+ 		{
+ 			AppDomainSetup setup = new AppDomainSetup();
++			if (Services.ProjectService == null)
++				ServiceManager.Services.AddService(new ProjectService());
+ 			 
+ 			//For paralell tests, we need to use distinct application name
+         	setup.ApplicationName = "Tests" + "_" + Environment.TickCount;
+-- 
