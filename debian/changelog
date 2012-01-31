@@ -1,3 +1,11 @@
+nunit (2.5.10.11092+dfsg-3) unstable; urgency=low
+
+  [ Julian Taylor ]
+  * [2d4a71e] add patch to fix monodevelop's nunit addin (LP: #889241)
+  * [161ce71] build debug configuration
+
+ -- Jo Shields <directhex@apebox.org>  Tue, 31 Jan 2012 09:22:46 +0000
+
 nunit (2.5.10.11092+dfsg-2) unstable; urgency=low
 
   * Upload to unstable 
