@@ -5,7 +5,9 @@ Subject: instantiate a ProjectService when creating a domain
 required for Services.ProjectService.CanLoadProject used later.
 fixes monodevelop's nunit addin.
 Issue introduced in upstream revision 3127.
-Forwarded: no
+Forwarded: yes
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/nunit/+bug/889241
+Bug: https://bugs.launchpad.net/nunitv2/+bug/928421
 ---
  src/ClientUtilities/util/Services/DomainManager.cs |    2 ++
  1 files changed, 2 insertions(+), 0 deletions(-)
