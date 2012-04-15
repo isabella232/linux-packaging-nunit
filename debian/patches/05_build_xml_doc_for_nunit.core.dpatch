@@ -1,3 +1,4 @@
+Description: build the documentation
 --- a/src/NUnitCore/core/nunit.core.dll.csproj
 +++ b/src/NUnitCore/core/nunit.core.dll.csproj
 @@ -44,8 +44,7 @@
