@@ -14,7 +14,7 @@ Vcs-Browser: http://git.debian.org/?p=pkg-cli-libs/packages/nunit.git
 Package: nunit-console
 Architecture: all
 Depends: ${cli:Depends}, ${misc:Depends}
-Description: Unit test framework for CLI
+Description: Unit test framework for CLI - Console test runner
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
@@ -28,7 +28,7 @@ Description: Unit test framework for CLI
 Package: nunit-gui
 Architecture: all
 Depends: ${cli:Depends}, ${misc:Depends}
-Description: Unit test framework for CLI
+Description: Unit test framework for CLI - GUI test runner
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
@@ -45,7 +45,7 @@ Section: cli-mono
 Depends: ${cli:Depends}, ${misc:Depends}
 Replaces: libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil
 Suggests: libnunit-doc, monodoc-nunit-manual
-Description: Unit test framework for CLI
+Description: Unit test framework for CLI - Assemblies
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
@@ -57,7 +57,7 @@ Package: libnunit-cil-dev
 Architecture: all
 Depends: libnunit2.6-cil (= ${binary:Version}), ${misc:Depends}
 Replaces: libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil (<< 2.4.7+dfsg-5)
-Description: Unit test framework for CLI
+Description: Unit test framework for CLI - Development files
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
@@ -70,7 +70,7 @@ Package: libnunit-doc
 Section: doc
 Architecture: all
 Depends: ${cli:Depends}, ${misc:Depends}
-Description: Unit test framework for CLI
+Description: Unit test framework for CLI - Documentation
  NUnit is a unit testing framework for all .NET languages. It serves the
  same purpose as JUnit does in the Java world. It supports test
  categories, testing for exceptions and writing test results in plain
@@ -85,7 +85,7 @@ Package: monodoc-nunit-manual
 Architecture: all
 Section: doc
 Depends: monodoc-manual, ${misc:Depends}
-Description: compiled XML documentation for NUnit
+Description: compiled XML documentation for NUnit - monodoc manual
  The MonoDoc Project is the documentation framework of the Mono project which
  provides detailed API documentation for all Mono components and the Mono CLI
  implementation.
