@@ -288,7 +288,7 @@ namespace NUnit.Framework.Tests
 			Assert.AreEqual( 35, i21  );
 			Assert.AreEqual( 35, i22  );
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             byte? b23 = 35;
             sbyte? sb24 = 35;
             decimal? d25 = 35;
@@ -537,6 +537,42 @@ namespace NUnit.Framework.Tests
 
             Assert.AreEqual(dir1, dir2);
         }
-    }
-}
 
+#if CLR_2_0 || CLR_4_0
+		[Test]
+		public void IEquatableSuccess_OldSyntax()
+		{
+			IntEquatable a = new IntEquatable(1);
+
+			Assert.AreEqual(1, a);
+            Assert.AreEqual(a, 1);
+		}
+
+		[Test]
+		public void IEquatableSuccess_ConstraintSyntax()
+		{
+			IntEquatable a = new IntEquatable(1);
+
+			Assert.That(a, Is.EqualTo(1));
+            Assert.That(1, Is.EqualTo(a));
+		}
+#endif
+    }
+
+#if CLR_2_0 || CLR_4_0
+	public class IntEquatable : IEquatable<int>
+	{
+		private int i;
+
+		public IntEquatable(int i)
+		{
+			this.i = i;
+		}
+
+		public bool Equals(int other)
+		{
+			return i.Equals(other);
+		}
+	}
+#endif
+}

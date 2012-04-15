@@ -584,9 +584,14 @@ namespace NUnit.UiKit
 		#endregion
 
 
-		public void RunAllTests()
+        public void RunAllTests()
+        {
+            RunAllTests(true);
+        }
+
+		public void RunAllTests(bool ignoreTests)
 		{
-			tests.RunAllTests();
+			tests.RunAllTests(ignoreTests);
 		}
 
 		public void RunSelectedTests()
@@ -603,9 +608,14 @@ namespace NUnit.UiKit
 		{
 			if (availableList.SelectedItems.Count > 0) 
 			{
-				ArrayList categories = new ArrayList(availableList.SelectedItems);
-				foreach ( string category in categories ) 
-				{
+                // Create a separate list to avoid exception
+                // when using the list box directly.
+                List<string> categories = new List<string>();
+				foreach ( string category in availableList.SelectedItems ) 
+                    categories.Add(category);
+
+                foreach ( string category in categories)
+                {
 					selectedList.Items.Add(category);
 					availableList.Items.Remove(category);
 				}
@@ -620,7 +630,12 @@ namespace NUnit.UiKit
 		{
 			if (selectedList.SelectedItems.Count > 0) 
 			{
-				ArrayList categories = new ArrayList(selectedList.SelectedItems);
+                // Create a separate list to avoid exception
+                // when using the list box directly.
+                List<string> categories = new List<string>();
+                foreach (string category in selectedList.SelectedItems)
+                    categories.Add(category);
+
 				foreach ( string category in categories )
 				{
 					selectedList.Items.Remove(category);

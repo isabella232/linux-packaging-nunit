@@ -79,7 +79,7 @@ namespace NUnit.Core.Tests
             return (sbyte)(x + y);
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         [TestCase(Result = null)]
         public object ExpectedResultCanBeNull()
         {
@@ -122,7 +122,7 @@ namespace NUnit.Core.Tests
         }
 
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         [TestCase(null, null)]
         public void CanPassNullAsArgument(object a, string b)
         {
@@ -165,10 +165,16 @@ namespace NUnit.Core.Tests
         }
 
         [TestCase("a", "b")]
-        public void HandlesParamsArrayAsSoleArgument(params object[] array)
+        public void HandlesParamsArrayAsSoleArgument(params string[] array)
         {
             Assert.AreEqual("a", array[0]);
             Assert.AreEqual("b", array[1]);
+        }
+
+        [TestCase("a")]
+        public void HandlesParamsArrayWithOneItemAsSoleArgument(params string[] array)
+        {
+            Assert.AreEqual("a", array[0]);
         }
 
         [TestCase("a", "b", "c", "d")]
@@ -178,6 +184,22 @@ namespace NUnit.Core.Tests
             Assert.AreEqual("b", s2);
             Assert.AreEqual("c", array[0]);
             Assert.AreEqual("d", array[1]);
+        }
+
+        [TestCase("a", "b")]
+        public void HandlesParamsArrayAsLastArgumentWithNoValues(string s1, string s2, params object[] array)
+        {
+            Assert.AreEqual("a", s1);
+            Assert.AreEqual("b", s2);
+            Assert.AreEqual(0, array.Length);
+        }
+
+        [TestCase("a", "b", "c")]
+        public void HandlesParamsArrayWithOneItemAsLastArgument(string s1, string s2, params object[] array)
+        {
+            Assert.AreEqual("a", s1);
+            Assert.AreEqual("b", s2);
+            Assert.AreEqual("c", array[0]);
         }
 
         [Test]
@@ -263,16 +285,37 @@ namespace NUnit.Core.Tests
         }
 
         [Test]
-        public void CanIgnoreIndividualTestCase()
+        public void CanIgnoreIndividualTestCases()
         {
             Test test = TestBuilder.MakeTestCase(
                 typeof(TestCaseAttributeFixture), "MethodWithIgnoredTestCases");
-            TestResult result = test.Run(NullListener.NULL, TestFilter.Empty);
 
-            ResultSummarizer summary = new ResultSummarizer(result);
-            Assert.AreEqual(3, summary.ResultCount);
-            Assert.AreEqual(2, summary.Ignored);
-            Assert.That(result.Results, Has.Some.Message.EqualTo("Don't Run Me!"));
+            Test testCase = TestFinder.Find("MethodWithIgnoredTestCases(1)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Runnable));
+
+            testCase = TestFinder.Find("MethodWithIgnoredTestCases(2)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Ignored));
+
+            testCase = TestFinder.Find("MethodWithIgnoredTestCases(3)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Ignored));
+            Assert.That(testCase.IgnoreReason, Is.EqualTo("Don't Run Me!"));
+        }
+
+        [Test]
+        public void CanMarkIndividualTestCasesExplicit()
+        {
+            Test test = TestBuilder.MakeTestCase(
+                typeof(TestCaseAttributeFixture), "MethodWithExplicitTestCases");
+
+            Test testCase = TestFinder.Find("MethodWithExplicitTestCases(1)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Runnable));
+
+            testCase = TestFinder.Find("MethodWithExplicitTestCases(2)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Explicit));
+
+            testCase = TestFinder.Find("MethodWithExplicitTestCases(3)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Explicit));
+            Assert.That(testCase.IgnoreReason, Is.EqualTo("Connection failing"));
         }
     }
 }

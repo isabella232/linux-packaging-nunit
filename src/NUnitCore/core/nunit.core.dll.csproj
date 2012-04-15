@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
   <PropertyGroup>
     <ProjectType>Local</ProjectType>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{EBD43A7F-AFCA-4281-BB53-5CDD91F966A3}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -44,7 +44,7 @@
     <BaseAddress>285212672</BaseAddress>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;DEBUG;NET_2_0</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;CLR_2_0,NET_2_0,CS_3_0</DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
     <DebugSymbols>true</DebugSymbols>
@@ -62,7 +62,7 @@
     <BaseAddress>285212672</BaseAddress>
     <ConfigurationOverrideFile>
     </ConfigurationOverrideFile>
-    <DefineConstants>TRACE;NET_2_0</DefineConstants>
+    <DefineConstants>TRACE;CLR_2_0,NET_2_0,CS_3_0</DefineConstants>
     <DocumentationFile>
     </DocumentationFile>
     <FileAlignment>4096</FileAlignment>
@@ -117,6 +117,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="AssemblyReader.cs" />
     <Compile Include="AssemblyResolver.cs" />
+    <Compile Include="ActionsHelper.cs" />
     <Compile Include="Builders\CombinatorialStrategy.cs" />
     <Compile Include="Builders\CombinatorialTestCaseProvider.cs" />
     <Compile Include="Builders\CombiningStrategy.cs" />
@@ -134,6 +135,7 @@
     <Compile Include="Builders\TestCaseParameterProvider.cs" />
     <Compile Include="Builders\TestCaseSourceProvider.cs" />
     <Compile Include="Builders\ValueSourceProvider.cs" />
+    <Compile Include="ContextDictionary.cs" />
     <Compile Include="CoreExtensions.cs" />
     <Compile Include="CultureDetector.cs" />
     <Compile Include="DirectorySwapper.cs" />
@@ -158,7 +160,6 @@
     <Compile Include="InvalidTestFixtureException.cs" />
     <Compile Include="LegacySuite.cs" />
     <Compile Include="Log4NetCapture.cs" />
-    <Compile Include="LogCapture.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="MethodHelper.cs" />
     <Compile Include="NamespaceSuite.cs" />
@@ -182,6 +183,7 @@
     <Compile Include="SimpleTestRunner.cs" />
     <Compile Include="StringTextWriter.cs" />
     <Compile Include="SuiteBuilderAttribute.cs" />
+    <Compile Include="TestAction.cs" />
     <Compile Include="TestAssembly.cs" />
     <Compile Include="TestBuilderAttribute.cs" />
     <Compile Include="TestCaseBuilderAttribute.cs" />
@@ -196,6 +198,7 @@
     <Compile Include="TestThread.cs" />
     <Compile Include="TextCapture.cs" />
     <Compile Include="ThreadedTestRunner.cs" />
+    <Compile Include="ThreadUtility.cs" />
     <Compile Include="TypeHelper.cs" />
   </ItemGroup>
   <ItemGroup>

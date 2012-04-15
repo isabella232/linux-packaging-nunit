@@ -4,6 +4,7 @@
 // copyright ownership at http://nunit.org.
 // ****************************************************************
 
+
 namespace NUnit.Core
 {
 	using System;
@@ -12,6 +13,10 @@ namespace NUnit.Core
 	using System.Collections;
 	using System.Reflection;
 	using NUnit.Core.Filters;
+
+#if CLR_2_0 || CLR_4_0
+    using System.Collections.Generic;
+#endif
 
 	/// <summary>
 	/// Summary description for TestSuite.
@@ -47,6 +52,13 @@ namespace NUnit.Core
         /// The teardown methods for this suite
         /// </summary>
         protected MethodInfo[] tearDownMethods;
+
+#if CLR_2_0 || CLR_4_0
+        /// <summary>
+        /// The actions for this suite
+        /// </summary>
+	    protected TestAction[] actions;
+#endif
 
         /// <summary>
         /// Set to true to suppress sorting this suite's contents
@@ -187,6 +199,27 @@ namespace NUnit.Core
         {
             return tearDownMethods;
         }
+
+#if CLR_2_0 || CLR_4_0
+        internal virtual TestAction[] GetTestActions()
+        {
+            List<TestAction> allActions = new List<TestAction>();
+
+            if (this.Parent != null && this.Parent is TestSuite)
+            {
+                TestAction[] parentActions = ((TestSuite)this.Parent).GetTestActions();
+
+                if (parentActions != null)
+                    allActions.AddRange(parentActions);
+            }
+
+            if (this.actions != null)
+                allActions.AddRange(this.actions);
+
+            return allActions.ToArray();
+        }
+#endif
+
         #endregion
 
 		#region Test Overrides
@@ -269,6 +302,9 @@ namespace NUnit.Core
 			TestResult suiteResult = new TestResult(this);
 			
             DoOneTimeSetUp(suiteResult);
+#if CLR_2_0 || CLR_4_0
+            DoOneTimeBeforeTestSuiteActions(suiteResult);
+#endif
 
             if (this.Properties["_SETCULTURE"] != null)
                 TestExecutionContext.CurrentContext.CurrentCulture =
@@ -294,6 +330,9 @@ namespace NUnit.Core
                     }
                     finally
                     {
+#if CLR_2_0 || CLR_4_0
+                        DoOneTimeAfterTestSuiteActions(suiteResult);
+#endif
                         DoOneTimeTearDown(suiteResult);
                     }
                     break;
@@ -342,6 +381,53 @@ namespace NUnit.Core
             }
         }
 
+#if CLR_2_0 || CLR_4_0
+
+        protected virtual void ExecuteActions(ActionPhase phase)
+        {
+            List<TestAction> targetActions = new List<TestAction>();
+
+            if (this.actions != null)
+            {
+                foreach (var action in this.actions)
+                {
+                    if (action.DoesTarget(TestAction.TargetsSuite) || action.DoesTarget(TestAction.TargetsDefault))
+                        targetActions.Add(action);
+                }
+            }
+
+            ActionsHelper.ExecuteActions(phase, targetActions, this);
+        }
+
+        protected virtual void DoOneTimeBeforeTestSuiteActions(TestResult suiteResult)
+        {
+            try
+            {
+                ExecuteActions(ActionPhase.Before);
+                TestExecutionContext.CurrentContext.Update();
+            }
+            catch (Exception ex)
+            {
+                if (ex is NUnitException || ex is System.Reflection.TargetInvocationException)
+                    ex = ex.InnerException;
+
+                if (ex is InvalidTestFixtureException)
+                    suiteResult.Invalid(ex.Message);
+                else if (IsIgnoreException(ex))
+                {
+                    this.RunState = RunState.Ignored;
+                    suiteResult.Ignore(ex.Message);
+                    suiteResult.StackTrace = ex.StackTrace;
+                    this.IgnoreReason = ex.Message;
+                }
+                else if (IsAssertException(ex))
+                    suiteResult.Failure(ex.Message, ex.StackTrace, FailureSite.SetUp);
+                else
+                    suiteResult.Error(ex, FailureSite.SetUp);
+            }
+        }
+#endif
+
 		protected virtual void CreateUserFixture()
 		{
             if (arguments != null && arguments.Length > 0)
@@ -387,6 +473,27 @@ namespace NUnit.Core
             }
         }
 
+#if CLR_2_0 || CLR_4_0
+        protected virtual void DoOneTimeAfterTestSuiteActions(TestResult suiteResult)
+        {
+            try
+            {
+                ExecuteActions(ActionPhase.After);
+            }
+            catch (Exception ex)
+            {
+                // Error in TestFixtureTearDown or Dispose causes the
+                // suite to be marked as a failure, even if
+                // all the contained tests passed.
+                NUnitException nex = ex as NUnitException;
+                if (nex != null)
+                    ex = nex.InnerException;
+
+                suiteResult.Failure(ex.Message, ex.StackTrace, FailureSite.TearDown);
+            }
+        }
+#endif
+
         protected virtual bool IsAssertException(Exception ex)
         {
             return ex.GetType().FullName == NUnitFramework.AssertException;
@@ -411,6 +518,9 @@ namespace NUnit.Core
 		{
             if (Properties.Contains("Timeout"))
                 TestExecutionContext.CurrentContext.TestCaseTimeout = (int)Properties["Timeout"];
+
+            IDictionary settings = TestExecutionContext.CurrentContext.TestPackage.Settings;
+            bool stopOnError = settings.Contains("StopOnError") && (bool)settings["StopOnError"];
 
             foreach (Test test in ArrayList.Synchronized(Tests))
             {
@@ -439,6 +549,9 @@ namespace NUnit.Core
                     }
 
                     if (result.ResultState == ResultState.Cancelled)
+                        break;
+
+                    if ((result.IsError || result.IsFailure) && stopOnError)
                         break;
                 }
             }
@@ -480,7 +593,7 @@ namespace NUnit.Core
                 listener.SuiteStarted(test.TestName);
                 TestResult result = new TestResult( new TestInfo(test) );
 				result.SetResult( resultState, ignoreReason, null );
-                MarkTestsNotRun(test.Tests, resultState, ignoreReason, suiteResult, listener, filter);
+                MarkTestsNotRun(test.Tests, resultState, ignoreReason, result, listener, filter);
                 suiteResult.AddResult(result);
                 listener.SuiteFinished(result);
             }
@@ -509,9 +622,12 @@ namespace NUnit.Core
             {
                 listener.SuiteStarted(test.TestName);
                 TestResult result = new TestResult( new TestInfo(test) );
-				string msg = string.Format( "Parent SetUp failed in {0}", this.FixtureType.Name );
+				string msg = this.FixtureType == null
+                    ? "Parent SetUp failed"
+                    : string.Format( "Parent SetUp failed in {0}", this.FixtureType.Name );
+
 				result.Failure(msg, null, FailureSite.Parent);
-                MarkTestsFailed(test.Tests, suiteResult, listener, filter);
+                MarkTestsFailed(test.Tests, result, listener, filter);
                 suiteResult.AddResult(result);
                 listener.SuiteFinished(result);
             }
@@ -519,7 +635,9 @@ namespace NUnit.Core
             {
                 listener.TestStarted(test.TestName);
                 TestResult result = new TestResult( new TestInfo(test) );
-				string msg = string.Format( "TestFixtureSetUp failed in {0}", this.FixtureType.Name );
+				string msg = this.FixtureType == null
+                    ? "TestFixtureSetUp failed"
+                    : string.Format( "TestFixtureSetUp failed in {0}", this.FixtureType.Name );
 				result.Failure(msg, null, FailureSite.Parent);
 				suiteResult.AddResult(result);
                 listener.TestFinished(result);

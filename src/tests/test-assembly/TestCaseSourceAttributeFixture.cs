@@ -30,6 +30,12 @@ namespace NUnit.TestData
         }
 
         [TestCaseSource("source")]
+        public string MethodThrowsNoExceptionButReturnsResult(int x, int y, int z)
+        {
+            return "HELLO";
+        }
+
+        [TestCaseSource("source")]
         public void MethodCallsIgnore(int x, int y, int z)
         {
             Assert.Ignore("Ignore this");
@@ -48,6 +54,11 @@ namespace NUnit.TestData
         {
         }
 
+        [TestCaseSource("explicit_source")]
+        public void MethodWithExplicitTestCases(int num)
+        {
+        }
+
         private static IEnumerable ignored_source
         {
             get
@@ -60,11 +71,23 @@ namespace NUnit.TestData
             }
         }
 
+        private static IEnumerable explicit_source
+        {
+            get
+            {
+                return new object[] {
+                    new TestCaseData(1),
+                    new TestCaseData(2).MakeExplicit(),
+                    new TestCaseData(3).MakeExplicit("Connection failing")
+                };
+            }
+        }
+
         private static IEnumerable exception_source
         {
             get
             {
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
                 yield return new TestCaseData("a", "a");
                 yield return new TestCaseData("b", "b");
 #endif

@@ -1,5 +1,5 @@
 // ****************************************************************
-// Copyright 2002-2008, Charlie Poole
+// Copyright 2002-2011, Charlie Poole
 // This is free software licensed under the NUnit license. You may
 // obtain a copy of the license at http://nunit.org
 // ****************************************************************
@@ -59,7 +59,7 @@ namespace NUnit.Util
 		/// <summary>
 		/// The currently loaded test, returned by the testrunner
 		/// </summary>
-		private ITest loadedTest = null;
+        //private ITest loadedTest = null;
 
 		/// <summary>
 		/// The test name that was specified when loading
@@ -97,11 +97,31 @@ namespace NUnit.Util
 		/// </summary>
 		private bool reloadPending = false;
 
+        /// <summary>
+        /// Trace setting to use for running tests
+        /// </summary>
+        private bool tracing;
+
+        /// <summary>
+        /// LoggingThreshold to use for running tests
+        /// </summary>
+        private LoggingThreshold logLevel;
+
 		/// <summary>
 		/// The last filter used for a run - used to 
 		/// rerun tests when a change occurs
 		/// </summary>
 		private ITestFilter lastFilter;
+
+        /// <summary>
+        /// The last trace setting used for a run
+        /// </summary>
+        private bool lastTracing;
+
+        /// <summary>
+        /// Last logging level used for a run
+        /// </summary>
+        private LoggingThreshold lastLogLevel;
 
         /// <summary>
         /// The runtime framework being used for the currently
@@ -141,8 +161,13 @@ namespace NUnit.Util
 
 		public bool IsTestLoaded
 		{
-			get { return loadedTest != null; }
+			get { return testRunner != null && testRunner.Test != null; }
 		}
+
+        public ITest LoadedTest
+        {
+            get { return testRunner == null ? null : testRunner.Test; }
+        }
 
 		public bool Running
 		{
@@ -176,18 +201,31 @@ namespace NUnit.Util
 
 		public IList AssemblyInfo
 		{
-			get { return testRunner == null ? null : testRunner.AssemblyInfo; }
+			get { return testRunner == null ? new TestAssemblyInfo[0] : testRunner.AssemblyInfo; }
 		}
 
 		public int TestCount
 		{
-			get { return loadedTest == null ? 0 : loadedTest.TestCount; }
+			get { return LoadedTest == null ? 0 : LoadedTest.TestCount; }
 		}
 
         public RuntimeFramework CurrentFramework
         {
             get { return currentFramework; }
         }
+
+        public bool IsTracingEnabled
+        {
+            get { return tracing; }
+            set { tracing = value; }
+        }
+
+        public LoggingThreshold LoggingThreshold
+        {
+            get { return logLevel; }
+            set { logLevel = value; }
+        }
+
 		#endregion
 
 		#region EventListener Handlers
@@ -202,17 +240,7 @@ namespace NUnit.Util
 		{
 			this.testResult = testResult;
 
-			try
-			{
-				this.SaveLastResult( 
-					Path.Combine( Path.GetDirectoryName( this.TestFileName ), "TestResult.xml" ) );
-				events.FireRunFinished( testResult );
-			}
-			catch( Exception ex )
-			{
-				this.lastException = ex;
-				events.FireRunFinished( ex );
-			}
+            events.FireRunFinished(testResult);
 		}
 
 		public void RunFinished(Exception exception)
@@ -465,7 +493,6 @@ namespace NUnit.Util
 
                 bool loaded = testRunner.Load(package);
 
-				loadedTest = testRunner.Test;
 				loadedTestName = testName;
 				testResult = null;
 				reloadPending = false;
@@ -480,7 +507,7 @@ namespace NUnit.Util
                         : RuntimeFramework.CurrentFramework;
 
                     testProject.HasChangesRequiringReload = false;
-                    events.FireTestLoaded(TestFileName, loadedTest);
+                    events.FireTestLoaded(TestFileName, LoadedTest);
                 }
                 else
                 {
@@ -539,7 +566,6 @@ namespace NUnit.Util
                     testRunner.Dispose();
 					testRunner = null;
 
-					loadedTest = null;
 					loadedTestName = null;
 					testResult = null;
 					reloadPending = false;
@@ -555,6 +581,25 @@ namespace NUnit.Util
 				}
 			}
 		}
+
+        /// <summary>
+        /// Return true if the current project can be reloaded under
+        /// the specified CLR version.
+        /// </summary>
+        public bool CanReloadUnderRuntimeVersion(Version version)
+        {
+            if (!Services.TestAgency.IsRuntimeVersionSupported(version))
+                return false;
+
+            if (AssemblyInfo.Count == 0)
+                return false;
+
+            foreach (TestAssemblyInfo info in AssemblyInfo)
+                if (info == null || info.ImageRuntimeVersion > version)
+                    return false;
+
+            return true;
+        }
 
 		/// <summary>
 		/// Reload the current test on command
@@ -584,7 +629,6 @@ namespace NUnit.Util
                         ? package.Settings["RuntimeFramework"] as RuntimeFramework
                         : RuntimeFramework.CurrentFramework;
 
-                loadedTest = testRunner.Test;
                 currentRuntime = framework;
 				reloadPending = false;
 
@@ -592,7 +636,7 @@ namespace NUnit.Util
                     InstallWatcher();
 
                 testProject.HasChangesRequiringReload = false;
-                events.FireTestReloaded(TestFileName, loadedTest);
+                events.FireTestReloaded(TestFileName, LoadedTest);
 
                 log.Info("Reload complete");
 			}
@@ -627,19 +671,12 @@ namespace NUnit.Util
 				ReloadTest();
 
                 if (lastFilter != null && Services.UserSettings.GetSetting("Options.TestLoader.RerunOnChange", false))
-					testRunner.BeginRun( this, lastFilter );
+					testRunner.BeginRun( this, lastFilter, lastTracing, lastLogLevel );
 			}
 		}
 		#endregion
 
 		#region Methods for Running Tests
-		/// <summary>
-		/// Run all the tests
-		/// </summary>
-		public void RunTests()
-		{
-			RunTests( TestFilter.Empty );
-		}
 
 		/// <summary>
 		/// Run selected tests using a filter
@@ -647,13 +684,17 @@ namespace NUnit.Util
 		/// <param name="filter">The filter to be used</param>
 		public void RunTests( ITestFilter filter )
 		{
-			if ( !Running )
+			if ( !Running  && LoadedTest != null)
 			{
                 if (reloadPending || Services.UserSettings.GetSetting("Options.TestLoader.ReloadOnRun", false))
 					ReloadTest();
 
-				this.lastFilter = filter;
-				testRunner.BeginRun( this, filter );
+                // Save args for automatic rerun
+                this.lastFilter = filter;
+                this.lastTracing = tracing;
+                this.lastLogLevel = logLevel;
+
+                testRunner.BeginRun(this, filter, tracing, logLevel);
 			}
 		}
 
@@ -671,7 +712,7 @@ namespace NUnit.Util
 		public IList GetCategories() 
 		{
 			CategoryManager categoryManager = new CategoryManager();
-			categoryManager.AddAllCategories( this.loadedTest );
+			categoryManager.AddAllCategories( this.LoadedTest );
 			ArrayList list = new ArrayList( categoryManager.Categories );
 			list.Sort();
 			return list;
@@ -720,21 +761,38 @@ namespace NUnit.Util
 			TestPackage package = TestProject.ActiveConfig.MakeTestPackage();
 			package.TestName = testName;
 
-            ISettings settings = Services.UserSettings;
-            package.Settings["MergeAssemblies"] = settings.GetSetting("Options.TestLoader.MergeAssemblies", false);
-            package.Settings["AutoNamespaceSuites"] = settings.GetSetting("Options.TestLoader.AutoNamespaceSuites", true);
-            package.Settings["ShadowCopyFiles"] = settings.GetSetting("Options.TestLoader.ShadowCopyFiles", true);
+            ISettings userSettings = Services.UserSettings;
+            package.Settings["MergeAssemblies"] = userSettings.GetSetting("Options.TestLoader.MergeAssemblies", false);
+            package.Settings["AutoNamespaceSuites"] = userSettings.GetSetting("Options.TestLoader.AutoNamespaceSuites", true);
+            package.Settings["ShadowCopyFiles"] = userSettings.GetSetting("Options.TestLoader.ShadowCopyFiles", true);
 
-            ProcessModel processModel = (ProcessModel)settings.GetSetting("Options.TestLoader.ProcessModel", ProcessModel.Default);
-            DomainUsage domainUsage = (DomainUsage)settings.GetSetting("Options.TestLoader.DomainUsage", DomainUsage.Default);
+            ProcessModel processModel = (ProcessModel)userSettings.GetSetting("Options.TestLoader.ProcessModel", ProcessModel.Default);
+            DomainUsage domainUsage = (DomainUsage)userSettings.GetSetting("Options.TestLoader.DomainUsage", DomainUsage.Default);
 
-            if (processModel != ProcessModel.Default && !package.Settings.Contains("ProcessModel"))
+            if (processModel != ProcessModel.Default &&     // Ignore default setting
+                !package.Settings.Contains("ProcessModel")) // Ignore global setting if package has a setting
+            {
                 package.Settings["ProcessModel"] = processModel;
+            }
 
-            if (processModel != ProcessModel.Multiple && domainUsage == DomainUsage.Multiple
-                    && !package.Settings.Contains("DomainUsage"))
+            // NOTE: This code ignores DomainUsage.None because TestLoader
+            // is only called from the GUI and the GUI can't support that setting.
+            // TODO: Move this logic to the GUI if TestLoader is used more widely
+            if (domainUsage != DomainUsage.Default &&       // Ignore default setting
+                domainUsage != DomainUsage.None &&          // Ignore DomainUsage.None in Gui
+                (processModel != ProcessModel.Multiple ||
+                    domainUsage != DomainUsage.Multiple) && // Both process and domain may not be multiple
+                !package.Settings.Contains("DomainUsage"))  // Ignore global setting if package has a setting
+            {
                 package.Settings["DomainUsage"] = domainUsage;
-			
+            }
+
+            if (!package.Settings.Contains("WorkDirectory"))
+                package.Settings["WorkDirectory"] = Environment.CurrentDirectory;
+
+            //if (NUnitConfiguration.ApartmentState != System.Threading.ApartmentState.Unknown)
+            //    package.Settings["ApartmentState"] = NUnitConfiguration.ApartmentState;
+
             return package;
 		}
 		#endregion

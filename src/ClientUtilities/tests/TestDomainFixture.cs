@@ -44,22 +44,22 @@ namespace NUnit.Util.Tests
 			Assert.AreEqual(MockAssembly.Tests, loadedTest.TestCount );
 		}
 
-		[Test]
+        [Test, Platform("Linux,Net", Reason = "get_SetupInformation() fails on Windows+Mono")]
 		public void AppDomainIsSetUpCorrectly()
 		{
 			AppDomain domain = testDomain.AppDomain;
 			AppDomainSetup setup = testDomain.AppDomain.SetupInformation;
 
             Assert.That(setup.ApplicationName, Is.StringStarting("Tests_"));
-			Assert.AreEqual( Path.GetDirectoryName(mockDll), setup.ApplicationBase, "ApplicationBase" );
+			Assert.That(setup.ApplicationBase, Is.SamePath(Path.GetDirectoryName(mockDll)), "ApplicationBase");
 			Assert.That( 
                 Path.GetFileName( setup.ConfigurationFile ),
                 Is.EqualTo("mock-assembly.dll.config").IgnoreCase,
                 "ConfigurationFile");
 			Assert.AreEqual( null, setup.PrivateBinPath, "PrivateBinPath" );
-			Assert.AreEqual( Path.GetDirectoryName(mockDll), setup.ShadowCopyDirectories, "ShadowCopyDirectories" );
+			Assert.That(setup.ShadowCopyDirectories, Is.SamePath(Path.GetDirectoryName(mockDll)), "ShadowCopyDirectories" );
 
-			Assert.AreEqual( Path.GetDirectoryName(mockDll), domain.BaseDirectory, "BaseDirectory" );
+			Assert.That(domain.BaseDirectory, Is.SamePath(Path.GetDirectoryName(mockDll)), "BaseDirectory" );
             Assert.That(domain.FriendlyName, 
                 Is.EqualTo("test-domain-mock-assembly.dll").IgnoreCase, "FriendlyName");
 			Assert.IsTrue( testDomain.AppDomain.ShadowCopyFiles, "ShadowCopyFiles" );
@@ -68,7 +68,7 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void CanRunMockAssemblyTests()
 		{
-			TestResult result = testDomain.Run( NullListener.NULL );
+			TestResult result = testDomain.Run( NullListener.NULL, TestFilter.Empty, false, LoggingThreshold.Off );
 			Assert.IsNotNull(result);
 
             ResultSummarizer summarizer = new ResultSummarizer(result);
@@ -154,7 +154,7 @@ namespace NUnit.Util.Tests
 			package.TestName = "NUnit.Tests.Assemblies.MockTestFixture";
 			testDomain.Load( package );
 
-			TestResult result = testDomain.Run( NullListener.NULL );
+			TestResult result = testDomain.Run( NullListener.NULL, TestFilter.Empty, false, LoggingThreshold.Off );
 
             ResultSummarizer summarizer = new ResultSummarizer(result);
             Assert.AreEqual(MockTestFixture.TestsRun, summarizer.TestsRun, "TestsRun");
@@ -163,7 +163,7 @@ namespace NUnit.Util.Tests
             Assert.AreEqual(MockTestFixture.Failures, summarizer.Failures, "Failures");
         }
 
-		[Test]
+        [Test, Platform("Linux,Net", Reason = "get_SetupInformation() fails on Windows+Mono")]
 		public void ConfigFileOverrideIsHonored()
 		{
 			TestPackage package = new TestPackage( "MyProject.nunit" );
@@ -186,10 +186,10 @@ namespace NUnit.Util.Tests
 
 			testDomain.Load( package );
 
-			Assert.AreEqual(  package.BasePath, testDomain.AppDomain.BaseDirectory );
+			Assert.That(testDomain.AppDomain.BaseDirectory, Is.SamePath(package.BasePath));
 		}
 
-		[Test]
+        [Test, Platform("Linux,Net", Reason = "get_SetupInformation() fails on Windows+Mono")]
 		public void BinPathOverrideIsHonored()
 		{
 			TestPackage package = new TestPackage( "MyProject.nunit" );

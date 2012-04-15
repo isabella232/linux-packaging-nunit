@@ -36,7 +36,12 @@ namespace NUnit.Framework
         /// <summary>
         /// The expected result to be returned
         /// </summary>
-        private object result;
+        private object expectedResult;
+
+        /// <summary>
+        /// Set to true if this has an expected result
+        /// </summary>
+        private bool hasExpectedResult;
 
         /// <summary>
         ///  The expected exception Type
@@ -68,6 +73,11 @@ namespace NUnit.Framework
         /// If true, indicates that the test case is to be ignored
         /// </summary>
         bool isIgnored;
+
+        /// <summary>
+        /// If true, indicates that the test case is marked explicit
+        /// </summary>
+        bool isExplicit;
 
         /// <summary>
         /// The reason for ignoring a test case
@@ -134,7 +144,15 @@ namespace NUnit.Framework
         /// </summary>
         public object Result
         {
-            get { return result; }
+            get { return expectedResult; }
+        }
+
+        /// <summary>
+        /// Returns true if the result has been set
+        /// </summary>
+        public bool HasExpectedResult
+        {
+            get { return hasExpectedResult; }
         }
 
         /// <summary>
@@ -179,6 +197,15 @@ namespace NUnit.Framework
         }
 
         /// <summary>
+        /// Gets a value indicating whether this <see cref="ITestCaseData"/> is explicit.
+        /// </summary>
+        /// <value><c>true</c> if explicit; otherwise, <c>false</c>.</value>
+        public bool Explicit
+        {
+            get { return isExplicit; }
+        }
+
+        /// <summary>
         /// Gets the ignore reason.
         /// </summary>
         /// <value>The ignore reason.</value>
@@ -186,6 +213,7 @@ namespace NUnit.Framework
         {
             get { return ignoreReason; }
         }
+
         #endregion
 
         #region Additional Public Properties
@@ -226,7 +254,8 @@ namespace NUnit.Framework
         /// <returns>A modified TestCaseData</returns>
         public TestCaseData Returns(object result)
         {
-            this.result = result;
+            this.expectedResult = result;
+            this.hasExpectedResult = true;
             return this;
         }
 
@@ -343,6 +372,29 @@ namespace NUnit.Framework
             ignoreReason = reason;
             return this;
         }
+
+        /// <summary>
+        /// Marks this TestCase as Explicit
+        /// </summary>
+        /// <returns></returns>
+        public TestCaseData MakeExplicit()
+        {
+            isExplicit = true;
+            return this;
+        }
+
+        /// <summary>
+        /// Marks this TestCase as Explicit, specifying the reason.
+        /// </summary>
+        /// <param name="reason">The reason.</param>
+        /// <returns></returns>
+        public TestCaseData MakeExplicit(string reason)
+        {
+            isExplicit = true;
+            ignoreReason = reason;
+            return this;
+        }
+
         #endregion
     }
 }

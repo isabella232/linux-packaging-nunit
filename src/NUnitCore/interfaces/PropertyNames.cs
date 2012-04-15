@@ -28,7 +28,9 @@ namespace NUnit.Core
         /// <summary>ExpectedException MatchType</summary>
         public static readonly string MatchType = "MatchType";
         /// <summary>Expected return result from test</summary>
-        public static readonly string Result = "Result";
+        public static readonly string ExpectedResult = "Result";
+        /// <summary>Indicates whether there is an expected return result</summary>
+        public static readonly string HasExpectedResult = "HasExpectedResult";
         /// <summary>Description of the test</summary>
         public static readonly string Description = "Description";
         /// <summary>Alternate test name</summary>
@@ -37,6 +39,8 @@ namespace NUnit.Core
         public static readonly string Arguments = "Arguments";
         /// <summary>Indicates test case is ignored</summary>
         public static readonly string Ignored = "Ignored";
+        /// <summary>Indicates test case is explicit</summary>
+        public static readonly string Explicit = "Explicit";
         /// <summary>The reason a test case is ignored</summary>
         public static readonly string IgnoreReason = "IgnoreReason";
         /// <summary>Properties of the test</summary>

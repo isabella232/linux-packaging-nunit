@@ -5,8 +5,8 @@
 // ****************************************************************
 
 using System;
+using System.IO;
 using System.Reflection;
-using System.Diagnostics;
 
 namespace NUnit.Core
 {
@@ -26,7 +26,7 @@ namespace NUnit.Core
         /// <returns>A proxy for the DomainAgent in the other domain</returns>
         static public DomainAgent CreateInstance(AppDomain targetDomain)
         {
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             System.Runtime.Remoting.ObjectHandle oh = Activator.CreateInstance(
                 targetDomain,
 #else
@@ -108,7 +108,7 @@ namespace NUnit.Core
         /// <returns>A proxy for the DomainAgent in the other domain</returns>
         static public DomainInitializer CreateInstance(AppDomain targetDomain)
         {
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             System.Runtime.Remoting.ObjectHandle oh = Activator.CreateInstanceFrom(
                 targetDomain,
 #else
@@ -140,6 +140,17 @@ namespace NUnit.Core
             AssemblyResolver resolver = new AssemblyResolver();
             resolver.AddDirectory(NUnitConfiguration.NUnitLibDirectory);
             resolver.AddDirectory(NUnitConfiguration.AddinDirectory);
+						
+			// TODO: Temporary additions till we resolve a problem with pnunit
+            // Test for existence is needed to avoid messing when the installation
+            // does not include pnunit.
+            string binDir = NUnitConfiguration.NUnitBinDirectory;
+            string pnunitFrameworkPath = Path.Combine(binDir, "pnunit.framework.dll");
+            if (File.Exists(pnunitFrameworkPath))
+                resolver.AddFile(pnunitFrameworkPath);
+            string pnunitAgentPath = Path.Combine(binDir, "pnunit-agent.exe");
+            if (File.Exists(pnunitAgentPath))
+                resolver.AddFile(pnunitAgentPath);
         }
 
         void OnDomainUnload(object sender, EventArgs e)

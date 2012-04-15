@@ -488,11 +488,7 @@ namespace NUnit.Core.Tests
                 }
                 finally
                 {
-                    consumerThread.Abort();
-                    if ((consumerThread.ThreadState & ThreadState.WaitSleepJoin) != 0)
-                    {
-                        consumerThread.Interrupt();
-                    }
+                    ThreadUtility.Kill(consumerThread);
                 }
 
                 Assert.IsNull(this.myConsumerException);
@@ -614,7 +610,7 @@ namespace NUnit.Core.Tests
             }
             #endregion
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             private static void WriteTrace(string message, params object[] args)
             {
                 Trace.TraceInformation(message, args);

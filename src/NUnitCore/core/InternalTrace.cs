@@ -30,6 +30,8 @@ namespace NUnit.Core
         private readonly static string TIME_FMT = "HH:mm:ss.fff";
 
 		private static bool initialized;
+		private static InternalTraceLevel level;
+        private static string logName;
 
         private static InternalTraceWriter writer;
         public static InternalTraceWriter Writer
@@ -37,25 +39,42 @@ namespace NUnit.Core
             get { return writer; }
         }
 
-		public static InternalTraceLevel Level;
-
-        public static void Initialize(string logName)
+        private static string LogName
         {
-            int lev = (int) new System.Diagnostics.TraceSwitch("NTrace", "NUnit internal trace").Level;
-            Initialize(logName, (InternalTraceLevel)lev);
+            get { return logName; }
+            set { logName = value; }
         }
+
+        public static InternalTraceLevel Level
+        {
+            get { return level; }
+            set 
+            {
+                if (level != value)
+                {
+                    level = value;
+
+                    if (writer == null && Level > InternalTraceLevel.Off)
+                    {
+                        writer = new InternalTraceWriter(logName);
+                        writer.WriteLine("InternalTrace: Initializing at level " + Level.ToString());
+                    }
+                }
+            }
+        }
+
+        //public static void Initialize(string logName)
+        //{
+        //    int lev = (int) new System.Diagnostics.TraceSwitch("NTrace", "NUnit internal trace").Level;
+        //    Initialize(logName, (InternalTraceLevel)lev);
+        //}
 
         public static void Initialize(string logName, InternalTraceLevel level)
         {
 			if (!initialized)
 			{
+                LogName = logName;
 				Level = level;
-
-				if (writer == null && Level > InternalTraceLevel.Off)
-				{
-					writer = new InternalTraceWriter(logName);
-					writer.WriteLine("InternalTrace: Initializing at level " + Level.ToString());
-				}
 
 				initialized = true;
 			}
@@ -95,7 +114,7 @@ namespace NUnit.Core
             Writer.WriteLine("{0} {1,-5} [{2,2}] {3}: {4}",
                 DateTime.Now.ToString(TIME_FMT),
                 level == InternalTraceLevel.Verbose ? "Debug" : level.ToString(),
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
                 System.Threading.Thread.CurrentThread.ManagedThreadId,
 #else
                 AppDomain.GetCurrentThreadId(),

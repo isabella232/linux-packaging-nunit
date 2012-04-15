@@ -19,12 +19,15 @@ namespace NUnit.Core.Extensibility
     public class ParameterSet : NUnit.Framework.ITestCaseData
     {
         #region Constants
+
         private static readonly string DESCRIPTION = "_DESCRIPTION";
-        private static readonly string IGNOREREASON = "_IGNOREREASON";
+        //private static readonly string IGNOREREASON = "_IGNOREREASON";
         private static readonly string CATEGORIES = "_CATEGORIES";
+
         #endregion
 
         #region Instance Fields
+
         private RunState runState;
         private Exception providerException;
         private object[] arguments;
@@ -33,10 +36,11 @@ namespace NUnit.Core.Extensibility
         private string expectedExceptionName;
         private string expectedMessage;
         private string matchType;
-        private object result;
+        private object expectedResult;
         private string testName;
         private string ignoreReason;
         private bool isIgnored;
+        private bool isExplicit;
         private bool hasExpectedResult;
 
         /// <summary>
@@ -44,6 +48,7 @@ namespace NUnit.Core.Extensibility
         /// to tests without requiring the class to change.
         /// </summary>
         private IDictionary properties;
+
         #endregion
 
         #region Properties
@@ -56,14 +61,14 @@ namespace NUnit.Core.Extensibility
             set { runState = value; }
         }
 
-        /// <summary>
-        /// The reason for not running the test case
-        /// represented by this ParameterSet
-        /// </summary>
-        public string NotRunReason
-        {
-            get { return (string) Properties[IGNOREREASON]; }
-        }
+        ///// <summary>
+        ///// The reason for not running the test case
+        ///// represented by this ParameterSet
+        ///// </summary>
+        //public string NotRunReason
+        //{
+        //    get { return (string) Properties[IGNOREREASON]; }
+        //}
 
         /// <summary>
         /// Holds any exception thrown by the parameter provider
@@ -140,10 +145,10 @@ namespace NUnit.Core.Extensibility
         /// </summary>
         public object Result
         {
-            get { return result; }
+            get { return expectedResult; }
             set 
             { 
-                result = value;
+                expectedResult = value;
                 hasExpectedResult = true;
             }
         }
@@ -194,6 +199,16 @@ namespace NUnit.Core.Extensibility
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether this <see cref="ParameterSet"/> is explicit.
+        /// </summary>
+        /// <value><c>true</c> if explicit; otherwise, <c>false</c>.</value>
+        public bool Explicit
+        {
+            get { return isExplicit; }
+            set { isExplicit = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the ignore reason.
         /// </summary>
         /// <value>The ignore reason.</value>
@@ -241,6 +256,7 @@ namespace NUnit.Core.Extensibility
         {
             this.runState = RunState.NotRunnable;
             this.providerException = exception;
+            this.ignoreReason = exception.Message;
         }
 
         /// <summary>
@@ -254,6 +270,7 @@ namespace NUnit.Core.Extensibility
         #endregion
 
         #region Static Methods
+
         /// <summary>
         /// Constructs a ParameterSet from another object, accessing properties 
         /// by reflection. The object must expose at least an Arguments property
@@ -265,23 +282,37 @@ namespace NUnit.Core.Extensibility
             ParameterSet parms = new ParameterSet();
 
             parms.Arguments = GetParm(source, PropertyNames.Arguments) as object[];
+
             parms.ExpectedException = GetParm(source, PropertyNames.ExpectedException) as Type;
             if (parms.ExpectedException != null)
                 parms.ExpectedExceptionName = parms.ExpectedException.FullName;
             else
                 parms.ExpectedExceptionName = GetParm(source, PropertyNames.ExpectedExceptionName) as string;
+
             parms.ExpectedMessage = GetParm(source, PropertyNames.ExpectedMessage) as string;
             object matchEnum = GetParm(source, PropertyNames.MatchType);
             if ( matchEnum != null )
                 parms.MatchType = matchEnum.ToString();
-            parms.Result = GetParm(source, PropertyNames.Result);
+
+            // Note: pre-2.6 versions of some attributes don't have the HasExpectedResult property
+            object hasResult = GetParm(source, PropertyNames.HasExpectedResult);
+            object expectedResult = GetParm(source, PropertyNames.ExpectedResult);
+            if (hasResult != null && (bool)hasResult || expectedResult != null)
+                parms.Result = expectedResult;
+
             parms.Description = GetParm(source, PropertyNames.Description) as string;
+
             parms.TestName = GetParm(source, PropertyNames.TestName) as string;
 
             object objIgnore = GetParm(source, PropertyNames.Ignored);
-            if ( objIgnore != null )
+            if (objIgnore != null)
                 parms.Ignored = (bool)objIgnore;
+
             parms.IgnoreReason = GetParm(source, PropertyNames.IgnoreReason) as string;
+
+            object objExplicit = GetParm(source, PropertyNames.Explicit);
+            if (objExplicit != null)
+                parms.Explicit = (bool)objExplicit;
 
             // Some sources may also implement Properties and/or Categories
             bool gotCategories = false;
@@ -298,7 +329,7 @@ namespace NUnit.Core.Extensibility
             if (!gotCategories)
             {
                 IList categories = GetParm(source, PropertyNames.Categories) as IList;
-                if (categories != null) 
+                if (categories != null)
                     foreach (string cat in categories)
                         parms.Categories.Add(cat);
             }

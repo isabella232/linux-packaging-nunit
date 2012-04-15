@@ -86,12 +86,12 @@ namespace NUnit.Core.Builders
                 // a type, we handle it specially
                 Type testType = assembly.GetType(testName);
                 if (testType != null)
-                    return Build(assemblyName, testType, autoSuites);
+                    return Build(assembly, assemblyName, testType, autoSuites);
 
                 // Assume that testName is a namespace and get all fixtures in it
                 IList fixtures = GetFixtures(assembly, testName);
                 if (fixtures.Count > 0)
-                    return BuildTestAssembly(assemblyName, fixtures, autoSuites);
+                    return BuildTestAssembly(this.assembly, assemblyName, fixtures, autoSuites);
 
                 return null;
             }
@@ -107,11 +107,11 @@ namespace NUnit.Core.Builders
                 if (this.assembly == null) return null;
 
                 IList fixtures = GetFixtures(assembly, null);
-                return BuildTestAssembly(assemblyName, fixtures, autoSuites);
+                return BuildTestAssembly(this.assembly, assemblyName, fixtures, autoSuites);
             }
 		}
 
-		private Test Build( string assemblyName, Type testType, bool autoSuites )
+		private Test Build( Assembly assembly, string assemblyName, Type testType, bool autoSuites )
 		{
 			// TODO: This is the only situation in which we currently
 			// recognize and load legacy suites. We need to determine 
@@ -119,14 +119,14 @@ namespace NUnit.Core.Builders
 			if ( legacySuiteBuilder.CanBuildFrom( testType ) )
 				return legacySuiteBuilder.BuildFrom( testType );
 			else if ( TestFixtureBuilder.CanBuildFrom( testType ) )
-				return BuildTestAssembly( assemblyName,
+				return BuildTestAssembly( assembly, assemblyName,
 					new Test[] { TestFixtureBuilder.BuildFrom( testType ) }, autoSuites );
 			return null;
 		}
 
-		private TestSuite BuildTestAssembly( string assemblyName, IList fixtures, bool autoSuites )
+		private TestSuite BuildTestAssembly( Assembly assembly, string assemblyName, IList fixtures, bool autoSuites )
 		{
-			TestSuite testAssembly = new TestAssembly( assemblyName );
+			 TestSuite testAssembly = new TestAssembly( assembly, assemblyName );
 
 			if ( autoSuites )
 			{
@@ -149,7 +149,7 @@ namespace NUnit.Core.Builders
                     testAssembly.Add(fixture);
                 }
 			}
-
+	
             NUnitFramework.ApplyCommonAttributes( assembly, testAssembly );
 
             testAssembly.Properties["_PID"] = System.Diagnostics.Process.GetCurrentProcess().Id;
@@ -192,7 +192,7 @@ namespace NUnit.Core.Builders
 			IList testTypes = GetCandidateFixtureTypes( assembly, ns );
 
             log.Debug("Found {0} classes to examine", testTypes.Count);
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             System.Diagnostics.Stopwatch timer = new System.Diagnostics.Stopwatch();
             timer.Start();
 #endif
@@ -201,9 +201,9 @@ namespace NUnit.Core.Builders
 			{
 				if( TestFixtureBuilder.CanBuildFrom( testType ) )
 					fixtures.Add( TestFixtureBuilder.BuildFrom( testType ) );
-			}
+            }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             log.Debug("Found {0} fixtures in {1} seconds", fixtures.Count, timer.Elapsed);
 #else
             log.Debug("Found {0} fixtures", fixtures.Count);

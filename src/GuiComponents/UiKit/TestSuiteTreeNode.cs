@@ -12,7 +12,7 @@ namespace NUnit.UiKit
 	using NUnit.Core;
 	using NUnit.Util;
 
-	/// <summary>
+    /// <summary>
 	/// Type safe TreeNode for use in the TestSuiteTreeView. 
 	/// NOTE: Hides some methods and properties of base class.
 	/// </summary>
@@ -34,6 +34,8 @@ namespace NUnit.UiKit
 		/// Private field used for inclusion by category
 		/// </summary>
 		private bool included = true;
+
+        private bool showFailedAssumptions = false;
 
 		/// <summary>
 		/// Image indices for various test states - the values 
@@ -94,6 +96,14 @@ namespace NUnit.UiKit
 			}
 		}
 
+        /// <summary>
+        /// Return true if the node has a result, otherwise false.
+        /// </summary>
+        public bool HasResult
+        {
+            get { return this.result != null; }
+        }
+
 		public string TestType
 		{
 			get { return test.TestType; }
@@ -119,6 +129,40 @@ namespace NUnit.UiKit
 				this.ForeColor = included ? SystemColors.WindowText : Color.LightBlue;
 			}
 		}
+
+        public bool ShowFailedAssumptions
+        {
+            get { return showFailedAssumptions; }
+            set
+            {
+                if (value != showFailedAssumptions)
+                {
+                    showFailedAssumptions = value;
+
+                    if (HasInconclusiveResults)
+                        RepopulateTheoryNode();
+                }
+            }
+        }
+
+        public bool HasInconclusiveResults
+        {
+            get
+            {
+                bool hasInconclusiveResults = false;
+                if (Result != null)
+                {
+                    foreach (TestResult result in Result.Results)
+                    {
+                        hasInconclusiveResults |= result.ResultState == ResultState.Inconclusive;
+                        if (hasInconclusiveResults)
+                            break;
+                    }
+                }
+                return hasInconclusiveResults;
+            }
+        }
+
 		#endregion
 
 		#region Methods
@@ -137,46 +181,91 @@ namespace NUnit.UiKit
 		public void ClearResults()
 		{
 			this.result = null;
-			ImageIndex = SelectedImageIndex = InitIndex;
+			ImageIndex = SelectedImageIndex = CalcImageIndex();
 
 			foreach(TestSuiteTreeNode node in Nodes)
 				node.ClearResults();
 		}
 
-		/// <summary>
+        /// <summary>
+        /// Gets the Theory node associated with the current
+        /// node. If the current node is a Theory, then the
+        /// current node is returned. Otherwise, if the current
+        /// node is a test case under a theory node, then that
+        /// node is returned. Otherwise, null is returned.
+        /// </summary>
+        /// <returns></returns>
+        public TestSuiteTreeNode GetTheoryNode()
+        {
+            if (this.Test.TestType == "Theory")
+                return this;
+
+            TestSuiteTreeNode parent = this.Parent as TestSuiteTreeNode;
+            if (parent != null && parent.Test.TestType == "Theory")
+                return parent;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Regenerate the test cases under a theory, respecting
+        /// the current setting for ShowFailedAssumptions
+        /// </summary>
+        public void RepopulateTheoryNode()
+        {
+            // Ignore if it's not a theory or if it has not been run yet
+            if (this.Test.TestType == "Theory" && this.HasResult)
+            {
+                Nodes.Clear();
+
+                foreach (TestResult result in Result.Results)
+                    if (showFailedAssumptions || result.ResultState != ResultState.Inconclusive)
+                        Nodes.Add(new TestSuiteTreeNode(result));
+            }
+        }
+
+        /// <summary>
 		/// Calculate the image index based on the node contents
 		/// </summary>
 		/// <returns>Image index for this node</returns>
 		private int CalcImageIndex()
 		{
-			if ( this.result == null )
-				return InitIndex;
-			
-			switch( this.result.ResultState )
-			{
-                case ResultState.Inconclusive:
-			        return InconclusiveIndex;
-                case ResultState.Skipped:
-					return SkippedIndex;
-                case ResultState.NotRunnable:
-                case ResultState.Failure:
-                case ResultState.Error:
-                case ResultState.Cancelled:
-			        return FailureIndex;
-				case ResultState.Ignored:
-					return IgnoredIndex;
-				case ResultState.Success:
-					int index = SuccessIndex;
-					foreach( TestSuiteTreeNode node in this.Nodes )
-					{
-						if ( node.ImageIndex == FailureIndex )
-							return FailureIndex;
-						if ( node.ImageIndex == IgnoredIndex )
-							index = IgnoredIndex;
-					}
-					return index;
-                default:
-			        return InitIndex;
+            if (this.result == null)
+            {
+                switch (this.test.RunState)
+                {
+                    case RunState.Ignored:
+                        return IgnoredIndex;
+                    case RunState.NotRunnable:
+                        return FailureIndex;
+                    default:
+                        return InitIndex;
+                }
+            }
+            else
+            {
+                switch (this.result.ResultState)
+                {
+                    case ResultState.Inconclusive:
+                        return InconclusiveIndex;
+                    case ResultState.Skipped:
+                        return SkippedIndex;
+                    case ResultState.NotRunnable:
+                    case ResultState.Failure:
+                    case ResultState.Error:
+                    case ResultState.Cancelled:
+                        return FailureIndex;
+                    case ResultState.Ignored:
+                        return IgnoredIndex;
+                    case ResultState.Success:
+                        foreach (TestSuiteTreeNode node in this.Nodes)
+                            if (node.ImageIndex == IgnoredIndex)
+                                return IgnoredIndex;
+
+                        return SuccessIndex;
+                    default:
+                        return InitIndex;
+                }
             }
 		}
 

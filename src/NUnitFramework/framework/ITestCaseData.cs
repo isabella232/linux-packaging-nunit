@@ -33,6 +33,13 @@ namespace NUnit.Framework
         object Result { get; }
 
         /// <summary>
+        /// Indicates whether a result has been specified.
+        /// This is necessary because the result may be
+        /// null, so it's value cannot be checked.
+        /// </summary>
+        bool HasExpectedResult { get; }
+
+        /// <summary>
         ///  Gets the expected exception Type
         /// </summary>
         Type ExpectedException { get; }
@@ -57,6 +64,12 @@ namespace NUnit.Framework
         /// </summary>
         /// <value><c>true</c> if ignored; otherwise, <c>false</c>.</value>
         bool Ignored { get; }
+
+        /// <summary>
+        /// Gets a value indicating whether this <see cref="ITestCaseData"/> is explicit.
+        /// </summary>
+        /// <value><c>true</c> if explicit; otherwise, <c>false</c>.</value>
+        bool Explicit { get; }
 
         /// <summary>
         /// Gets the ignore reason.

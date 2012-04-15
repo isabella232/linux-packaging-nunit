@@ -3,6 +3,11 @@
 // This is free software licensed under the NUnit license. You may
 // obtain a copy of the license at http://nunit.org.
 // ****************************************************************
+//#define DEFAULT_APPLIES_TO_TESTCASE
+using System.Collections;
+#if CLR_2_0 || CLR_4_0
+using System.Collections.Generic;
+#endif
 using System.Reflection;
 using System.Text;
 
@@ -15,6 +20,7 @@ namespace NUnit.Core
     public class ParameterizedMethodSuite : TestSuite
     {
         private bool isTheory;
+        private MethodInfo method;
 
         /// <summary>
         /// Construct from a MethodInfo
@@ -25,6 +31,7 @@ namespace NUnit.Core
         {
             this.maintainTestOrder = true;
             this.isTheory = Reflect.HasAttribute(method, NUnitFramework.TheoryAttribute, true);
+            this.method = method;
         }
 
         /// <summary>
@@ -60,6 +67,10 @@ namespace NUnit.Core
                 }
             }
 
+#if CLR_2_0 || CLR_4_0
+            this.actions = ActionsHelper.GetActionsFromAttributeProvider(this.method);
+#endif
+
             // DYNAMIC: Get the parameters, and add the methods here.
             
             TestResult result = base.Run(listener, filter);
@@ -75,6 +86,9 @@ namespace NUnit.Core
 			this.Fixture = null;
 			this.setUpMethods = null;
 			this.tearDownMethods = null;
+#if CLR_2_0 || CLR_4_0
+            this.actions = null;
+#endif
 
             return result;
         }
@@ -96,5 +110,25 @@ namespace NUnit.Core
         protected override void DoOneTimeTearDown(TestResult suiteResult)
         {
         }
+
+#if CLR_2_0 || CLR_4_0
+#if !DEFAULT_APPLIES_TO_TESTCASE
+        protected override void ExecuteActions(ActionPhase phase)
+        {
+            List<TestAction> targetActions = new List<TestAction>();
+
+            if (this.actions != null)
+            {
+                foreach (var action in this.actions)
+                {
+                    if (action.DoesTarget(TestAction.TargetsSuite))
+                        targetActions.Add(action);
+                }
+            }
+
+            ActionsHelper.ExecuteActions(phase, targetActions, this);
+        }
+#endif
+#endif
     }
 }

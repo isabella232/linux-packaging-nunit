@@ -25,7 +25,6 @@ namespace NUnit.Util
 
         private FileSystemWatcher[] fileWatchers;
 		private FileInfo[] files;
-		private bool isWatching;
 
 		protected System.Timers.Timer timer;
 		protected string changedAssemblyPath;
@@ -40,7 +39,7 @@ namespace NUnit.Util
 			Setup(delay, new string[] {assemblyFileName});
 		}
 
-#if NET_2_0 || NET_4_0
+#if CLR_2_0 || CLR_4_0
 		public void Setup(int delay, System.Collections.Generic.IList<string> assemblies)
 #else
         public void Setup(int delay, System.Collections.IList assemblies)
@@ -86,8 +85,6 @@ namespace NUnit.Util
             if (fileWatchers != null)
     			foreach( FileSystemWatcher watcher in fileWatchers )
 	    			watcher.EnableRaisingEvents = enable;
-
-			isWatching = enable;
 		}
 
 		public void FreeResources()

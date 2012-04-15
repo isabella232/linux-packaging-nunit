@@ -9,20 +9,22 @@ using System.IO;
 using NUnit.Framework;
 using NUnit.TestUtilities;
 using NUnit.Util.ProjectConverters;
+using NUnit.Util.Tests.resources;
 
 namespace NUnit.Util.Tests
 {
 	[TestFixture]
 	public class VisualStudioConverterTests
 	{
-		static readonly string resourceDir = "resources";
-
 		private VisualStudioConverter converter;
+        static readonly bool useSolutionConfigs = 
+            Services.UserSettings.GetSetting("Options.TestLoader.VisualStudio.UseSolutionConfigs", true);
 		
 		private void AssertCanLoadVsProject( string resourceName )
 		{
 			string fileName = Path.GetFileNameWithoutExtension( resourceName );
-			using( TempResourceFile file = new TempResourceFile( this.GetType(), resourceDir + "." + resourceName, resourceName ) )
+
+			using( TestResource file = new TestResource(resourceName) ) 
 			{
 				NUnitProject project = converter.ConvertFrom( file.Path );
 				Assert.AreEqual( fileName, project.Name );
@@ -72,18 +74,27 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void FromVSSolution2003()
 		{
-			using(new TempResourceFile(this.GetType(), "resources.csharp-sample.csproj", @"csharp\csharp-sample.csproj"))
-			using(new TempResourceFile(this.GetType(), "resources.jsharp.vjsproj", @"jsharp\jsharp.vjsproj"))
-			using(new TempResourceFile(this.GetType(), "resources.vb-sample.vbproj", @"vb\vb-sample.vbproj"))
-			using(new TempResourceFile(this.GetType(), "resources.cpp-sample.vcproj", @"cpp-sample\cpp-sample.vcproj"))
-			using(TempResourceFile file = new TempResourceFile(this.GetType(), "resources.samples.sln", "samples.sln" ))
+			using(new TestResource("csharp-sample.csproj", @"csharp\csharp-sample.csproj"))
+			using(new TestResource("jsharp.vjsproj", @"jsharp\jsharp.vjsproj"))
+			using(new TestResource("vb-sample.vbproj", @"vb\vb-sample.vbproj"))
+			using(new TestResource("cpp-sample.vcproj", @"cpp-sample\cpp-sample.vcproj"))
+			using(TestResource file = new TestResource("samples.sln"))
 			{
 				NUnitProject project = converter.ConvertFrom( file.Path );
-				Assert.AreEqual( 4, project.Configs.Count );
-				Assert.AreEqual( 3, project.Configs["Debug"].Assemblies.Count );
-				Assert.AreEqual( 3, project.Configs["Release"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Debug|Win32"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Release|Win32"].Assemblies.Count );
+                if (useSolutionConfigs)
+                {
+                    Assert.AreEqual(2, project.Configs.Count);
+                    Assert.AreEqual(4, project.Configs["Debug"].Assemblies.Count);
+                    Assert.AreEqual(4, project.Configs["Release"].Assemblies.Count);
+                }
+                else
+                {
+                    Assert.AreEqual(4, project.Configs.Count);
+                    Assert.AreEqual(3, project.Configs["Debug"].Assemblies.Count);
+                    Assert.AreEqual(3, project.Configs["Release"].Assemblies.Count);
+                    Assert.AreEqual(1, project.Configs["Debug|Win32"].Assemblies.Count);
+                    Assert.AreEqual(1, project.Configs["Release|Win32"].Assemblies.Count);
+                }
 				Assert.IsTrue( project.IsLoadable, "Not loadable" );
 				Assert.IsFalse( project.IsDirty, "Project should not be dirty" );
 			}
@@ -92,18 +103,27 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void FromVSSolution2005()
 		{
-			using(new TempResourceFile(this.GetType(), "resources.csharp-sample_VS2005.csproj", @"csharp\csharp-sample_VS2005.csproj"))
-			using(new TempResourceFile(this.GetType(), "resources.jsharp_VS2005.vjsproj", @"jsharp\jsharp_VS2005.vjsproj"))
-			using(new TempResourceFile(this.GetType(), "resources.vb-sample_VS2005.vbproj", @"vb\vb-sample_VS2005.vbproj"))
-			using(new TempResourceFile(this.GetType(), "resources.cpp-sample_VS2005.vcproj", @"cpp-sample\cpp-sample_VS2005.vcproj"))
-			using(TempResourceFile file = new TempResourceFile(this.GetType(), "resources.samples_VS2005.sln", "samples_VS2005.sln"))
+            using (new TestResource("csharp-sample_VS2005.csproj", @"csharp\csharp-sample_VS2005.csproj"))
+            using (new TestResource("jsharp_VS2005.vjsproj", @"jsharp\jsharp_VS2005.vjsproj"))
+            using (new TestResource("vb-sample_VS2005.vbproj", @"vb\vb-sample_VS2005.vbproj"))
+            using (new TestResource("cpp-sample_VS2005.vcproj", @"cpp-sample\cpp-sample_VS2005.vcproj"))
+            using (TestResource file = new TestResource("samples_VS2005.sln"))
 			{
 				NUnitProject project = converter.ConvertFrom( file.Path );
-				Assert.AreEqual( 4, project.Configs.Count );
-				Assert.AreEqual( 3, project.Configs["Debug"].Assemblies.Count );
-				Assert.AreEqual( 3, project.Configs["Release"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Debug|Win32"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Release|Win32"].Assemblies.Count );
+                if (useSolutionConfigs)
+                {
+                    Assert.AreEqual(2, project.Configs.Count);
+                    Assert.AreEqual(4, project.Configs["Debug"].Assemblies.Count);
+                    Assert.AreEqual(4, project.Configs["Release"].Assemblies.Count);
+                }
+                else
+                {
+                    Assert.AreEqual(4, project.Configs.Count);
+                    Assert.AreEqual(3, project.Configs["Debug"].Assemblies.Count);
+                    Assert.AreEqual(3, project.Configs["Release"].Assemblies.Count);
+                    Assert.AreEqual(1, project.Configs["Debug|Win32"].Assemblies.Count);
+                    Assert.AreEqual(1, project.Configs["Release|Win32"].Assemblies.Count);
+                }
 				Assert.IsTrue( project.IsLoadable, "Not loadable" );
 				Assert.IsFalse( project.IsDirty, "Project should not be dirty" );
 			}
@@ -112,8 +132,8 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void FromWebApplication()
 		{
-			using( new TempResourceFile(this.GetType(), "resources.ClassLibrary1.csproj", @"ClassLibrary1\ClassLibrary1.csproj" ) )
-			using( TempResourceFile file = new TempResourceFile( this.GetType(), "resources.WebApplication1.sln", "WebApplication1.sln" ) )
+            using (new TestResource("ClassLibrary1.csproj", @"ClassLibrary1\ClassLibrary1.csproj"))
+            using (TestResource file = new TestResource("WebApplication1.sln"))
 			{
 				NUnitProject project = converter.ConvertFrom( Path.GetFullPath( file.Path ) );
 				Assert.AreEqual( 2, project.Configs.Count );
@@ -125,29 +145,55 @@ namespace NUnit.Util.Tests
 		[Test]
 		public void WithUnmanagedCpp()
 		{
-			using( new TempResourceFile( this.GetType(), "resources.ClassLibrary1.csproj", @"ClassLibrary1\ClassLibrary1.csproj" ) )
-			using( new TempResourceFile( this.GetType(), "resources.Unmanaged.vcproj", @"Unmanaged\Unmanaged.vcproj" ) )
-			using( TempResourceFile file = new TempResourceFile( this.GetType(), "resources.Solution1.sln", "Solution1.sln" ) ) 
+            using (new TestResource("ClassLibrary1.csproj", @"ClassLibrary1\ClassLibrary1.csproj"))
+            using (new TestResource("Unmanaged.vcproj", @"Unmanaged\Unmanaged.vcproj"))
+            using (TestResource file = new TestResource("Solution1.sln")) 
 			{
 				NUnitProject project = converter.ConvertFrom( file.Path );
-				Assert.AreEqual( 4, project.Configs.Count );
-				Assert.AreEqual( 1, project.Configs["Debug"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Release"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Debug|Win32"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Release|Win32"].Assemblies.Count );
+                if (useSolutionConfigs)
+                {
+                    Assert.AreEqual(2, project.Configs.Count);
+                    Assert.AreEqual(2, project.Configs["Debug"].Assemblies.Count);
+                    Assert.AreEqual(2, project.Configs["Release"].Assemblies.Count);
+                }
+                else
+                {
+                    Assert.AreEqual(4, project.Configs.Count);
+                    Assert.AreEqual(1, project.Configs["Debug"].Assemblies.Count);
+                    Assert.AreEqual(1, project.Configs["Release"].Assemblies.Count);
+                    Assert.AreEqual(1, project.Configs["Debug|Win32"].Assemblies.Count);
+                    Assert.AreEqual(1, project.Configs["Release|Win32"].Assemblies.Count);
+                }
 			}
 		}
 
 		[Test]
 		public void FromMakefileProject()
 		{
-			using( TempResourceFile file = new TempResourceFile( this.GetType(), "resources.MakeFileProject.vcproj", "MakeFileProject.vcproj" ) )
+            using (TestResource file = new TestResource("MakeFileProject.vcproj"))
 			{
 				NUnitProject project = converter.ConvertFrom( file.Path );
 				Assert.AreEqual( 2, project.Configs.Count );
-				Assert.AreEqual( 1, project.Configs["Debug|Win32"].Assemblies.Count );
-				Assert.AreEqual( 1, project.Configs["Release|Win32"].Assemblies.Count );
-			}
+                Assert.AreEqual(1, project.Configs["Debug|Win32"].Assemblies.Count);
+                Assert.AreEqual(1, project.Configs["Release|Win32"].Assemblies.Count);
+            }
 		}
+
+        [Test]
+        public void FromSolutionWithDisabledProject()
+        {
+            using (new TestResource("DisabledProject.csproj", @"DisabledProject\DisabledProject.csproj"))
+            using (new TestResource("DebugOnly.csproj", @"DebugOnly\DebugOnly.csproj"))
+            using (TestResource file = new TestResource("DisabledProject.sln"))
+            {
+                NUnitProject project = converter.ConvertFrom(file.Path);
+                Assert.AreEqual(2, project.Configs.Count);
+                Assert.AreEqual(2, project.Configs["Release"].Assemblies.Count, "Release should have 2 assemblies");
+                if (useSolutionConfigs)
+                    Assert.AreEqual(1, project.Configs["Debug"].Assemblies.Count, "Debug should have 1 assembly");
+                else
+                    Assert.AreEqual(2, project.Configs["Debug"].Assemblies.Count, "Debug should have 2 assemblies");
+            }
+        }
 	}
 }

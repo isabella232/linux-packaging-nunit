@@ -3,9 +3,6 @@
 // obtain a copy of the license at http://nunit.org
 // ****************************************************************
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework;
 using NUnit.UiException.StackTraceAnalyzers;
 using NUnit.UiException.StackTraceAnalysers;
@@ -41,7 +38,7 @@ namespace NUnit.UiException.Tests.StackTraceAnalyzers
             Assert.That(res.Line, Is.EqualTo(42));
 
             // parser doesn't rely on the existence of
-            // a method name or path value
+            // a method name or filePath value
             res = AcceptValue(_parser, ":43");
             Assert.That(res.Line, Is.EqualTo(43));
 

@@ -6,7 +6,9 @@
 
 using System;
 using System.Collections;
-using System.Data;
+#if NET_3_5 || NET_4_0
+using System.Linq;
+#endif
 
 namespace NUnit.Framework.Tests
 {
@@ -166,6 +168,7 @@ namespace NUnit.Framework.Tests
                 "  Expected: \"z\"" + Environment.NewLine +
                 "  But was:  \"a\"" + Environment.NewLine +
                 "  -----------^" + Environment.NewLine;
+
 			CollectionAssert.AreEqual(set1,set2,new TestComparer());
 		}
 
@@ -193,9 +196,9 @@ namespace NUnit.Framework.Tests
 			array2[1] = -99;
 
 			CollectionAssert.AreEqual(array1, array2, new AlwaysEqualComparer());
-		}
+        }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         [Test]
         public void AreEqual_UsingIterator()
         {
@@ -210,12 +213,44 @@ namespace NUnit.Framework.Tests
             yield return 2;
             yield return 3;
         }
+
+        [Test]
+        public void AreEqual_UsingIterator_Fails()
+        {
+            int[] array = new int[] { 1, 3, 5 };
+
+			Assert.That(
+            	delegate { CollectionAssert.AreEqual(array, CountToThree()); },
+			    Throws.TypeOf<AssertionException>()
+					.With.Message.EndsWith("Expected: 3" + Environment.NewLine + "  But was:  2" + Environment.NewLine));
+        }
 #endif
-		#endregion
 
-		#region AreEquivalent
+#if NET_3_5 || CLR_4_0
+        [Test, Platform("Net-3.5,Mono-3.5,Net-4.0,Mono-4.0")]
+        public void AreEqual_UsingLinqQuery()
+        {
+            int[] array = new int[] { 1, 2, 3 };
 
-		[Test]
+            CollectionAssert.AreEqual(array, array.Select((item) => item));
+        }
+
+        [Test, Platform("Net-3.5,Mono-3.5,Net-4.0,Mono-4.0")]
+        public void AreEqual_UsingLinqQuery_Fails()
+        {
+            int[] array = new int[] { 1, 2, 3 };
+
+			Assert.That(
+				delegate { CollectionAssert.AreEqual(array, array.Select((item) => item * 2)); },
+				Throws.TypeOf<AssertionException>()
+					.With.Message.EndsWith("Expected: 1" + Environment.NewLine + "  But was:  2" + Environment.NewLine));
+        }
+#endif
+        #endregion
+
+        #region AreEquivalent
+
+        [Test]
 		public void Equivalent()
 		{
 			ICollection set1 = new ICollectionAdapter( "x", "y", "z" );

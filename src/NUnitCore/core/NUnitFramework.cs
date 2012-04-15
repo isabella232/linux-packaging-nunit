@@ -55,6 +55,11 @@ namespace NUnit.Core
         #endregion
 
         #region Other Framework Types
+
+        public static readonly string TestActionInterface = "NUnit.Framework.ITestAction, nunit.framework";
+
+	    public static readonly string TestDetailsClass = "NUnit.Framework.TestDetails, nunit.framework";
+
         public static readonly string AssertException = "NUnit.Framework.AssertionException";
         public static readonly string IgnoreException = "NUnit.Framework.IgnoreException";
         public static readonly string InconclusiveException = "NUnit.Framework.InconclusiveException";
@@ -226,7 +231,7 @@ namespace NUnit.Core
                             string categoryName = (string)Reflect.GetPropertyValue(attribute, PropertyNames.CategoryName);
                             test.Categories.Add(categoryName);
 
-                            if (categoryName.IndexOfAny(new char[] { ',', '!', '+', '-' }) >= 0)
+                            if (!IsValidCategoryName(categoryName))
                             {
                                 test.RunState = RunState.NotRunnable;
                                 test.IgnoreReason = "Category name must not contain ',', '!', '+' or '-'";
@@ -247,7 +252,7 @@ namespace NUnit.Core
                                  test.IgnoreReason = GetIgnoreReason(attribute);
                              }
                          }
-                         else if ( Reflect.InheritsFrom( attributeType, IgnoreAttribute ) )
+                        else if (Reflect.InheritsFrom(attributeType, IgnoreAttribute))
                          {
                              if (isValid)
                              {
@@ -432,6 +437,18 @@ namespace NUnit.Core
                         else
                             return ResultState.Error;
         }
+        #endregion
+
+        #region IsValidCategoryName
+
+        /// <summary>
+        /// Returns true if the category name is valid
+        /// </summary>
+        public static bool IsValidCategoryName(string name)
+        {
+            return name.IndexOfAny(new char[] { ',', '!', '+', '-' }) < 0;
+        }
+
         #endregion
     }
 }

@@ -1,4 +1,10 @@
-﻿using System;
+﻿// ****************************************************************
+// Copyright 2012, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
+using System;
 using System.IO;
 using NUnit.Framework;
 using NUnit.TestData.TestContextData;
@@ -36,6 +42,14 @@ namespace NUnit.Core.Tests
             Assert.NotNull(testDirectory);
             Assert.That(Directory.Exists(testDirectory));
             Assert.That(File.Exists(Path.Combine(testDirectory, "nunit.core.tests.dll")));
+        }
+
+        [Test]
+        public void TestCanAccessWorkDirectory()
+        {
+            string workDirectory = TestContext.CurrentContext.WorkDirectory;
+            Assert.NotNull(workDirectory);
+            Assert.That(Directory.Exists(workDirectory), string.Format("Directory {0} does not exist", workDirectory));
         }
 
         [Test]

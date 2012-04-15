@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using NUnit.Framework;
 using NUnit.UiException.CodeFormatters;
 using NUnit.UiException.Tests.data;
@@ -284,9 +283,9 @@ namespace NUnit.UiException.Tests.CodeFormatters
             ICodeFormatter csFormatter;
             FormattedCode exp;
 
-            using (new TestResource("HelloWorld.txt"))
+            using (TestResource resource = new TestResource("HelloWorld.txt"))
             {
-                itemHelloTxt = new ErrorItem("HelloWorld.txt", 1);
+                itemHelloTxt = new ErrorItem(resource.Path, 1);
                 txtFormatter = new PlainTextCodeFormatter();
                 exp = txtFormatter.Format(itemHelloTxt.ReadFile());
                 Assert.That(
@@ -295,9 +294,9 @@ namespace NUnit.UiException.Tests.CodeFormatters
                 FormattedCode.CheckData(exp);
             }
 
-            using (new TestResource("Basic.cs"))
+            using (TestResource resource = new TestResource("Basic.cs"))
             {
-                itemBasicCs = new ErrorItem("Basic.cs", 1);
+                itemBasicCs = new ErrorItem(resource.Path, 1);
                 csFormatter = new CSharpCodeFormatter();
                 exp = csFormatter.Format(itemBasicCs.ReadFile());
                 Assert.That(
