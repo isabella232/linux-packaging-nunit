@@ -1,9 +1,7 @@
-Format: http://dep.debian.net/deps/dep5/
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: NUnit
 Upstream-Contact: Charlie Poole <charlie@nunit.com>
 Source: http://www.nunit.org/
-
-Comment: This package was debianized by Jelmer Vernooij <jelmer@samba.org> on Mon, 30 May 2005 01:24:27 +0100.
 
 Files: *
 Copyright: Copyright 2002-2008 Charlie Poole
