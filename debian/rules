@@ -35,8 +35,8 @@ override_dh_install:
 	install -D -m 755 debian/nunit-console.sh debian/nunit-console/usr/bin/nunit-console
 	install -D -m 755 debian/nunit-gui.sh debian/nunit-gui/usr/bin/nunit-gui
 	dh_install
-	cp -a src/ConsoleRunner/nunit-console-exe/Ship.config debian/nunit-console/usr/lib/nunit/nunit-console.exe.config
-	cp -a src/GuiRunner/nunit-gui-exe/Ship.config debian/nunit-gui/usr/lib/nunit/nunit.exe.config
+	cp -a src/ConsoleRunner/nunit-console-exe/App.config debian/nunit-console/usr/lib/nunit/nunit-console.exe.config
+	cp -a src/GuiRunner/nunit-gui-exe/App.config debian/nunit-gui/usr/lib/nunit/nunit.exe.config
 
 override_dh_make_clilibs:
 	dh_makeclilibs -m $(DEB_CLI_API_VERSION)
