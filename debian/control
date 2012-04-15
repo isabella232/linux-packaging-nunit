@@ -6,7 +6,7 @@ Uploaders: Mirco Bauer <meebey@debian.org>,
            Julian Taylor <jtaylor.debian@googlemail.com>
 Build-Depends: cli-common-dev (>= 0.5.7), debhelper (>= 7.0.50~)
 Build-Depends-Indep: mono-devel (>= 2.4.3), mono-xbuild, monodoc-base
-Standards-Version: 3.9.2
+Standards-Version: 3.9.3
 Homepage: http://www.nunit.org/
 Vcs-Git: git://git.debian.org/pkg-cli-libs/packages/nunit.git
 Vcs-Browser: http://git.debian.org/?p=pkg-cli-libs/packages/nunit.git
