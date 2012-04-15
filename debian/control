@@ -39,7 +39,7 @@ Description: Unit test framework for CLI
  .
  This package contains the graphical front-end.
 
-Package: libnunit2.5-cil
+Package: libnunit2.6-cil
 Architecture: all
 Section: cli-mono
 Depends: ${cli:Depends}, ${misc:Depends}
@@ -55,7 +55,7 @@ Description: Unit test framework for CLI
 
 Package: libnunit-cil-dev
 Architecture: all
-Depends: libnunit2.5-cil (= ${binary:Version}), ${misc:Depends}
+Depends: libnunit2.6-cil (= ${binary:Version}), ${misc:Depends}
 Replaces: libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil (<< 2.4.7+dfsg-5)
 Description: Unit test framework for CLI
  NUnit is a unit testing framework for all .NET languages. It serves the
@@ -95,7 +95,7 @@ Description: compiled XML documentation for NUnit
 Package: nunit
 Architecture: all
 Depends: libnunit-doc,
-         libnunit2.5-cil,
+         libnunit2.6-cil,
          nunit-console,
          nunit-gui,
          ${misc:Depends}

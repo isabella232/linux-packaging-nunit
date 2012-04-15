@@ -1,3 +1,9 @@
+nunit (2.6.0.12051+dfsg-1) UNRELEASED; urgency=low
+
+  * New upstream release
+
+ -- Julian Taylor <jtaylor.debian@googlemail.com>  Sun, 15 Apr 2012 17:12:48 +0200
+
 nunit (2.5.10.11092+dfsg-3) unstable; urgency=low
 
   [ Julian Taylor ]

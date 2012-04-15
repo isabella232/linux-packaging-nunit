@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
-DEB_CLI_ABI_VERSION = 2.5
-DEB_CLI_API_VERSION = 2.5.10
+DEB_CLI_ABI_VERSION = 2.6
+DEB_CLI_API_VERSION = 2.6.0
 
 %:
 	dh $@ --with cli
@@ -22,12 +22,12 @@ override_dh_auto_build:
 	xbuild /property:Configuration=Debug ./src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
 
 	rm -rf monodocer;
-	mdoc update -i ./src/bin/Debug/framework/nunit.framework.xml \
+	mdoc update -i ./bin/Debug/framework/nunit.framework.xml \
 	  -o monodocer bin/Debug/framework/nunit.framework.dll;
 	mdoc assemble -o nunit.framework monodocer;
 
 	rm -rf monodocer;
-	mdoc update -i ./src/bin/Debug/lib/nunit.core.xml \
+	mdoc update -i ./bin/Debug/lib/nunit.core.xml \
 	  -o monodocer bin/Debug/lib/nunit.core.dll;
 	mdoc assemble -o nunit.core monodocer;
 
