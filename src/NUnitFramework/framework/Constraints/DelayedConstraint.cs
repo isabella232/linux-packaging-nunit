@@ -49,7 +49,19 @@ namespace NUnit.Framework.Constraints
         /// <returns>True for if the base constraint fails, false if it succeeds</returns>
         public override bool Matches(object actual)
         {
-            Thread.Sleep(delayInMilliseconds);
+            int remainingDelay = delayInMilliseconds;
+
+            while (pollingInterval > 0 && pollingInterval < remainingDelay)
+            {
+                remainingDelay -= pollingInterval;
+                Thread.Sleep(pollingInterval);
+                this.actual = actual;
+                if (baseConstraint.Matches(actual))
+                    return true;
+            }
+
+            if (remainingDelay > 0)
+                Thread.Sleep(remainingDelay);
             this.actual = actual;
             return baseConstraint.Matches(actual);
         }
@@ -68,8 +80,15 @@ namespace NUnit.Framework.Constraints
 				remainingDelay -= pollingInterval;
 				Thread.Sleep(pollingInterval);
 				this.actual = del();
-				if (baseConstraint.Matches(actual))
-					return true;
+                try
+                {
+                    if (baseConstraint.Matches(actual))
+                        return true;
+                }
+                catch (Exception)
+                {
+                    // Ignore any exceptions when polling
+                }
 			}
 
 			if ( remainingDelay > 0 )
@@ -78,7 +97,7 @@ namespace NUnit.Framework.Constraints
 			return baseConstraint.Matches(actual);
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         /// <summary>
         /// Test whether the constraint is satisfied by a given reference.
         /// Overridden to wait for the specified delay period before
@@ -95,8 +114,15 @@ namespace NUnit.Framework.Constraints
                 remainingDelay -= pollingInterval;
                 Thread.Sleep(pollingInterval);
                 this.actual = actual;
-                if (baseConstraint.Matches(actual))
-                    return true;
+                try
+                {
+                    if (baseConstraint.Matches(actual))
+                        return true;
+                }
+                catch (Exception)
+                {
+                    // Ignore any exceptions when polling
+                }
             }
 
             if ( remainingDelay > 0 )

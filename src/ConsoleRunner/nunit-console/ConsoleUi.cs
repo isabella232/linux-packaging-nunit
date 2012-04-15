@@ -27,17 +27,29 @@ namespace NUnit.ConsoleRunner
 		public static readonly int FIXTURE_NOT_FOUND = -3;
 		public static readonly int UNEXPECTED_ERROR = -100;
 
+        private string workDir;
+
 		public ConsoleUi()
 		{
 		}
 
 		public int Execute( ConsoleOptions options )
 		{
+            this.workDir = options.work;
+            if (workDir == null || workDir == string.Empty)
+                workDir = Environment.CurrentDirectory;
+            else
+            {
+                workDir = Path.GetFullPath(workDir);
+                if (!Directory.Exists(workDir))
+                    Directory.CreateDirectory(workDir);
+            }
+
 			TextWriter outWriter = Console.Out;
 			bool redirectOutput = options.output != null && options.output != string.Empty;
 			if ( redirectOutput )
 			{
-				StreamWriter outStreamWriter = new StreamWriter( options.output );
+				StreamWriter outStreamWriter = new StreamWriter( Path.Combine(workDir, options.output) );
 				outStreamWriter.AutoFlush = true;
 				outWriter = outStreamWriter;
 			}
@@ -46,25 +58,38 @@ namespace NUnit.ConsoleRunner
 			bool redirectError = options.err != null && options.err != string.Empty;
 			if ( redirectError )
 			{
-				StreamWriter errorStreamWriter = new StreamWriter( options.err );
+				StreamWriter errorStreamWriter = new StreamWriter( Path.Combine(workDir, options.err) );
 				errorStreamWriter.AutoFlush = true;
 				errorWriter = errorStreamWriter;
 			}
 
             TestPackage package = MakeTestPackage(options);
 
-            Console.WriteLine("ProcessModel: {0}    DomainUsage: {1}", 
-                package.Settings.Contains("ProcessModel")
-                    ? package.Settings["ProcessModel"]
-                    : "Default", 
-                package.Settings.Contains("DomainUsage")
-                    ? package.Settings["DomainUsage"]
-                    : "Default");
+            ProcessModel processModel = package.Settings.Contains("ProcessModel")
+                ? (ProcessModel)package.Settings["ProcessModel"]
+                : ProcessModel.Default;
 
-            Console.WriteLine("Execution Runtime: {0}", 
-                package.Settings.Contains("RuntimeFramework")
-                    ? package.Settings["RuntimeFramework"]
-                    : "Default");
+            DomainUsage domainUsage = package.Settings.Contains("DomainUsage")
+                ? (DomainUsage)package.Settings["DomainUsage"]
+                : DomainUsage.Default;
+
+            RuntimeFramework framework = package.Settings.Contains("RuntimeFramework")
+                ? (RuntimeFramework)package.Settings["RuntimeFramework"]
+                : RuntimeFramework.CurrentFramework;
+
+#if CLR_2_0 || CLR_4_0
+            Console.WriteLine("ProcessModel: {0}    DomainUsage: {1}", processModel, domainUsage);
+
+            Console.WriteLine("Execution Runtime: {0}", framework);
+#else
+            Console.WriteLine("DomainUsage: {0}", domainUsage);
+
+            if (processModel != ProcessModel.Default && processModel != ProcessModel.Single)
+                Console.WriteLine("Warning: Ignoring project setting 'processModel={0}'", processModel);
+
+            if (!RuntimeFramework.CurrentFramework.Supports(framework))
+                Console.WriteLine("Warning: Ignoring project setting 'runtimeFramework={0}'", framework);
+#endif
 
             using (TestRunner testRunner = new DefaultTestRunnerFactory().MakeTestRunner(package))
 			{
@@ -80,17 +105,40 @@ namespace NUnit.ConsoleRunner
 				EventCollector collector = new EventCollector( options, outWriter, errorWriter );
 
 				TestFilter testFilter = TestFilter.Empty;
+                SimpleNameFilter nameFilter = new SimpleNameFilter();
+
 				if ( options.run != null && options.run != string.Empty )
 				{
 					Console.WriteLine( "Selected test(s): " + options.run );
-					testFilter = new SimpleNameFilter( TestNameParser.Parse(options.run) );
+                    foreach (string name in TestNameParser.Parse(options.run))
+                        nameFilter.Add(name);
+                    testFilter = nameFilter;
 				}
+
+                if (options.runlist != null && options.runlist != string.Empty)
+                {
+                    Console.WriteLine("Run list: " + options.runlist);
+                    using (StreamReader rdr = new StreamReader(options.runlist))
+                    {
+                        // NOTE: We can't use rdr.EndOfStream because it's
+                        // not present in .NET 1.x.
+                        string line = rdr.ReadLine();
+                        while (line != null)
+                        {
+                            if (line[0] != '#')
+                                nameFilter.Add(line);
+                            line = rdr.ReadLine();
+                        }
+                    }
+                    testFilter = nameFilter;
+                }
 
 				if ( options.include != null && options.include != string.Empty )
 				{
-					Console.WriteLine( "Included categories: " + options.include );
 					TestFilter includeFilter = new CategoryExpression( options.include ).Filter;
-					if ( testFilter.IsEmpty )
+                    Console.WriteLine("Included categories: " + includeFilter.ToString());
+
+                    if (testFilter.IsEmpty)
 						testFilter = includeFilter;
 					else
 						testFilter = new AndFilter( testFilter, includeFilter );
@@ -98,8 +146,9 @@ namespace NUnit.ConsoleRunner
 
 				if ( options.exclude != null && options.exclude != string.Empty )
 				{
-					Console.WriteLine( "Excluded categories: " + options.exclude );
 					TestFilter excludeFilter = new NotFilter( new CategoryExpression( options.exclude ).Filter );
+                    Console.WriteLine("Excluded categories: " + excludeFilter.ToString());
+
 					if ( testFilter.IsEmpty )
 						testFilter = excludeFilter;
 					else if ( testFilter is AndFilter )
@@ -118,7 +167,7 @@ namespace NUnit.ConsoleRunner
 
 				try
 				{
-					result = testRunner.Run( collector, testFilter );
+					result = testRunner.Run( collector, testFilter, false, LoggingThreshold.Off );
 				}
 				finally
 				{
@@ -152,18 +201,29 @@ namespace NUnit.ConsoleRunner
                     {
                         WriteSummaryReport(summary);
                         if (summary.ErrorsAndFailures > 0 || result.IsError || result.IsFailure)
+                        {
+                            if (options.stoponerror)
+                            {
+                                Console.WriteLine("Test run was stopped after first error, as requested.");
+                                Console.WriteLine();
+                            }
+
                             WriteErrorsAndFailuresReport(result);
+                        }
                         if (summary.TestsNotRun > 0)
                             WriteNotRunReport(result);
-                    }
 
-                    // Write xml output here
-                    string xmlResultFile = options.xml == null || options.xml == string.Empty
-                        ? "TestResult.xml" : options.xml;
+                        if (!options.noresult)
+                        {
+                            // Write xml output here
+                            string xmlResultFile = options.result == null || options.result == string.Empty
+                                ? "TestResult.xml" : options.result;
 
-                    using (StreamWriter writer = new StreamWriter(xmlResultFile))
-                    {
-                        writer.Write(xmlOutput);
+                            using (StreamWriter writer = new StreamWriter(Path.Combine(workDir, xmlResultFile)))
+                            {
+                                writer.Write(xmlOutput);
+                            }
+                        }
                     }
 
                     returnCode = summary.ErrorsAndFailures;
@@ -181,7 +241,7 @@ namespace NUnit.ConsoleRunner
 
 		#region Helper Methods
         // TODO: See if this can be unified with the Gui's MakeTestPackage
-        private static TestPackage MakeTestPackage( ConsoleOptions options )
+        private TestPackage MakeTestPackage( ConsoleOptions options )
         {
 			TestPackage package;
 			DomainUsage domainUsage = DomainUsage.Default;
@@ -219,14 +279,16 @@ namespace NUnit.ConsoleRunner
 				domainUsage = DomainUsage.Multiple;
 			}
 
+#if CLR_2_0 || CLR_4_0
+            if (options.framework != null)
+                framework = RuntimeFramework.Parse(options.framework);
+
             if (options.process != ProcessModel.Default)
                 processModel = options.process;
+#endif
 
 			if (options.domain != DomainUsage.Default)
 				domainUsage = options.domain;
-
-            if (options.framework != null)
-                framework = RuntimeFramework.Parse(options.framework);
 
 			package.TestName = options.fixture;
             
@@ -246,6 +308,11 @@ namespace NUnit.ConsoleRunner
             package.Settings["ShadowCopyFiles"] = !options.noshadow;
 			package.Settings["UseThreadedRunner"] = !options.nothread;
             package.Settings["DefaultTimeout"] = options.timeout;
+            package.Settings["WorkDirectory"] = this.workDir;
+            package.Settings["StopOnError"] = options.stoponerror;
+
+            if (options.apartment != System.Threading.ApartmentState.Unknown)
+                package.Settings["ApartmentState"] = options.apartment;
 
             return package;
 		}

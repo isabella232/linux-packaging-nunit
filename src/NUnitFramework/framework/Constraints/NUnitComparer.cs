@@ -8,7 +8,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Collections;
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
 using System.Collections.Generic;
 #endif
 
@@ -64,4 +64,35 @@ namespace NUnit.Framework.Constraints
             throw new ArgumentException("Neither value implements IComparable or IComparable<T>");
         }
     }
+
+#if CLR_2_0 || CLR_4_0
+    /// <summary>
+    /// Generic version of NUnitComparer
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class NUnitComparer<T> : IComparer<T>
+    {
+        /// <summary>
+        /// Compare two objects of the same type
+        /// </summary>
+        public int Compare(T x, T y)
+        {
+            if (x == null)
+                return y == null ? 0 : -1;
+            else if (y == null)
+                return +1;
+
+            if (Numerics.IsNumericType(x) && Numerics.IsNumericType(y))
+                return Numerics.Compare(x, y);
+
+            if (x is IComparable<T>)
+                return ((IComparable<T>)x).CompareTo(y);
+
+            if (x is IComparable)
+                return ((IComparable)x).CompareTo(y);
+
+            throw new ArgumentException("Neither value implements IComparable or IComparable<T>");
+        }
+    }
+#endif
 }

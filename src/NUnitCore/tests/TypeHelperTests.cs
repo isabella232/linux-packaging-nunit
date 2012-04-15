@@ -1,5 +1,11 @@
-﻿using System;
-#if NET_2_0
+﻿// ****************************************************************
+// Copyright 2012, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
+using System;
+#if CLR_2_0 || CLR_4_0
 using System.Collections.Generic;
 #endif
 using NUnit.Framework;
@@ -13,7 +19,7 @@ namespace NUnit.Core.Tests
         [TestCase(typeof(int), "Int32")]
         [TestCase(typeof(SimpleClass), "SimpleClass")]
         [TestCase(typeof(MyNoNamespaceClass), "MyNoNamespaceClass")]
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         [TestCase(typeof(GenericClass<int, decimal, string>), "GenericClass<Int32,Decimal,String>")]
         [TestCase(typeof(GenericClass<int[], decimal[], string[]>), "GenericClass<Int32[],Decimal[],String[]>")]
         [TestCase(typeof(ContainerClass.NestedClass), "ContainerClass+NestedClass")]

@@ -43,13 +43,31 @@ namespace NUnit.TestData.TestFixtureData
 		{}
 	}
 
-    public class FixtureWithoutTestFixtureAttribute
+    public class FixtureWithoutTestFixtureAttributeContainingTest
     {
         [Test]
         public void SomeTest() { }
     }
 
-#if NET_2_0
+    public class FixtureWithoutTestFixtureAttributeContainingTestCase
+    {
+        [TestCase(42)]
+        public void SomeTest(int x) { }
+    }
+
+    public class FixtureWithoutTestFixtureAttributeContainingTestCaseSource
+    {
+        [TestCaseSource("data")]
+        public void SomeTest(int x) { }
+    }
+
+    public class FixtureWithoutTestFixtureAttributeContainingTheory
+    {
+        [Theory]
+        public void SomeTest(int x) { }
+    }
+
+#if CLR_2_0 || CLR_4_0
     public static class StaticFixtureWithoutTestFixtureAttribute
     {
         [Test]
@@ -335,9 +353,9 @@ namespace NUnit.TestData.TestFixtureData
 	{
 		[TestFixtureTearDown]
 		public void Teardown(int j) { }
-	}
+    }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
     [TestFixture(typeof(int))]
     [TestFixture(typeof(string))]
     public class GenericFixtureWithProperArgsProvided<T>

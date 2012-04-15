@@ -43,6 +43,7 @@ namespace NUnit.Core.Builders
 			return Reflect.HasAttribute( type, NUnitFramework.TestFixtureAttribute, true ) ||
                    Reflect.HasMethodWithAttribute(type, NUnitFramework.TestAttribute, true) ||
                    Reflect.HasMethodWithAttribute(type, NUnitFramework.TestCaseAttribute, true) ||
+                   Reflect.HasMethodWithAttribute(type, NUnitFramework.TestCaseSourceAttribute, true) ||
                    Reflect.HasMethodWithAttribute(type, NUnitFramework.TheoryAttribute, true);
 		}
 
@@ -55,7 +56,7 @@ namespace NUnit.Core.Builders
 		{
             Attribute[] attrs = GetTestFixtureAttributes(type);
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             if (type.IsGenericType)
                 return BuildMultipleFixtures(type, attrs);
 #endif
@@ -106,7 +107,7 @@ namespace NUnit.Core.Builders
                 arguments = (object[])Reflect.GetPropertyValue(attr, "Arguments");
 
                 categories = Reflect.GetPropertyValue(attr, "Categories") as IList;
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
                 if (type.ContainsGenericParameters)
                 {
                     Type[] typeArgs = (Type[])Reflect.GetPropertyValue(attr, "TypeArgs");
@@ -236,7 +237,7 @@ namespace NUnit.Core.Builders
             //    return false;
             //}
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             if ( fixtureType.ContainsGenericParameters )
             {
                 reason = "Fixture type contains generic parameters. You must either provide "

@@ -1,4 +1,10 @@
-﻿using System;
+﻿// ****************************************************************
+// Copyright 2012, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
+using System;
 
 namespace NUnit.Util
 {
@@ -31,7 +37,7 @@ namespace NUnit.Util
 		/// </summary>
 		/// <param name="delayInMs">The delay in ms.</param>
 		/// <param name="assemblies">The assemblies.</param>
-#if NET_2_0 || NET_4_0
+#if CLR_2_0 || CLR_4_0
         void Setup(int delayInMs, System.Collections.Generic.IList<string> assemblies);
 #else
         void Setup(int delayInMs, System.Collections.IList assemblies);

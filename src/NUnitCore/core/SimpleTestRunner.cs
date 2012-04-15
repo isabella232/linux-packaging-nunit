@@ -112,6 +112,7 @@ namespace NUnit.Core
 			if ( test == null ) return false;
 
 			test.SetRunnerID( this.runnerID, true );
+            TestExecutionContext.CurrentContext.TestPackage = package;
 			return true;
 		}
 
@@ -133,12 +134,8 @@ namespace NUnit.Core
 		#endregion
 
 		#region Methods for Running Tests
-		public virtual TestResult Run( EventListener listener )
-		{
-			return Run( listener, TestFilter.Empty );
-		}
 
-		public virtual TestResult Run( EventListener listener, ITestFilter filter )
+		public virtual TestResult Run( EventListener listener, ITestFilter filter, bool tracing, LoggingThreshold logLevel )
 		{
 			try
 			{
@@ -171,17 +168,12 @@ namespace NUnit.Core
 			}
 		}
 
-		public void BeginRun( EventListener listener )
-		{
-			testResult = this.Run( listener );
-		}
+        public void BeginRun(EventListener listener, ITestFilter filter, bool tracing, LoggingThreshold logLevel)
+        {
+            testResult = this.Run(listener, filter, tracing, logLevel);
+        }
 
-		public void BeginRun( EventListener listener, ITestFilter filter )
-		{
-			testResult = this.Run( listener, filter );
-		}
-
-		public virtual TestResult EndRun()
+        public virtual TestResult EndRun()
 		{
 			return TestResult;
 		}
@@ -198,20 +190,10 @@ namespace NUnit.Core
 			if (this.runThread != null)
 			{
 				// Cancel Synchronous run only if on another thread
-				if ( runThread == Thread.CurrentThread )
+				if ( this.runThread == Thread.CurrentThread )
 					throw new InvalidOperationException( "May not CancelRun on same thread that is running the test" );
 
-				// Make a copy of runThread, which will be set to 
-				// null when the thread terminates.
-				Thread cancelThread = this.runThread;
-
-				// Tell the thread to abort
-				this.runThread.Abort();
-				
-				// Wake up the thread if necessary
-				// Figure out if we need to do an interupt
-				if ( (cancelThread.ThreadState & ThreadState.WaitSleepJoin ) != 0 )
-					cancelThread.Interrupt();
+                ThreadUtility.Kill(this.runThread);
 			}
 		}
 		#endregion

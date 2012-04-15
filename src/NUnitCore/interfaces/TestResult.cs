@@ -435,13 +435,19 @@ namespace NUnit.Core
             {
                 case ResultState.Failure:
                 case ResultState.Error:
-                    if (!this.IsFailure && !this.IsError)
-                        this.Failure("Child test failed", null, FailureSite.Child);
+                case ResultState.NotRunnable:
+                    if (!this.IsFailure && !this.IsError && this.ResultState != ResultState.NotRunnable)
+                        this.Failure("One or more child tests had errors", null, FailureSite.Child);
                     break;
                 case ResultState.Success:
                     if (this.ResultState == ResultState.Inconclusive)
                         this.Success();
                     break;
+                // Removed this case due to bug #928018
+                //case ResultState.Ignored:
+                //    if (this.ResultState == ResultState.Inconclusive || ResultState == ResultState.Success)
+                //        this.SetResult(ResultState.Ignored, "One or more child tests were ignored", null, FailureSite.Child);
+                //    break;
                 case ResultState.Cancelled:
                     this.SetResult(ResultState.Cancelled, result.Message, null, FailureSite.Child);
                     break;

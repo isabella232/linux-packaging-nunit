@@ -7,9 +7,10 @@
 namespace NUnit.Core
 {
 	using System;
+    using System.Collections;
+    using System.Diagnostics;
     using System.Reflection;
-	using System.Collections;
-	using System.Diagnostics;
+    using System.Threading;
 
 	/// <summary>
 	/// RemoteTestRunner is tailored for use as the initial runner to
@@ -29,7 +30,7 @@ namespace NUnit.Core
 		/// <returns></returns>
         public static RemoteTestRunner CreateInstance(AppDomain targetDomain, int ID)
         {
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             System.Runtime.Remoting.ObjectHandle oh = Activator.CreateInstance(
                 targetDomain,
 #else
@@ -52,6 +53,7 @@ namespace NUnit.Core
 		#endregion
 
 		#region Method Overrides
+
 		public override bool Load(TestPackage package)
 		{
 			log.Info("Loading Test Package " + package.Name );
@@ -65,8 +67,12 @@ namespace NUnit.Core
 			bool useThreadedRunner = package.GetSetting( "UseThreadedRunner", true );
 			
 			TestRunner runner = new SimpleTestRunner( this.runnerID );
-			if ( useThreadedRunner )
-				runner = new ThreadedTestRunner( runner );
+            if (useThreadedRunner)
+            {
+                ApartmentState apartmentState = (ApartmentState)package.GetSetting("ApartmentState", ApartmentState.Unknown);
+                ThreadPriority priority = (ThreadPriority)package.GetSetting("ThreadPriority", ThreadPriority.Normal);
+                runner = new ThreadedTestRunner(runner, apartmentState, priority);
+            }
 
 			this.TestRunner = runner;
 
@@ -85,58 +91,60 @@ namespace NUnit.Core
         public override void Unload()
         {
             log.Info("Unloading test package");
+
             base.Unload();
         }
 
-        public override TestResult Run(EventListener listener)
-		{
-			return Run( listener, TestFilter.Empty );
-		}
-
-		public override TestResult Run( EventListener listener, ITestFilter filter )
+		public override TestResult Run( EventListener listener, ITestFilter filter, bool tracing, LoggingThreshold logLevel )
 		{
             log.Debug("Run");
 
             QueuingEventListener queue = new QueuingEventListener();
 
-			StartTextCapture( queue );
+			StartTextCapture( queue, tracing, logLevel );
 
 			using( EventPump pump = new EventPump( listener, queue.Events, true ) )
 			{
 				pump.Start();
-				return base.Run( queue, filter );
+				return base.Run( queue, filter, tracing, logLevel );
 			}
 		}
 
-		public override void BeginRun( EventListener listener )
-		{
-			BeginRun( listener, TestFilter.Empty );
-		}
-
-		public override void BeginRun( EventListener listener, ITestFilter filter )
+		public override void BeginRun( EventListener listener, ITestFilter filter, bool tracing, LoggingThreshold logLevel )
 		{
             log.Debug("BeginRun");
 
 			QueuingEventListener queue = new QueuingEventListener();
 
-			StartTextCapture( queue );
+			StartTextCapture( queue, tracing, logLevel );
 
 			EventPump pump = new EventPump( listener, queue.Events, true);
 			pump.Start(); // Will run till RunFinished is received
 			// TODO: Make sure the thread is cleaned up if we abort the run
 		
-			base.BeginRun( queue, filter );
+			base.BeginRun( queue, filter, tracing, logLevel );
 		}
 
-		private void StartTextCapture( EventListener queue )
+		private void StartTextCapture( EventListener queue, bool tracing, LoggingThreshold logLevel )
 		{
             TestExecutionContext.CurrentContext.Out = new EventListenerTextWriter(queue, TestOutputType.Out);
             TestExecutionContext.CurrentContext.Error = new EventListenerTextWriter(queue, TestOutputType.Error);
-            TestExecutionContext.CurrentContext.TraceWriter = new EventListenerTextWriter(queue, TestOutputType.Trace);
-            TestExecutionContext.CurrentContext.Tracing = true;
-            TestExecutionContext.CurrentContext.LogWriter = new EventListenerTextWriter(queue, TestOutputType.Log);
-            TestExecutionContext.CurrentContext.Logging = true;
-		}
+
+            TestExecutionContext.CurrentContext.Tracing = false;
+            if (tracing)
+            {
+                TestExecutionContext.CurrentContext.TraceWriter = new EventListenerTextWriter(queue, TestOutputType.Trace);
+                TestExecutionContext.CurrentContext.Tracing = true;
+            }
+
+            TestExecutionContext.CurrentContext.LogLevel = LoggingThreshold.Off;
+            if (logLevel != LoggingThreshold.Off)
+            {
+                TestExecutionContext.CurrentContext.LogWriter = new EventListenerTextWriter(queue, TestOutputType.Log);
+                TestExecutionContext.CurrentContext.LogLevel = logLevel;
+            }
+        }
+
 		#endregion
 
 		private void CurrentDomain_DomainUnload(object sender, EventArgs e)

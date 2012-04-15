@@ -8,7 +8,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using System.Text;
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
 using System.Collections.Generic;
 #endif
 
@@ -44,9 +44,12 @@ namespace NUnit.Framework.Constraints
 			ICollection collection = enumerable as ICollection;
 			if ( collection != null )
 				return collection.Count == 0;
-			else
-				return !enumerable.GetEnumerator().MoveNext();
-		}
+
+            foreach (object o in enumerable)
+                return false;
+
+            return true;
+        }
 
 		/// <summary>
 		/// Test whether the constraint is satisfied by a given value
@@ -116,11 +119,11 @@ namespace NUnit.Framework.Constraints
         /// <returns>Self.</returns>
         public CollectionItemsEqualConstraint Using(IComparer comparer)
         {
-            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            this.comparer.ExternalComparers.Add(EqualityAdapter.For(comparer));
             return this;
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         /// <summary>
         /// Flag the constraint to use the supplied IComparer object.
         /// </summary>
@@ -128,7 +131,7 @@ namespace NUnit.Framework.Constraints
         /// <returns>Self.</returns>
         public CollectionItemsEqualConstraint Using<T>(IComparer<T> comparer)
         {
-            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            this.comparer.ExternalComparers.Add(EqualityAdapter.For(comparer));
             return this;
         }
 
@@ -139,7 +142,7 @@ namespace NUnit.Framework.Constraints
         /// <returns>Self.</returns>
         public CollectionItemsEqualConstraint Using<T>(Comparison<T> comparer)
         {
-            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            this.comparer.ExternalComparers.Add(EqualityAdapter.For(comparer));
             return this;
         }
 
@@ -150,7 +153,7 @@ namespace NUnit.Framework.Constraints
         /// <returns>Self.</returns>
         public CollectionItemsEqualConstraint Using(IEqualityComparer comparer)
         {
-            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            this.comparer.ExternalComparers.Add(EqualityAdapter.For(comparer));
             return this;
         }
 
@@ -161,7 +164,7 @@ namespace NUnit.Framework.Constraints
         /// <returns>Self.</returns>
         public CollectionItemsEqualConstraint Using<T>(IEqualityComparer<T> comparer)
         {
-            this.comparer.ExternalComparer = EqualityAdapter.For(comparer);
+            this.comparer.ExternalComparers.Add(EqualityAdapter.For(comparer));
             return this;
         }
 #endif
@@ -172,7 +175,8 @@ namespace NUnit.Framework.Constraints
         /// </summary>
         protected bool ItemsEqual(object x, object y)
         {
-            return comparer.ObjectsEqual(x, y);
+            Tolerance tolerance = Tolerance.Zero;
+            return comparer.AreEqual(x, y, ref tolerance);
         }
 
         /// <summary>
@@ -428,7 +432,7 @@ namespace NUnit.Framework.Constraints
             return this;
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         /// <summary>
         /// Modifies the constraint to use an IComparer&lt;T&gt; and returns self.
         /// </summary>

@@ -24,8 +24,6 @@ namespace NUnit.Core.Builders
     /// </summary>
     public class NUnitTestCaseBuilder : ITestCaseBuilder2
 	{
-        private readonly bool allowOldStyleTests = NUnitConfiguration.AllowOldStyleTests;
-
         #region ITestCaseBuilder Methods
         /// <summary>
         /// Determines if the method can be used to build an NUnit test
@@ -50,12 +48,7 @@ namespace NUnit.Core.Builders
             return Reflect.HasAttribute(method, NUnitFramework.TestAttribute, false)
                 || Reflect.HasAttribute(method, NUnitFramework.TestCaseAttribute, false)
                 || Reflect.HasAttribute(method, NUnitFramework.TestCaseSourceAttribute, false)
-                || Reflect.HasAttribute(method, NUnitFramework.TheoryAttribute, false)
-                || allowOldStyleTests && method.Name.ToLower().StartsWith("test")
-                && !Reflect.HasAttribute(method, NUnitFramework.SetUpAttribute, true)
-                && !Reflect.HasAttribute(method, NUnitFramework.TearDownAttribute, true)
-                && !Reflect.HasAttribute(method, NUnitFramework.FixtureSetUpAttribute, true)
-                && !Reflect.HasAttribute(method, NUnitFramework.FixtureTearDownAttribute, true);
+                || Reflect.HasAttribute(method, NUnitFramework.TheoryAttribute, false);
         }
 
 		/// <summary>
@@ -99,6 +92,21 @@ namespace NUnit.Core.Builders
         {
             ParameterizedMethodSuite methodSuite = new ParameterizedMethodSuite(method);
             NUnitFramework.ApplyCommonAttributes(method, methodSuite);
+
+            if (parentSuite != null)
+            {
+                if (parentSuite.RunState == RunState.NotRunnable && methodSuite.RunState != RunState.NotRunnable)
+                {
+                    methodSuite.RunState = RunState.NotRunnable;
+                    methodSuite.IgnoreReason = parentSuite.IgnoreReason;
+                }
+
+                if (parentSuite.RunState == RunState.Ignored && methodSuite.RunState != RunState.Ignored && methodSuite.RunState != RunState.NotRunnable)
+                {
+                    methodSuite.RunState = RunState.Ignored;
+                    methodSuite.IgnoreReason = parentSuite.IgnoreReason;
+                }
+            }
 
             foreach (object source in CoreExtensions.Host.TestCaseProviders.GetTestCasesFor(method, parentSuite))
             {
@@ -200,6 +208,10 @@ namespace NUnit.Core.Builders
                     testMethod.RunState = RunState.Ignored;
                     testMethod.IgnoreReason = parms.IgnoreReason;
                 }
+                else if (parms.Explicit)
+                {
+                    testMethod.RunState = RunState.Explicit;
+                }
 
                 if (parms.ExpectedExceptionName != null)
                     testMethod.exceptionProcessor = new ExpectedExceptionProcessor(testMethod, parms);
@@ -212,8 +224,26 @@ namespace NUnit.Core.Builders
                     testMethod.Description = parms.Description;
             }
 
-            if (testMethod.BuilderException != null)
-                testMethod.RunState = RunState.NotRunnable;
+            //if (testMethod.BuilderException != null && testMethod.RunState != RunState.NotRunnable)
+            //{
+            //    testMethod.RunState = RunState.NotRunnable;
+            //    testMethod.IgnoreReason = testMethod.BuilderException.Message;
+            //}
+
+            if (parentSuite != null)
+            {
+                if (parentSuite.RunState == RunState.NotRunnable && testMethod.RunState != RunState.NotRunnable)
+                {
+                    testMethod.RunState = RunState.NotRunnable;
+                    testMethod.IgnoreReason = parentSuite.IgnoreReason;
+                }
+
+                if (parentSuite.RunState == RunState.Ignored && testMethod.RunState != RunState.Ignored && testMethod.RunState != RunState.NotRunnable)
+                {
+                    testMethod.RunState = RunState.Ignored;
+                    testMethod.IgnoreReason = parentSuite.IgnoreReason;
+                }
+            }
 
             return testMethod;
         }
@@ -261,10 +291,11 @@ namespace NUnit.Core.Builders
             if (parms != null)
             {
                 testMethod.arguments = parms.Arguments;
-                testMethod.expectedResult = parms.Result;
                 testMethod.hasExpectedResult = parms.HasExpectedResult;
+                if (testMethod.hasExpectedResult)
+                    testMethod.expectedResult = parms.Result;
                 testMethod.RunState = parms.RunState;
-                testMethod.IgnoreReason = parms.NotRunReason;
+                testMethod.IgnoreReason = parms.IgnoreReason;
                 testMethod.BuilderException = parms.ProviderException;
 
                 arglist = parms.Arguments;
@@ -327,7 +358,7 @@ namespace NUnit.Core.Builders
                 return false;
             }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             if (testMethod.Method.IsGenericMethodDefinition)
             {
                 Type[] typeArguments = GetTypeArgumentsForMethod(testMethod.Method, arglist);
@@ -362,7 +393,7 @@ namespace NUnit.Core.Builders
             return true;
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         private static Type[] GetTypeArgumentsForMethod(MethodInfo method, object[] arglist)
         {
             Type[] typeParameters = method.GetGenericArguments();

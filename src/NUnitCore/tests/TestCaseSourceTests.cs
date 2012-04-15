@@ -115,7 +115,7 @@ namespace NUnit.Core.Tests
 
         [Test]
         [TestCaseSource("MyData")]
-        [TestCaseSource("MoreData")]
+        [TestCaseSource("MoreData", Category="Extra")]
         [TestCase(12, 0, 0, ExpectedException = typeof(System.DivideByZeroException))]
         public void TestMayUseMultipleSourceAttributes(int n, int d, int q)
         {
@@ -135,8 +135,8 @@ namespace NUnit.Core.Tests
             Assert.AreEqual(q, n / d);
         }
 
-        [Test, TestCaseSource(typeof(DivideDataProviderWithReturnValue), "TestCases")]
-        public int SourceMayBeInAnotherClassWithReturn(int n, int d)
+        [Test, TestCaseSource(typeof(DivideDataProviderWithExpectedResult), "TestCases")]
+        public int SourceMayBeInAnotherClassWithExpectedResult(int n, int d)
         {
             return n / d;
         }
@@ -177,6 +177,16 @@ namespace NUnit.Core.Tests
         }
 
         [Test]
+        public void CanSpecifyExpectedException_NoneThrown_ExpectedResultReturned()
+        {
+            Test test = (Test)TestBuilder.MakeTestCase(
+                typeof(TestCaseSourceAttributeFixture), "MethodThrowsNoExceptionButReturnsResult").Tests[0];
+            TestResult result = test.Run(NullListener.NULL, TestFilter.Empty);
+            Assert.AreEqual(ResultState.Failure, result.ResultState);
+            Assert.AreEqual("System.ArgumentNullException was expected", result.Message);
+        }
+
+        [Test]
         public void IgnoreTakesPrecedenceOverExpectedException()
         {
             Test test = (Test)TestBuilder.MakeTestCase(
@@ -191,12 +201,33 @@ namespace NUnit.Core.Tests
         {
             Test test = TestBuilder.MakeTestCase(
                 typeof(TestCaseSourceAttributeFixture), "MethodWithIgnoredTestCases");
-            TestResult result = test.Run(NullListener.NULL, TestFilter.Empty);
 
-            ResultSummarizer summary = new ResultSummarizer(result);
-            Assert.AreEqual( 3, summary.ResultCount );
-            Assert.AreEqual( 2, summary.Ignored );
-            Assert.AreEqual( "Don't Run Me!", ((TestResult)result.Results[2]).Message );
+            Test testCase = TestFinder.Find("MethodWithIgnoredTestCases(1)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Runnable));
+
+            testCase = TestFinder.Find("MethodWithIgnoredTestCases(2)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Ignored));
+
+            testCase = TestFinder.Find("MethodWithIgnoredTestCases(3)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Ignored));
+            Assert.That(testCase.IgnoreReason, Is.EqualTo("Don't Run Me!"));
+        }
+
+        [Test]
+        public void CanMarkIndividualTestCasesExplicit()
+        {
+            Test test = TestBuilder.MakeTestCase(
+                typeof(TestCaseSourceAttributeFixture), "MethodWithExplicitTestCases");
+
+            Test testCase = TestFinder.Find("MethodWithExplicitTestCases(1)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Runnable));
+
+            testCase = TestFinder.Find("MethodWithExplicitTestCases(2)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Explicit));
+
+            testCase = TestFinder.Find("MethodWithExplicitTestCases(3)", test, false);
+            Assert.That(testCase.RunState, Is.EqualTo(RunState.Explicit));
+            Assert.That(testCase.IgnoreReason, Is.EqualTo("Connection failing"));
         }
 
         [Test]
@@ -273,7 +304,7 @@ namespace NUnit.Core.Tests
             {
                 get
                 {
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
                     yield return new TestCaseData(0, 0, 0)
                         .SetName("ThisOneShouldThrow")
                         .SetDescription("Demonstrates use of ExpectedException")
@@ -299,13 +330,14 @@ namespace NUnit.Core.Tests
             }
         }
 
-        public class DivideDataProviderWithReturnValue
+        public class DivideDataProviderWithExpectedResult
         {
             public static IEnumerable TestCases
             {
                 get
                 {
                     return new object[] {
+                        new TestCaseData(12, 0).Throws(typeof(System.DivideByZeroException)),
                         new TestCaseData(12, 3).Returns(5).Throws(typeof(AssertionException)).SetName("TC1"),
                         new TestCaseData(12, 2).Returns(6).SetName("TC2"),
                         new TestCaseData(12, 4).Returns(3).SetName("TC3")
@@ -318,7 +350,7 @@ namespace NUnit.Core.Tests
         {
             get
             {
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
                 yield return new TestCaseData("a", "a");
                 yield return new TestCaseData("b", "b");
 #endif

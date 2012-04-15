@@ -29,10 +29,12 @@ namespace NUnit.Core
 	public class TestExecutionContext
 	{
 		#region Static Fields
+
 		/// <summary>
 		/// The current context, head of the list of saved contexts.
 		/// </summary>
         private static TestExecutionContext current = new TestExecutionContext();
+
         #endregion
 
         #region Instance Fields
@@ -45,7 +47,7 @@ namespace NUnit.Core
         /// <summary>
         /// Indicates whether logging is enabled
         /// </summary>
-        private bool logging;
+        //private bool logging;
 
         /// <summary>
         /// Destination for standard output
@@ -100,6 +102,11 @@ namespace NUnit.Core
         private TestResult currentResult;
 
         /// <summary>
+        /// The TestPackage being executed
+        /// </summary>
+        private TestPackage testPackage;
+
+        /// <summary>
         /// Link to a prior saved context
         /// </summary>
         public TestExecutionContext prior;
@@ -115,7 +122,7 @@ namespace NUnit.Core
         {
             this.prior = null;
             this.tracing = false;
-            this.logging = false;
+            //this.logging = false;
             this.outWriter = Console.Out;
             this.errorWriter = Console.Error;
             this.traceWriter = null;
@@ -136,7 +143,7 @@ namespace NUnit.Core
         {
             this.prior = other;
             this.tracing = other.tracing;
-            this.logging = other.logging;
+            //this.logging = other.logging;
             this.outWriter = other.outWriter;
             this.errorWriter = other.errorWriter;
             this.traceWriter = other.traceWriter;
@@ -145,6 +152,7 @@ namespace NUnit.Core
 
             this.currentTest = other.currentTest;
             this.currentResult = other.currentResult;
+            this.testPackage = other.testPackage;
 
             this.currentDirectory = Environment.CurrentDirectory;
             this.currentCulture = CultureInfo.CurrentCulture;
@@ -189,15 +197,6 @@ namespace NUnit.Core
                         StartTracing();
                 }
             }
-        }
-
-        /// <summary>
-        /// Controls whether log output is captured
-        /// </summary>
-        public bool Logging
-        {
-            get { return logCapture.Enabled; }
-            set { logCapture.Enabled = value; }
         }
 
         /// <summary>
@@ -272,6 +271,12 @@ namespace NUnit.Core
             set { logCapture.Writer = value; }
         }
 
+        public LoggingThreshold LogLevel
+        {
+            get { return logCapture.Threshold; }
+            set { logCapture.Threshold = value; }
+        }
+
         private void StopTracing()
         {
             traceWriter.Close();
@@ -336,7 +341,7 @@ namespace NUnit.Core
         }
 
         /// <summary>
-        /// Gets or sets the test case timeout vaue
+        /// Gets or sets the test case timeout value
         /// </summary>
         public int TestCaseTimeout
         {
@@ -360,6 +365,15 @@ namespace NUnit.Core
         {
             get { return currentResult; }
             set { currentResult = value; }
+        }
+
+        /// <summary>
+        /// Gets the test package currently being run
+        /// </summary>
+        public TestPackage TestPackage
+        {
+            get { return testPackage; }
+            set { testPackage = value; }
         }
 
         #endregion

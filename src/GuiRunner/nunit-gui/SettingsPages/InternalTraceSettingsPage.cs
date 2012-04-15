@@ -5,6 +5,7 @@
 // ****************************************************************
 
 using System;
+using System.IO;
 using NUnit.Core;
 
 namespace NUnit.Gui.SettingsPages
@@ -19,14 +20,14 @@ namespace NUnit.Gui.SettingsPages
         public override void LoadSettings()
         {
             traceLevelComboBox.SelectedIndex = (int)(InternalTraceLevel)settings.GetSetting("Options.InternalTraceLevel", InternalTraceLevel.Default);
-            logDirectoryLabel.Text = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "logs");
+            logDirectoryLabel.Text = NUnitConfiguration.LogDirectory;
         }
 
         public override void ApplySettings()
         {
-           settings.SaveSetting("Options.InternalTraceLevel", (InternalTraceLevel)traceLevelComboBox.SelectedIndex);
+            InternalTraceLevel level = (InternalTraceLevel)traceLevelComboBox.SelectedIndex;
+            settings.SaveSetting("Options.InternalTraceLevel", level);
+            InternalTrace.Level = level;
         }
     }
 }

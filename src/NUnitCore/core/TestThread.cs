@@ -37,7 +37,7 @@ namespace NUnit.Core
 
         protected ITestFilter filter;
 		
-		protected TestMethod.ContextDictionary contextDictionary;
+		protected ContextDictionary contextDictionary;
 
         /// <summary>
         /// Unexpected exception thrown by test thread
@@ -63,7 +63,7 @@ namespace NUnit.Core
         #region Properties
         public ApartmentState ApartmentState
         {
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             get { return thread.GetApartmentState(); }
             set { thread.SetApartmentState(value); }
 #else
@@ -91,7 +91,7 @@ namespace NUnit.Core
             this.thrownException = null;
             this.listener = listener;
             this.filter = filter;
-			this.contextDictionary = (TestMethod.ContextDictionary)CallContext.GetData("NUnit.Framework.TestContext");
+			this.contextDictionary = (ContextDictionary)CallContext.GetData("NUnit.Framework.TestContext");
 
             log.Debug("Starting test in separate thread");
             thread.Start();
@@ -101,8 +101,16 @@ namespace NUnit.Core
             if (thread.IsAlive)
             {
 				log.Debug("Test timed out - aborting thread");
-                thread.Abort();
-                //thread.Join();
+                ThreadUtility.Kill(thread);
+
+                // NOTE: Without the use of Join, there is a race condition here.
+                // The thread sets the result to Cancelled and our code below sets
+                // it to Failure. In order for the result to be shown as a failure,
+                // we need to ensure that the following code executes after the
+                // thread has terminated. There is a risk here: the test code might
+                // refuse to terminate. However, it's more important to deal with
+                // the normal rather than a pathological case.
+                thread.Join();
                 testResult.Failure(string.Format("Test exceeded Timeout value of {0}ms", Timeout), null);
             }
 			else if (thrownException != null)

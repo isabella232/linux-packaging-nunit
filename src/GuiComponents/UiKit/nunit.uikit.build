@@ -14,10 +14,12 @@
         <include name="FolderBrowser.cs"/>
         <include name="GuiAttachedConsole.cs"/>
         <include name="GuiTestEventDispatcher.cs"/>
-        <include name="LongRunningOperationDisplay.cs"/>
-        <include name="NotRunTree.cs"/>
+    <include name="IMessageDisplay.cs"/>
+    <include name="LongRunningOperationDisplay.cs"/>
+    <include name="MessageDisplay.cs"/>
+    <include name="NotRunTree.cs"/>
+    <include name="NUnitFormBase.cs"/>
         <include name="ProgressBar.cs"/>
-        <include name="RecentFileMenuHandler.cs"/>
         <include name="RenameConfigurationDialog.cs"/>
         <include name="ResultTabs.cs"/>
         <include name="SettingsDialogBase.cs"/>
@@ -27,11 +29,13 @@
         <include name="StatusBar.cs"/>
         <include name="TabbedSettingsDialog.cs"/>
         <include name="TestLoaderUI.cs"/>
-        <include name="TestPropertiesDialog.cs"/>
-        <include name="TestSuiteTreeNode.cs"/>
-        <include name="TestSuiteTreeView.cs"/>
-        <include name="TestTree.cs"/>
-        <include name="TextBoxDisplay.cs"/>
+    <include name="TestPropertiesDialog.cs"/>
+    <include name="TestPropertiesDialog.Designer.cs"/>
+    <include name="TestSuiteTreeNode.cs"/>
+    <include name="TestSuiteTreeView.cs"/>
+    <include name="TestTree.cs"/>
+    <include name="TextBoxDisplay.cs"/>
+    <include name="TextDisplayContent.cs"/>
         <include name="TextDisplayTabPage.cs"/>
         <include name="TextDisplayTabSettings.cs"/>       
         <include name="TextDisplayWriter.cs"/>
@@ -72,17 +76,13 @@
         <include name="TipWindow.resx"/>
         <include name="TreeBasedSettingsDialog.resx"/>
         <include name="UserMessage.resx"/>
-        <include name="Ellipsis.gif"/>
-        <include name="pinned.gif"/>
-        <include name="unpinned.gif"/>
+        <include name="Images/Ellipsis.gif"/>
+        <include name="Images/pinned.gif"/>
+        <include name="Images/unpinned.gif"/>
   </patternset>
 
   <patternset id="content-files">
-    <include name="Success.png"/>
-    <include name="Failure.png"/>
-    <include name="Ignored.png"/>
-    <include name="Skipped.png"/>
-    <include name="Inconclusive.png"/>
+    <include name="Images/**"/>
   </patternset>
 
   <target name="build">
@@ -96,7 +96,7 @@
       <nowarn>
         <warning number="1699" if="${runtime.version>='2.0'}"/>
       </nowarn>
-      <resources prefix="NUnit.UiKit">
+      <resources prefix="NUnit.UiKit" dynamicprefix="true">
         <patternset refid="resource-files"/>
       </resources>
       <references basedir="${current.lib.dir}">

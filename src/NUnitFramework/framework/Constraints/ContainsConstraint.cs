@@ -6,7 +6,7 @@
 
 using System;
 using System.Collections;
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
 using System.Collections.Generic;
 #endif
 
@@ -46,7 +46,7 @@ namespace NUnit.Framework.Constraints
                         CollectionContainsConstraint constraint = new CollectionContainsConstraint(expected);
 						
 						if (this.adapter != null)
-							constraint.comparer.ExternalComparer = adapter;
+							constraint.comparer.ExternalComparers.Add(adapter);
 							
 						this.realConstraint = constraint;
 					}
@@ -109,7 +109,7 @@ namespace NUnit.Framework.Constraints
             return this;
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         /// <summary>
         /// Flag the constraint to use the supplied IComparer object.
         /// </summary>

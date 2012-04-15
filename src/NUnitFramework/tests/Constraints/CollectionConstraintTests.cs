@@ -6,10 +6,12 @@
 
 using System;
 using System.Collections;
-#if NET_2_0
-using System.Collections.Generic;
-#endif
 using NUnit.Framework.Tests;
+
+#if CLR_2_0 || CLR_4_0
+using System.Collections.Generic;
+using RangeConstraint = NUnit.Framework.Constraints.RangeConstraint<int>;
+#endif
 
 namespace NUnit.Framework.Constraints
 {
@@ -48,7 +50,7 @@ namespace NUnit.Framework.Constraints
             Assert.That(c, new AllItemsConstraint(new RangeConstraint(10, 100).Using(Comparer.Default)));
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         [Test]
         public void AllItemsAreInRange_UsingIComparerOfT()
         {
@@ -89,6 +91,61 @@ namespace NUnit.Framework.Constraints
                 TextMessageWriter.Pfx_Expected + "all items instance of <System.Char>" + Environment.NewLine +
                 TextMessageWriter.Pfx_Actual   + "< 'a', \"b\", 'c' >" + Environment.NewLine;
             Assert.That(c, new AllItemsConstraint(new InstanceOfTypeConstraint(typeof(char))));
+        }
+    }
+    #endregion
+
+    #region OneItem
+    public class ExactCountConstraintTests : MessageChecker
+    {
+        private static readonly string[] names = new string[] { "Charlie", "Fred", "Joe", "Charlie" };
+
+        [Test]
+        public void ZeroItemsMatch()
+        {
+            Assert.That(names, new ExactCountConstraint(0, Is.EqualTo("Sam")));
+            Assert.That(names, Has.Exactly(0).EqualTo("Sam"));
+        }
+
+        [Test, ExpectedException(typeof(AssertionException))]
+        public void ZeroItemsMatchFails()
+        {
+            expectedMessage =
+                TextMessageWriter.Pfx_Expected + "no item \"Charlie\"" + Environment.NewLine +
+                TextMessageWriter.Pfx_Actual + "< \"Charlie\", \"Fred\", \"Joe\", \"Charlie\" >" + Environment.NewLine;
+            Assert.That(names, new ExactCountConstraint(0, Is.EqualTo("Charlie")));
+        }
+
+        [Test]
+        public void ExactlyOneItemMatches()
+        {
+            Assert.That(names, new ExactCountConstraint(1, Is.EqualTo("Fred")));
+            Assert.That(names, Has.Exactly(1).EqualTo("Fred"));
+        }
+
+        [Test, ExpectedException(typeof(AssertionException))]
+        public void ExactlyOneItemMatchFails()
+        {
+            expectedMessage =
+                TextMessageWriter.Pfx_Expected + "exactly one item \"Charlie\"" + Environment.NewLine +
+                TextMessageWriter.Pfx_Actual + "< \"Charlie\", \"Fred\", \"Joe\", \"Charlie\" >" + Environment.NewLine;
+            Assert.That(names, new ExactCountConstraint(1, Is.EqualTo("Charlie")));
+        }
+
+        [Test]
+        public void ExactlyTwoItemsMatch()
+        {
+            Assert.That(names, new ExactCountConstraint(2, Is.EqualTo("Charlie")));
+            Assert.That(names, Has.Exactly(2).EqualTo("Charlie"));
+        }
+
+        [Test, ExpectedException(typeof(AssertionException))]
+        public void ExactlyTwoItemsMatchFails()
+        {
+            expectedMessage =
+                TextMessageWriter.Pfx_Expected + "exactly 2 items \"Fred\"" + Environment.NewLine +
+                TextMessageWriter.Pfx_Actual + "< \"Charlie\", \"Fred\", \"Joe\", \"Charlie\" >" + Environment.NewLine;
+            Assert.That(names, new ExactCountConstraint(2, Is.EqualTo("Fred")));
         }
     }
     #endregion
@@ -159,7 +216,7 @@ namespace NUnit.Framework.Constraints
             }
         }
 
-#if NET_2_0	
+#if CLR_2_0 || CLR_4_0
         [Test]
         public void UsesProvidedEqualityComparer()
         {
@@ -250,7 +307,7 @@ namespace NUnit.Framework.Constraints
             }
         }
 
-#if CS_3_0
+#if CS_3_0 || CS_4_0
         [Test]
         public void UsesProvidedLambdaExpression()
         {
@@ -337,7 +394,7 @@ namespace NUnit.Framework.Constraints
             Assert.That(new CollectionEquivalentConstraint(set1).IgnoreCase.Matches(set2));
         }
 
-#if CS_3_0
+#if CS_3_0 || CS_4_0
         [Test]
         public void EquivalentHonorsUsing()
         {
@@ -347,6 +404,52 @@ namespace NUnit.Framework.Constraints
             Assert.That(new CollectionEquivalentConstraint(set1)
                 .Using<string>( (x,y)=>String.Compare(x,y,true) )
                 .Matches(set2));
+        }
+
+        [Test, Platform("Net-3.5,Mono-3.5,Net-4.0,Mono-4.0")]
+        public void WorksWithHashSets()
+        {
+            var hash1 = new HashSet<string>(new string[] { "presto", "abracadabra", "hocuspocus" });
+            var hash2 = new HashSet<string>(new string[] { "abracadabra", "presto", "hocuspocus" });
+
+            Assert.That(new CollectionEquivalentConstraint(hash1).Matches(hash2));
+        }
+
+        [Test, Platform("Net-3.5,Mono-3.5,Net-4.0,Mono-4.0")]
+        public void WorksWithHashSetAndArray()
+        {
+            var hash = new HashSet<string>(new string[] { "presto", "abracadabra", "hocuspocus" });
+            var array = new string[] { "abracadabra", "presto", "hocuspocus" };
+
+            var constraint = new CollectionEquivalentConstraint(hash);
+            Assert.That(constraint.Matches(array));
+        }
+
+        [Test, Platform("Net-3.5,Mono-3.5,Net-4.0,Mono-4.0")]
+        public void WorksWithArrayAndHashSet()
+        {
+            var hash = new HashSet<string>(new string[] { "presto", "abracadabra", "hocuspocus" });
+            var array = new string[] { "abracadabra", "presto", "hocuspocus" };
+
+            var constraint = new CollectionEquivalentConstraint(array);
+            Assert.That(constraint.Matches(hash));
+        }
+
+        [Test, Platform("Net-3.5,Mono-3.5,Net-4.0,Mono-4.0")]
+        public void FailureMessageWithHashSetAndArray()
+        {
+            var hash = new HashSet<string>(new string[] { "presto", "abracadabra", "hocuspocus" });
+            var array = new string[] { "abracadabra", "presto", "hocusfocus" };
+
+            var constraint = new CollectionEquivalentConstraint(hash);
+            Assert.False(constraint.Matches(array));
+
+            TextMessageWriter writer = new TextMessageWriter();
+            constraint.WriteMessageTo(writer);
+            Assert.That(writer.ToString(), Is.EqualTo(
+                "  Expected: equivalent to < \"presto\", \"abracadabra\", \"hocuspocus\" >" + Environment.NewLine +
+                "  But was:  < \"abracadabra\", \"presto\", \"hocusfocus\" >" + Environment.NewLine));
+            Console.WriteLine(writer.ToString());
         }
 #endif
     }
@@ -482,7 +585,7 @@ namespace NUnit.Framework.Constraints
             Assert.That(comparer.Called, "TestComparer was not called");
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         [Test]
         public void UsesProvidedComparerOfT()
         {
@@ -529,7 +632,7 @@ namespace NUnit.Framework.Constraints
             }
         }
 
-#if CS_3_0
+#if CS_3_0 || CS_4_0
         [Test]
         public void UsesProvidedLambda()
         {

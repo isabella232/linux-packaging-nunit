@@ -1,4 +1,9 @@
-﻿using System;
+﻿// ****************************************************************
+// Copyright 2012, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+using System;
 using NUnit.Core;
 using NUnit.Framework;
 
@@ -26,6 +31,7 @@ namespace NUnit.Util.Tests
             Assert.That( factory.MakeTestRunner(package), Is.TypeOf(typeof(TestDomain)));
         }
 
+#if CLR_2_0 || CLR_4_0
         [Test]
         public void DifferentRuntimeUsesProcessRunner()
         {
@@ -42,5 +48,6 @@ namespace NUnit.Util.Tests
             package.Settings["RuntimeFramework"] = new RuntimeFramework(currentFramework.Runtime, new Version(major,0));
             Assert.That(factory.MakeTestRunner(package), Is.TypeOf(typeof(ProcessRunner)));
         }
+#endif
     }
 }

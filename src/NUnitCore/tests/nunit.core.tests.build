@@ -6,6 +6,8 @@
         <include name="Generic/SimpleGenericFixture.cs"/>
         <include name="Generic/SimpleGenericMethods.cs"/>
         <include name="Generic/TypeParameterUsedWithTestMethod.cs"/>
+    <include name="ActionAttributeExceptionTests.cs"/>
+    <include name="ActionAttributeTests.cs"/>
         <include name="AllTests.cs"/>
         <include name="AssemblyHelperTests.cs"/>
         <include name="AssemblyReaderTests.cs"/>
@@ -103,6 +105,7 @@
         <include name="${current.lib.dir}/nunit.core.interfaces.dll"/>
         <include name="${current.lib.dir}/nunit.core.dll"/>
         <include name="${current.lib.dir}/nunit.util.dll"/>
+        <include name="${current.lib.dir}/NSubstitute.dll" if="${runtime.version >= '3.5'}"/>
         <include name="${current.test.dir}/test-assembly.dll"/>
         <include name="${current.test.dir}/test-utilities.dll"/>
         <include name="${current.test.dir}/mock-assembly.dll"/>

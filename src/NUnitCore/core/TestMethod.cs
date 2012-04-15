@@ -3,6 +3,7 @@
 // may obtain a copy of the license as well as information regarding
 // copyright ownership at http://nunit.org.
 // ****************************************************************
+//#define DEFAULT_APPLIES_TO_TESTCASE
 
 namespace NUnit.Core
 {
@@ -13,6 +14,10 @@ namespace NUnit.Core
 	using System.Text;
 	using System.Text.RegularExpressions;
 	using System.Reflection;
+
+#if CLR_2_0 || CLR_4_0
+    using System.Collections.Generic;
+#endif
 
 	/// <summary>
 	/// The TestMethod class represents a Test implemented as a method.
@@ -43,6 +48,18 @@ namespace NUnit.Core
 		/// The teardown method
 		/// </summary>
 		protected MethodInfo[] tearDownMethods;
+
+#if CLR_2_0 || CLR_4_0
+        /// <summary>
+        /// The actions
+        /// </summary>
+	    protected TestAction[] actions;
+
+        /// <summary>
+        /// The parent suite's actions
+        /// </summary>
+        protected TestAction[] suiteActions;
+#endif
 
         /// <summary>
         /// The ExpectedExceptionProcessor for this test, if any
@@ -220,12 +237,19 @@ namespace NUnit.Core
                 {
                     this.setUpMethods = suite.GetSetUpMethods();
                     this.tearDownMethods = suite.GetTearDownMethods();
+#if CLR_2_0 || CLR_4_0
+                    this.suiteActions = suite.GetTestActions();
+#endif
                 }
             }
 
             try
             {
-                // Temporary... to allow for tests that directly execute a test case
+#if CLR_2_0 || CLR_4_0
+                this.actions = ActionsHelper.GetActionsFromAttributeProvider(method);
+#endif
+
+                // Temporary... to allow for tests that directly execute a test case);
                 if (Fixture == null && !method.IsStatic)
                     Fixture = Reflect.Construct(this.FixtureType);
 
@@ -255,7 +279,6 @@ namespace NUnit.Core
             {
                 Fixture = null;
 
-                CallContext.FreeNamedDataSlot("NUnit.Framework.TestContext");
                 TestExecutionContext.Restore();
             }
 		}
@@ -300,9 +323,12 @@ namespace NUnit.Core
 			TestResult testResult = new TestResult(this);
 			TestExecutionContext.CurrentContext.CurrentResult =  testResult;
 			
-			try 
+			try
 			{
                 RunSetUp();
+#if CLR_2_0 || CLR_4_0
+			    RunBeforeActions(testResult);
+#endif
 
 				RunTestCase( testResult );
 			}
@@ -317,6 +343,9 @@ namespace NUnit.Core
 			}
 			finally 
 			{
+#if CLR_2_0 || CLR_4_0
+                RunAfterActions(testResult);
+#endif
 				RunTearDown( testResult );
 
 				DateTime stop = DateTime.Now;
@@ -354,7 +383,59 @@ namespace NUnit.Core
 
 		#region Invoke Methods by Reflection, Recording Errors
 
-        private void RunSetUp()
+#if CLR_2_0 || CLR_4_0
+
+        protected virtual void ExecuteActions(ActionPhase phase)
+        {
+            List<TestAction> targetActions = new List<TestAction>();
+
+            if (this.suiteActions != null)
+            {
+                foreach (var action in this.suiteActions)
+                {
+                    if(action.DoesTarget(TestAction.TargetsTest))
+                        targetActions.Add(action);
+                }
+            }
+
+            if (this.actions != null)
+            {
+                foreach (var action in this.actions)
+                {
+#if DEFAULT_APPLIES_TO_TESTCASE
+                    if (!(Parent is ParameterizedMethodSuite) && (action.DoesTarget(TestAction.TargetsDefault) || action.DoesTarget(TestAction.TargetsTest)))
+#else
+                    if (action.DoesTarget(TestAction.TargetsDefault) || (!(Parent is ParameterizedMethodSuite) && action.DoesTarget(TestAction.TargetsTest)))
+#endif
+                        targetActions.Add(action);
+                }
+            }
+
+            ActionsHelper.ExecuteActions(phase, targetActions, this);
+        }
+
+        private void RunBeforeActions(TestResult testResult)
+        {
+            ExecuteActions(ActionPhase.Before);
+        }
+
+        private void RunAfterActions(TestResult testResult)
+        {
+            try
+            {
+                ExecuteActions(ActionPhase.After);
+            }
+            catch (Exception ex)
+            {
+                if (ex is NUnitException)
+                    ex = ex.InnerException;
+                // TODO: What about ignore exceptions in teardown?
+                testResult.Error(ex, FailureSite.TearDown);
+            }
+        }
+#endif
+
+	    private void RunSetUp()
         {
             if (setUpMethods != null)
                 foreach( MethodInfo setUpMethod in setUpMethods )
@@ -376,8 +457,8 @@ namespace NUnit.Core
 			{
 				if ( ex is NUnitException )
 					ex = ex.InnerException;
-				// TODO: What about ignore exceptions in teardown?
-				testResult.Error( ex,FailureSite.TearDown );
+
+                RecordException(ex, testResult, FailureSite.TearDown);
 			}
 		}
 
@@ -421,43 +502,13 @@ namespace NUnit.Core
             if (exception is NUnitException)
                 exception = exception.InnerException;
 
-            testResult.SetResult(NUnitFramework.GetResultState(exception), exception, failureSite);
+            // Ensure that once a test is cancelled, it stays cancelled
+            ResultState finalResultState = testResult.ResultState == ResultState.Cancelled
+                ? ResultState.Cancelled
+                : NUnitFramework.GetResultState(exception);
+
+            testResult.SetResult(finalResultState, exception, failureSite);
 		}
 		#endregion
-
-        #region Inner Classes
-        public class ContextDictionary : Hashtable
-        {
-            internal TestExecutionContext _ec;
-
-            public override object this[object key]
-            {
-                get
-                {
-                    // Get Result values dynamically, since
-                    // they may change as execution proceeds
-                    switch (key as string)
-                    {
-                        case "Test.Name":
-                            return _ec.CurrentTest.TestName.Name;
-                        case "Test.FullName":
-                            return _ec.CurrentTest.TestName.FullName;
-                        case "Test.Properties":
-                            return _ec.CurrentTest.Properties;
-                        case "Result.State":
-                            return (int)_ec.CurrentResult.ResultState;
-                        case "TestDirectory":
-                            return AssemblyHelper.GetDirectoryName(_ec.CurrentTest.FixtureType.Assembly);
-                        default:
-                            return base[key];
-                    }
-                }
-                set
-                {
-                    base[key] = value;
-                }
-            }
-        }
-        #endregion
     }
 }

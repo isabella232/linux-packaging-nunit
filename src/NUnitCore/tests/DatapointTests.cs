@@ -1,5 +1,11 @@
-﻿using System;
-#if NET_2_0
+﻿// ****************************************************************
+// Copyright 2012, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
+using System;
+#if CLR_2_0 || CLR_4_0
 using System.Collections.Generic;
 #endif
 using NUnit.Framework;
@@ -43,7 +49,8 @@ namespace NUnit.Core.Tests
             RunTestOnFixture(typeof(SquareRootTest_Method_ArrayOfDouble));
         }
 
-#if NET_2_0 && CS_3_0
+#if CLR_2_0 || CLR_4_0 
+#if CS_3_0 || CS_4_0
         [Test]
         public void WorksOnIEnumerableOfT()
         {
@@ -61,6 +68,13 @@ namespace NUnit.Core.Tests
         {
             RunTestOnFixture(typeof(SquareRootTest_Method_IEnumerableOfDouble));
         }
+
+        [Test]
+        public void WorksOnIteratorReturningIEnumerableOfT()
+        {
+            RunTestOnFixture(typeof(SquareRootTest_Iterator_IEnumerableOfDouble));
+        }
+#endif
 #endif
     }
 }

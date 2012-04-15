@@ -78,5 +78,24 @@ namespace NUnit.Core.Filters
 
 			return true;
 		}
+
+        /// <summary>
+        /// Return string representation of  the filter.
+        /// </summary>
+        public override string ToString()
+        {
+            int count = 0;
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+            foreach (TestFilter filter in filters)
+            {
+                if (count++ > 0)
+                    sb.Append(" and ");
+
+                sb.Append(filter.ToString());
+            }
+
+            return sb.ToString();
+        }
 	}
 }

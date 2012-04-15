@@ -20,80 +20,7 @@ namespace NUnit.Core
     /// </summary>
     public class NUnitConfiguration
     {
-        #region Class Constructor
-        /// <summary>
-        /// Class constructor initializes fields from config file
-        /// </summary>
-        static NUnitConfiguration()
-        {
-            try
-            {
-                NameValueCollection settings = GetConfigSection("NUnit/TestCaseBuilder");
-                if (settings != null)
-                {
-                    string oldStyle = settings["OldStyleTestCases"];
-                    if (oldStyle != null)
-                            allowOldStyleTests = Boolean.Parse(oldStyle);
-                }
-
-                settings = GetConfigSection("NUnit/TestRunner");
-                if (settings != null)
-                {
-                    string apartment = settings["ApartmentState"];
-                    if (apartment != null)
-                        apartmentState = (ApartmentState)
-                            System.Enum.Parse(typeof(ApartmentState), apartment, true);
-
-                    string priority = settings["ThreadPriority"];
-                    if (priority != null)
-                        threadPriority = (ThreadPriority)
-                            System.Enum.Parse(typeof(ThreadPriority), priority, true);
-                }
-            }
-            catch (Exception ex)
-            {
-                string msg = string.Format("Invalid configuration setting in {0}",
-                    AppDomain.CurrentDomain.SetupInformation.ConfigurationFile);
-                throw new ApplicationException(msg, ex);
-            }
-        }
-
-        private static NameValueCollection GetConfigSection( string name )
-        {
-#if NET_2_0
-            return (NameValueCollection)System.Configuration.ConfigurationManager.GetSection(name);
-#else
-			return (NameValueCollection)System.Configuration.ConfigurationSettings.GetConfig(name);
-#endif
-        }
-        #endregion
-
         #region Public Properties
-
-        #region AllowOldStyleTests
-        private static bool allowOldStyleTests = false;
-        public static bool AllowOldStyleTests
-        {
-            get { return allowOldStyleTests; }
-        }
-        #endregion
-
-        #region ThreadPriority
-        private static ThreadPriority threadPriority = ThreadPriority.Normal;
-        public static ThreadPriority ThreadPriority
-        {
-            get { return threadPriority; }
-        }
-        #endregion
-
-        #region ApartmentState
-        private static ApartmentState apartmentState = ApartmentState.Unknown;
-        public static ApartmentState ApartmentState
-        {
-            get { return apartmentState; }
-            //set { apartmentState = value; }
-        }
-        #endregion
 
         #region BuildConfiguration
         public static string BuildConfiguration
@@ -144,6 +71,28 @@ namespace NUnit.Core
                 }
 
                 return nunitBinDirectory;
+            }
+        }
+        #endregion
+
+        #region NUnitDocDirectory
+        private static string nunitDocDirectory;
+        private static string NUnitDocDirectory
+        {
+            get
+            {
+                if (nunitDocDirectory == null)
+                {
+                    string dir = Path.GetDirectoryName(NUnitBinDirectory);
+                    nunitDocDirectory = Path.Combine(dir, "doc");
+                    if (!Directory.Exists(nunitDocDirectory))
+                    {
+                        dir = Path.GetDirectoryName(dir);
+                        nunitDocDirectory = Path.Combine(dir, "doc");
+                    }
+                }
+
+                return nunitDocDirectory;
             }
         }
         #endregion
@@ -247,11 +196,27 @@ namespace NUnit.Core
                 if (applicationDirectory == null)
                 {
                     applicationDirectory = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                         "NUnit");
                 }
 
                 return applicationDirectory;
+            }
+        }
+        #endregion
+
+        #region LogDirectory
+        private static string logDirectory;
+        public static string LogDirectory
+        {
+            get
+            {
+                if (logDirectory == null)
+                {
+                    logDirectory = Path.Combine(ApplicationDirectory, "logs");
+                }
+
+                return logDirectory;
             }
         }
         #endregion
@@ -261,31 +226,29 @@ namespace NUnit.Core
         {
             get
             {
-#if NET_2_0
-                string helpUrl = ConfigurationManager.AppSettings["helpUrl"];
-#else
-                string helpUrl = ConfigurationSettings.AppSettings["helpUrl"];
-#endif
+                string helpUrl = "http://nunit.org";
 
-                if (helpUrl == null)
+                string dir = Path.GetDirectoryName(NUnitBinDirectory);
+                string docDir = null;
+
+                while (dir != null)
                 {
-                    helpUrl = "http://nunit.org";
-                    string dir = Path.GetDirectoryName(NUnitBinDirectory);
-                    if ( dir != null )
+                    docDir = Path.Combine(dir, "doc");
+                    if (Directory.Exists(docDir))
+                        break;
+                    dir = Path.GetDirectoryName(dir);
+                }
+
+                if (docDir != null)
+                {
+                    string localPath = Path.Combine(docDir, "index.html");
+                    if (File.Exists(localPath))
                     {
-                        dir = Path.GetDirectoryName(dir);
-                        if ( dir != null )
-                        {
-                            string localPath = Path.Combine(dir, @"doc/index.html");
-                            if (File.Exists(localPath))
-                            {
-                                UriBuilder uri = new UriBuilder();
-                                uri.Scheme = "file";
-                                uri.Host = "localhost";
-                                uri.Path = localPath;
-                                helpUrl = uri.ToString();
-                            }
-                        }
+                        UriBuilder uri = new UriBuilder();
+                        uri.Scheme = "file";
+                        uri.Host = "localhost";
+                        uri.Path = localPath;
+                        helpUrl = uri.ToString();
                     }
                 }
 
@@ -293,90 +256,6 @@ namespace NUnit.Core
             }
         }
         #endregion
-
-        #endregion
-
-        #region Public Methods
-
-        /// <summary>
-        /// Return the NUnit Bin Directory for a particular
-        /// runtime version, or null if it's not installed.
-        /// For normal installations, there are only 1.1 and
-        /// 2.0 directories. However, this method accomodates
-        /// 3.5 and 4.0 directories for the benefit of NUnit
-        /// developers using those runtimes.
-        /// </summary>
-        public static string GetNUnitBinDirectory(Version v)
-        {
-            string dir = NUnitBinDirectory;
-
-            if ((Environment.Version.Major >= 2) == (v.Major >= 2))
-                return dir;
-
-            string[] v1Strings = new string[] { "1.0", "1.1" };
-            string[] v2Strings = new string[] { "2.0", "3.0", "3.5", "4.0" };
-            
-            string[] search;
-            string[] replace;
-
-            if (Environment.Version.Major == 1)
-            {
-                search = v1Strings;
-                replace = v2Strings;
-            }
-            else
-            {
-                search = v2Strings;
-                replace = v1Strings;
-            }
-
-            // Look for current value in path so it can be replaced
-            string current = null;
-            foreach (string s in search)
-                if (dir.IndexOf(s) >= 0)
-                {
-                    current = s;
-                    break;
-                }
-
-            // If nothing found, we can't do it
-            if (current == null)
-                return null;
-
-            // First try exact replacement
-            string altDir = dir.Replace(current, v.ToString(2));
-            if (Directory.Exists(altDir))
-                return altDir;
-
-            // Now try all the alternatives
-            foreach (string target in replace)
-            {
-                altDir = dir.Replace(current, target);
-                if (Directory.Exists(altDir))
-                    return altDir;
-            }
-
-            // Nothing was found
-            return null;
-        }
-
-        public static string GetTestAgentExePath(Version v)
-        {
-            string binDir = GetNUnitBinDirectory(v);
-            if ( binDir == null ) return null;
-
-#if NET_2_0
-            Assembly a = System.Reflection.Assembly.GetEntryAssembly();
-            string agentName = v.Major > 1 && a != null && a.GetName().ProcessorArchitecture == ProcessorArchitecture.X86
-                ? "nunit-agent-x86.exe" 
-                : "nunit-agent.exe";
-#else
-            string agentName = "nunit-agent.exe";
-#endif
-
-            string agentExePath = Path.Combine(binDir, agentName);
-            return File.Exists(agentExePath) ? agentExePath : null;
-        }
 
         #endregion
     }

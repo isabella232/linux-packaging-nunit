@@ -68,7 +68,11 @@ namespace NUnit.Util
 				if ( this.TestRunner == null )
 					this.TestRunner = this.agent.CreateRunner( this.ID );
 
-                log.Info("Loading tests in AppDomain, see {0}.log", domain.FriendlyName);
+                log.Info(
+                    "Loading tests in AppDomain, see {0}_{1}.log", 
+                    domain.FriendlyName, 
+                    Process.GetCurrentProcess().Id);
+
 				return TestRunner.Load( package );
 			}
 			catch
@@ -105,10 +109,10 @@ namespace NUnit.Util
 		#endregion
 
         #region Running Tests
-        public override void BeginRun(EventListener listener, ITestFilter filter)
+        public override void BeginRun(EventListener listener, ITestFilter filter, bool tracing, LoggingThreshold logLevel)
         {
             log.Info("BeginRun in AppDomain {0}", domain.FriendlyName);
-            base.BeginRun(listener, filter);
+            base.BeginRun(listener, filter, tracing, logLevel);
         }
         #endregion
 

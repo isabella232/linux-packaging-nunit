@@ -140,7 +140,7 @@ namespace NUnit.Framework
         #endregion
 
         #region ref Object
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         /// <summary>
         /// Apply a constraint to a referenced value, succeeding if the constraint
         /// is satisfied and throwing an InconclusiveException on failure.
@@ -211,8 +211,8 @@ namespace NUnit.Framework
         /// Apply a constraint to a referenced value, succeeding if the constraint
         /// is satisfied and throwing an InconclusiveException on failure.
         /// </summary>
-        /// <param name="constraint">A Constraint to be applied</param>
         /// <param name="actual">The actual value to test</param>
+        /// <param name="expression">A Constraint expression to be applied</param>
         /// <param name="message">The message that will be displayed on failure</param>
         /// <param name="args">Arguments to be used in formatting the message</param>
         static public void That(ref bool actual, IResolveConstraint expression, string message, params object[] args)

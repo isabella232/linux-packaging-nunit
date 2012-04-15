@@ -1,6 +1,12 @@
-﻿using System;
+﻿// ****************************************************************
+// Copyright 2012, Charlie Poole
+// This is free software licensed under the NUnit license. You may
+// obtain a copy of the license at http://nunit.org
+// ****************************************************************
+
+using System;
 using System.Collections;
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
 using System.Collections.Generic;
 #endif
 using NUnit.Framework;
@@ -25,13 +31,13 @@ namespace NUnit.TestData.TypeHelperFixture
             [TestFixture]
             public class DoublyNestedClass { }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
             [TestFixture(typeof(long))]
             public class DoublyNestedGeneric<T> { }
 #endif
         }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
         public class NestedGeneric<T>
         {
             [TestFixture(typeof(int))]
@@ -45,7 +51,7 @@ namespace NUnit.TestData.TypeHelperFixture
 #endif
     }
 
-#if NET_2_0
+#if CLR_2_0 || CLR_4_0
     [TestFixture(typeof(int[]))]
     [TestFixture(typeof(List<int>))]
     [TestFixture(typeof(List<string>))]

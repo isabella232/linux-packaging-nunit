@@ -16,6 +16,7 @@ using System.Security;
 using System.Security.Permissions;
 using System.Security.Policy;
 using NUnit.Core;
+using System.Security.Principal;
 
 namespace NUnit.Util
 {
@@ -37,7 +38,7 @@ namespace NUnit.Util
 				{
                     shadowCopyPath = Services.UserSettings.GetSetting("Options.TestLoader.ShadowCopyPath", "");
                     if (shadowCopyPath == "")
-                        shadowCopyPath = Path.Combine(Path.GetTempPath(), @"nunit20\ShadowCopyCache");
+                        shadowCopyPath = PathUtils.Combine(Path.GetTempPath(), "nunit20", "ShadowCopyCache");
 					else
 						shadowCopyPath = Environment.ExpandEnvironmentVariables(shadowCopyPath);
 				}
@@ -80,6 +81,10 @@ namespace NUnit.Util
             else if (appBase == null || appBase == string.Empty)
                 appBase = GetCommonAppBase(package.Assemblies);
 
+            char lastChar = appBase[appBase.Length - 1];
+            if (lastChar != Path.DirectorySeparatorChar && lastChar != Path.AltDirectorySeparatorChar)
+                appBase += Path.DirectorySeparatorChar;
+
             setup.ApplicationBase = appBase;
             // TODO: Check whether Mono still needs full path to config file...
             setup.ConfigurationFile = appBase != null && configFile != null
@@ -120,9 +125,9 @@ namespace NUnit.Util
 			
 			// TODO: Try to eliminate this test. Currently, running on
 			// Linux with the permission set specified causes an
-			// unexplained crash when unloading the domain.
-#if NET_2_0
-			if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            // unexplained crash when unloading the domain.
+#if CLR_2_0 || CLR_4_0
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
 			{
             	PermissionSet permissionSet = new PermissionSet( PermissionState.Unrestricted );	
            		runnerDomain = AppDomain.CreateDomain(domainName, evidence, setup, permissionSet, null);
@@ -130,6 +135,11 @@ namespace NUnit.Util
 			else
 #endif
             	runnerDomain = AppDomain.CreateDomain(domainName, evidence, setup);
+
+            // Set PrincipalPolicy for the domain if called for in the settings
+            if ( Services.UserSettings.GetSetting("Options.TestLoader.SetPrincipalPolicy", false ))
+                runnerDomain.SetPrincipalPolicy((PrincipalPolicy)Services.UserSettings.GetSetting(
+                    "Options.TestLoader.PrincipalPolicy", PrincipalPolicy.UnauthenticatedPrincipal));
 
 			// HACK: Only pass down our AddinRegistry one level so that tests of NUnit
 			// itself start without any addins defined.
@@ -186,7 +196,7 @@ namespace NUnit.Util
                 if (!thread.Join(30000))
                 {
                     log.Error("Unable to unload AppDomain {0}, Unload thread timed out", domainName);
-                    thread.Abort();
+                    ThreadUtility.Kill(thread);
                 }
             }
 

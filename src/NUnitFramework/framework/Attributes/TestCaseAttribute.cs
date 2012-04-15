@@ -17,8 +17,11 @@ namespace NUnit.Framework
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited=false)]
     public class TestCaseAttribute : Attribute, ITestCaseData
     {
+        #region Instance Variables
+
         private object[] arguments;
-        private object result;
+        private object expectedResult;
+        private bool hasExpectedResult;
         private Type expectedExceptionType;
         private string expectedExceptionName;
         private string expectedMessage;
@@ -26,8 +29,13 @@ namespace NUnit.Framework
         private string description;
         private string testName;
         private bool isIgnored;
-        private string ignoreReason;
+        private bool isExplicit;
+        private string reason;
         private string category;
+
+        #endregion
+
+        #region Constructors
 
         /// <summary>
         /// Construct a TestCaseAttribute with a list of arguments.
@@ -72,6 +80,10 @@ namespace NUnit.Framework
             this.arguments = new object[] { arg1, arg2, arg3 };
         }
 
+        #endregion
+
+        #region Properties
+
         /// <summary>
         /// Gets the list of arguments to a test case
         /// </summary>
@@ -86,8 +98,30 @@ namespace NUnit.Framework
         /// <value>The result.</value>
         public object Result
         {
-            get { return result; }
-            set { result = value; }
+            get { return expectedResult; }
+            set
+            {
+                expectedResult = value;
+                hasExpectedResult = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the expected result.
+        /// </summary>
+        /// <value>The result.</value>
+        public object ExpectedResult
+        {
+            get { return expectedResult; }
+        }
+
+        /// <summary>
+        /// Gets a flag indicating whether an expected
+        /// result has been set.
+        /// </summary>
+        public bool HasExpectedResult
+        {
+            get { return hasExpectedResult; }
         }
 
         /// <summary>
@@ -194,17 +228,38 @@ namespace NUnit.Framework
         }
 
         /// <summary>
-        /// Gets the ignore reason.
+        /// Gets or sets the explicit status of the test
+        /// </summary>
+        public bool Explicit
+        {
+            get { return isExplicit; }
+            set { isExplicit = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the reason for not running the test
+        /// </summary>
+        public string Reason
+        {
+            get { return reason; }
+            set { reason = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the reason for not running the test.
+        /// Set has the side effect of marking the test as ignored.
         /// </summary>
         /// <value>The ignore reason.</value>
         public string IgnoreReason
         {
-            get { return ignoreReason; }
+            get { return reason; }
             set 
             { 
-                ignoreReason = value;
-                isIgnored = ignoreReason != null && ignoreReason != string.Empty;
+                reason = value;
+                isIgnored = reason != null && reason != string.Empty;
             }
         }
+
+        #endregion
     }
 }
