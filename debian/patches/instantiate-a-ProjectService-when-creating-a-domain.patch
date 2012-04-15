@@ -12,11 +12,9 @@ Bug: https://bugs.launchpad.net/nunitv2/+bug/928421
  src/ClientUtilities/util/Services/DomainManager.cs |    2 ++
  1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/src/ClientUtilities/util/Services/DomainManager.cs b/src/ClientUtilities/util/Services/DomainManager.cs
-index 3c86207..1993e37 100644
 --- a/src/ClientUtilities/util/Services/DomainManager.cs
 +++ b/src/ClientUtilities/util/Services/DomainManager.cs
-@@ -55,6 +55,8 @@ namespace NUnit.Util
+@@ -56,6 +56,8 @@
  		public AppDomain CreateDomain( TestPackage package )
  		{
  			AppDomainSetup setup = new AppDomainSetup();
@@ -25,4 +23,3 @@ index 3c86207..1993e37 100644
  			 
  			//For paralell tests, we need to use distinct application name
          	setup.ApplicationName = "Tests" + "_" + Environment.TickCount;
--- 
