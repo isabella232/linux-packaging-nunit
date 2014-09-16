@@ -1,3 +1,22 @@
+nunit (2.6.3+dfsg-1) unstable; urgency=medium
+
+  * [c7bd1b5] Imported Upstream version 2.6.3+dfsg
+  * [bcb4bf8] Move nunit-console-runner to GAC-installed libnunit2.6, 
+    don't treat it as a private lib. This lib is signed, and treated 
+    as a GAC lib by consumers such as MonoDevelop.
+  * [7f08e99] Bump version to 2.6.3 as required
+  * [84535eb] Refreshed patches
+  * [8479f61] Split package up into per-assembly packages. This makes 
+    ABI tracking easier in the future, as we can meaningfully have GAC 
+    policy for cases where ABI isn't truly bumped, and no policy for 
+    cases where it is. For example, if nunit.framework bumps ABI but 
+    nunit.core does not, previously we would need to rebuild everything 
+    using NUnit, but under the new split packaging, that rebuild would 
+    not be needed for apps only using nunit.core.
+  * [17a7dc7] Add missing nunit.mocks.dll to nunit.pc
+
+ -- Jo Shields <directhex@apebox.org>  Tue, 16 Sep 2014 13:43:36 +0100
+
 nunit (2.6.0.12051+dfsg-2) unstable; urgency=low
 
   * Upload to unstable.
