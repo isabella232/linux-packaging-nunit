@@ -4,11 +4,10 @@
 // obtain a copy of the license at http://nunit.org.
 // ****************************************************************
 using System;
-using System.Collections.Specialized;
-using System.Configuration;
 using System.IO;
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.Remoting.Messaging;
 using System.Security.Principal;
 using System.Threading;
 
@@ -111,6 +110,12 @@ namespace NUnit.Core
         /// </summary>
         public TestExecutionContext prior;
 
+        /// <summary>
+        /// Context dictionary used to provide test access
+        /// to this TestExecutionContext
+        /// </summary>
+        private ContextDictionary contextDictionary;
+
         #endregion
 
         #region Constructors
@@ -133,6 +138,8 @@ namespace NUnit.Core
             this.currentCulture = CultureInfo.CurrentCulture;
             this.currentUICulture = CultureInfo.CurrentUICulture;
             this.currentPrincipal = Thread.CurrentPrincipal;
+
+            this.contextDictionary = new ContextDictionary(this);
         }
 
         /// <summary>
@@ -158,6 +165,8 @@ namespace NUnit.Core
             this.currentCulture = CultureInfo.CurrentCulture;
             this.currentUICulture = CultureInfo.CurrentUICulture;
             this.currentPrincipal = Thread.CurrentPrincipal;
+
+            this.contextDictionary = new ContextDictionary(this);
         }
 
         #endregion
@@ -386,10 +395,11 @@ namespace NUnit.Core
         /// </summary>
         public static void Save()
         {
-            TestExecutionContext.current = new TestExecutionContext(current);
+	        current = new TestExecutionContext(current);
+	        SaveInCallContext();
         }
 
-        /// <summary>
+		/// <summary>
         /// Restores the last saved context and puts
         /// any saved settings back into effect.
         /// </summary>
@@ -397,8 +407,15 @@ namespace NUnit.Core
         {
             current.ReverseChanges();
             current = current.prior;
+            SaveInCallContext();
         }
-        #endregion
+
+        private static void SaveInCallContext()
+        {
+            CallContext.SetData("NUnit.Framework.TestContext", current.contextDictionary);
+        }
+
+		#endregion
 
         #region Instance Methods
 

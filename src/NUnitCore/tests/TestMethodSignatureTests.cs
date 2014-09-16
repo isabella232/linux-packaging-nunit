@@ -177,6 +177,18 @@ namespace NUnit.Core.Tests
             Assert.That(test.TestName.FullName, Is.EqualTo(fullName + "(1, 2, 3)"));
         }
 
+#if CS_3_0
+        [TestCase()]
+#endif
+        [TestCase(@"one")]
+        [TestCase(@"one", @"two")]
+        [TestCase(@"one", @"two", @"three")]
+        [TestCase(@"one", @"two", @"three", @"four")]
+        public void TestParams(params string[] values) 
+        {
+            Assert.That(values.Length <= 4);
+        }
+
         [Test]
         public void RunningTestsThroughFixtureGivesCorrectResults()
 		{

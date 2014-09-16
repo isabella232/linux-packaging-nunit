@@ -1,0 +1,5 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit.framework.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit.framework.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\pnunit.framework\obj\Debug\pnunit.framework.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\pnunit.framework\obj\Debug\pnunit.framework.dll
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\pnunit.framework\obj\Debug\pnunit.framework.pdb

@@ -5,6 +5,8 @@
 // ****************************************************************
 //#define DEFAULT_APPLIES_TO_TESTCASE
 
+using System.Diagnostics;
+
 namespace NUnit.Core
 {
 	using System;
@@ -31,8 +33,6 @@ namespace NUnit.Core
 	{
         static Logger log = InternalTrace.GetLogger(typeof(TestMethod));
         
-        static ContextDictionary context;
-
 		#region Fields
 		/// <summary>
 		/// The test method
@@ -101,20 +101,6 @@ namespace NUnit.Core
 		}
 		#endregion
 
-        #region Static Properties
-	    private static ContextDictionary Context
-	    {
-	        get
-	        {
-	            if (context==null)
-	            {
-	                context = new ContextDictionary();
-	            }
-	            return context;
-	        }
-	    }
-        #endregion
-
 		#region Properties
 
         public override string TestType
@@ -130,6 +116,11 @@ namespace NUnit.Core
         public override Type FixtureType
         {
             get { return method.ReflectedType; }
+        }
+
+        public override string MethodName
+        {
+            get { return method.Name; }
         }
 
         public ExpectedExceptionProcessor ExceptionProcessor
@@ -179,15 +170,24 @@ namespace NUnit.Core
         {
             log.Debug("Test Starting: " + this.TestName.FullName);
             listener.TestStarted(this.TestName);
+#if CLR_2_0 || CLR_4_0
+            long startTime = Stopwatch.GetTimestamp();
+#else
             long startTime = DateTime.Now.Ticks;
+#endif
 
             TestResult testResult = this.RunState == RunState.Runnable || this.RunState == RunState.Explicit
 				? RunTestInContext() : SkipTest();
 
 			log.Debug("Test result = " + testResult.ResultState);
 
+#if CLR_2_0 || CLR_4_0
+            long stopTime = Stopwatch.GetTimestamp();
+            double time = ((double)(stopTime - startTime)) / (double)Stopwatch.Frequency;
+#else
             long stopTime = DateTime.Now.Ticks;
             double time = ((double)(stopTime - startTime)) / (double)TimeSpan.TicksPerSecond;
+#endif
             testResult.Time = time;
 
             listener.TestFinished(testResult);
@@ -224,11 +224,6 @@ namespace NUnit.Core
 
             TestExecutionContext.CurrentContext.CurrentTest = this;
 
-            ContextDictionary context = Context;
-            context._ec = TestExecutionContext.CurrentContext;
-
-            CallContext.SetData("NUnit.Framework.TestContext", context);
-
             if (this.Parent != null)
             {
                 this.Fixture = this.Parent.Fixture;
@@ -256,10 +251,16 @@ namespace NUnit.Core
                 if (this.Properties["_SETCULTURE"] != null)
                     TestExecutionContext.CurrentContext.CurrentCulture =
                         new System.Globalization.CultureInfo((string)Properties["_SETCULTURE"]);
+                else if (this.Properties["SetCulture"] != null) // In case we are running NUnitLite tests
+                    TestExecutionContext.CurrentContext.CurrentCulture =
+                        new System.Globalization.CultureInfo((string)Properties["SetCulture"]);
 
                 if (this.Properties["_SETUICULTURE"] != null)
                     TestExecutionContext.CurrentContext.CurrentUICulture =
                         new System.Globalization.CultureInfo((string)Properties["_SETUICULTURE"]);
+                if (this.Properties["SetUICulture"] != null) // In case we are running NUnitLite tests
+                    TestExecutionContext.CurrentContext.CurrentUICulture =
+                        new System.Globalization.CultureInfo((string)Properties["SetUICulture"]);
 
 				return RunRepeatedTest();
             }
@@ -466,7 +467,13 @@ namespace NUnit.Core
 		{
             try
             {
-                RunTestMethod(testResult);
+                object result = RunTestMethod();
+
+                if (this.hasExpectedResult)
+                    NUnitFramework.Assert.AreEqual(expectedResult, result);
+
+                testResult.Success();
+
                 if (testResult.IsSuccess && exceptionProcessor != null)
                     exceptionProcessor.ProcessNoException(testResult);
             }
@@ -482,19 +489,14 @@ namespace NUnit.Core
             }
 		}
 
-		private void RunTestMethod(TestResult testResult)
+	    protected virtual object RunTestMethod()
 		{
-		    object fixture = this.method.IsStatic ? null : this.Fixture;
-
-			object result = Reflect.InvokeMethod( this.method, fixture, this.arguments );
-
-            if (this.hasExpectedResult)
-                NUnitFramework.Assert.AreEqual(expectedResult, result);
-
-            testResult.Success();
+            object fixture = this.method.IsStatic ? null : this.Fixture;
+            
+            return Reflect.InvokeMethod(this.method, fixture, this.arguments);
         }
 
-		#endregion
+	    #endregion
 
 		#region Record Info About An Exception
 		protected virtual void RecordException( Exception exception, TestResult testResult, FailureSite failureSite )

@@ -1,0 +1,8 @@
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\bin\Debug\test-assembly-net45.dll
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\bin\Debug\test-assembly-net45.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\bin\Debug\nunit.framework.dll
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\bin\Debug\nunit.framework.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\bin\Debug\nunit.framework.xml
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\obj\Debug\test-assembly-net45.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\obj\Debug\test-assembly-net45.dll
+D:\Dev\NUnit\nunit-2.6\work\src\tests\test-assembly-net45\obj\Debug\test-assembly-net45.pdb

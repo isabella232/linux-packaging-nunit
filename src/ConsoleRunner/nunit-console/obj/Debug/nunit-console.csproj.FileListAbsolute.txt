@@ -1,0 +1,5 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\lib\nunit-console-runner.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\lib\nunit-console-runner.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\ConsoleRunner\nunit-console\obj\Debug\nunit-console-runner.dll
+D:\Dev\NUnit\nunit-2.6\work\src\ConsoleRunner\nunit-console\obj\Debug\nunit-console-runner.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\ConsoleRunner\nunit-console\obj\Debug\nunit-console.csprojResolveAssemblyReference.cache

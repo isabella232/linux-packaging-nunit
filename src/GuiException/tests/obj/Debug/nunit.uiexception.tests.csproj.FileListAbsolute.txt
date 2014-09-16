@@ -1,0 +1,5 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\tests\nunit.uiexception.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\tests\nunit.uiexception.tests.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\tests\obj\Debug\nunit.uiexception.tests.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\tests\obj\Debug\nunit.uiexception.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\tests\obj\Debug\nunit.uiexception.tests.pdb

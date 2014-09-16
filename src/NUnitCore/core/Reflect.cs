@@ -7,6 +7,7 @@
 using System;
 using System.Reflection;
 using System.Collections;
+using NUnit.Framework;
 
 namespace NUnit.Core
 {
@@ -439,5 +440,12 @@ namespace NUnit.Core
 		private Reflect() { }
 
 		#endregion
+
+#if CLR_2_0 || CLR_4_0
+	    public static bool IsAsyncMethod(MethodInfo method)
+	    {
+		    return AsyncInvocationRegion.IsAsyncOperation(method);
+	    }
+#endif
 	}
 }

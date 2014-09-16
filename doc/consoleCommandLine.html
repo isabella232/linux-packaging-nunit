@@ -38,6 +38,7 @@
 	take values may use an equal sign, a colon or a space to separate the option 
 	from its value.</p>
 
+<hr>
 <h2>Specifying Which Tests to Run</h2>
 
 <h3>Specifying an Assembly</h3>
@@ -69,7 +70,7 @@ a namespace containing tests.
 rather than the loading of the tests. Consequently it supports much broader use,
 including situations involving SetUpFixtures, which are not run if the class
 in question is not loaded. You should use <b>/run</b> in lieu of <b>/fixture</b>
-in most cases.
+in almost every case.
 
 <h3>Specifying Tests to be Run Using a Separate File</h3>
 
@@ -93,7 +94,7 @@ with the character '#' in the first column are treated as comments.
 	class, a legacy suite (using the Suite property ) or a namespace. If a 
 	namespace is given, then all fixtures under that namespace are loaded.</p>
 <p>This option is provided for backward compatibility. In most cases, you will
-be better served by using the <b>/test</b> option.
+be better served by using the <b>/run</b> option.
 	
 <h3>Specifying Multiple Assemblies</h3>
 <p>You may run tests from multiple assemblies in one run using the console 
@@ -206,6 +207,7 @@ the shell you are using.
 	<a href="category.html">Category Attribute</a> and the 
 	<a href="explicit.html">Explicit Attribute</a>.</p>
 
+<hr>
 <h2>Controlling How Tests Are Run</h2>
 
 <h3>Specifying the .NET Framework Version</h3>
@@ -282,6 +284,7 @@ for selected tests by use of <b>TimeoutAttribute</b>.
 <p><b>Note:</b> If you do not use this option, no timeout is set and tests
 may run for any amount of time.
 
+<hr>
 <h2>Controlling the Output of a Test Run</h2>
 
 <h3>Redirecting Text Output</h3>
@@ -328,6 +331,7 @@ files to be created in the results directory.
 
 <pre class="programtext">        nunit-console /work:results /out:Output.txt nunit.tests.dll</pre>
 
+<hr>
 <h2>Miscellaneous Options</h2>
 
 <p>The <b>/trace</b> option allows you to control the amount of information that NUnit
@@ -353,7 +357,7 @@ files to be created in the results directory.
 <!-- Submenu -->
 <div id="subnav">
 <ul>
-<li><a href="index.html">NUnit 2.6</a></li>
+<li><a href="index.html">NUnit 2.6.3</a></li>
 <ul>
 <li><a href="getStarted.html">Getting&nbsp;Started</a></li>
 <li><a href="writingTests.html">Writing&nbsp;Tests</a></li>
@@ -378,12 +382,13 @@ files to be created in the results directory.
 <li><a href="samples.html">Samples</a></li>
 <li><a href="license.html">License</a></li>
 </ul>
-<li><a href="vsTestAdapter.html">NUnit&nbsp;Test&nbsp;Adapter&nbsp;0.90</a></li>
+<li><a href="vsTestAdapter.html">NUnit&nbsp;Test&nbsp;Adapter</a></li>
 <ul>
 <li><a href="vsTestAdapterLicense.html">License</a></li>
+<li><a href="vsTestAdapterReleaseNotes.html">Release&nbsp;Notes</a></li>
 </ul>
-<li><a href="&r=2.6.html"></a></li>
-<li><a href="&r=2.6.html"></a></li>
+<li><a href="&r=2.6.3.html"></a></li>
+<li><a href="&r=2.6.3.html"></a></li>
 </ul>
 </div>
 <!-- End of Submenu -->

@@ -1,0 +1,5 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\framework\nunit.mocks.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\framework\nunit.mocks.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\NUnitMocks\mocks\obj\Debug\nunit.mocks.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\NUnitMocks\mocks\obj\Debug\nunit.mocks.dll
+D:\Dev\NUnit\nunit-2.6\work\src\NUnitMocks\mocks\obj\Debug\nunit.mocks.pdb

@@ -19,7 +19,7 @@ namespace NUnit.ConsoleRunner
 		[Option(Description = "Name of the test case(s), fixture(s) or namespace(s) to run")]
 		public string run;
 
-        [Option(Description = "Name of a file containing a list of the tests to run")]
+        [Option(Description = "Name of a file containing a list of the tests to run, one per line")]
         public string runlist;
 
 		[Option(Description = "Project configuration (e.g.: Debug) to load")]
@@ -67,13 +67,19 @@ namespace NUnit.ConsoleRunner
 		public DomainUsage domain;
 
         [Option(Description = "Apartment for running tests: MTA (Default), STA")]
-        public System.Threading.ApartmentState apartment;
+        public System.Threading.ApartmentState apartment = System.Threading.ApartmentState.Unknown;
 
         [Option(Description = "Disable shadow copy when running in separate domain")]
 		public bool noshadow;
 
 		[Option (Description = "Disable use of a separate thread for tests")]
 		public bool nothread;
+
+		[Option(Description = "Base path to be used when loading the assemblies")]
+ 		public string basepath;
+ 
+ 		[Option(Description = "Additional directories to be probed when loading assemblies, separated by semicolons")]
+ 		public string privatebinpath;
 
         [Option(Description = "Set timeout for each test case in milliseconds")]
         public int timeout;
