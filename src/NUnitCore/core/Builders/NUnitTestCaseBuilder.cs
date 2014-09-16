@@ -167,7 +167,12 @@ namespace NUnit.Core.Builders
         /// <returns></returns>
         public static NUnitTestMethod BuildSingleTestMethod(MethodInfo method, Test parentSuite, ParameterSet parms)
         {
+#if CLR_2_0 || CLR_4_0
+            NUnitTestMethod testMethod = Reflect.IsAsyncMethod(method) ? 
+                new NUnitAsyncTestMethod(method) : new NUnitTestMethod(method);
+#else
             NUnitTestMethod testMethod = new NUnitTestMethod(method);
+#endif
 
             string prefix = method.ReflectedType.FullName;
 
@@ -307,29 +312,26 @@ namespace NUnit.Core.Builders
                     return false;
             }
 
-            if (!testMethod.Method.ReturnType.Equals(typeof(void)) &&
-                (parms == null || !parms.HasExpectedResult && parms.ExpectedExceptionName == null))
-            {
-                testMethod.RunState = RunState.NotRunnable;
-                testMethod.IgnoreReason = "Method has non-void return value";
-                return false;
-            }
+			
+#if CLR_2_0 || CLR_4_0
+	        bool isAsyncMethod = Reflect.IsAsyncMethod(testMethod.Method);
+			bool hasMeaningfulReturnType = isAsyncMethod ? testMethod.Method.ReturnType.IsGenericType : testMethod.Method.ReturnType != typeof(void);
+#else
+			bool hasMeaningfulReturnType = testMethod.Method.ReturnType != typeof(void);
+#endif
 
-            if (argsProvided > 0 && argsNeeded == 0)
-            {
-                testMethod.RunState = RunState.NotRunnable;
-                testMethod.IgnoreReason = "Arguments provided for method not taking any";
-                return false;
-            }
+			if (hasMeaningfulReturnType && (parms == null || !parms.HasExpectedResult && parms.ExpectedExceptionName == null))
+		        return MarkAsNotRunnable(testMethod, "Test method has non-void return type, but no result is expected");
+			if (!hasMeaningfulReturnType && parms != null && parms.HasExpectedResult)
+				return MarkAsNotRunnable(testMethod, "Test method has void return type, but a result is expected");
 
-            if (argsProvided == 0 && argsNeeded > 0)
-            {
-                testMethod.RunState = RunState.NotRunnable;
-                testMethod.IgnoreReason = "No arguments were provided";
-                return false;
-            }
+	        if (argsProvided > 0 && argsNeeded == 0)
+		        return MarkAsNotRunnable(testMethod, "Arguments provided for method not taking any");
 
-            //if (argsProvided > argsNeeded)
+	        if (argsProvided == 0 && argsNeeded > 0)
+		        return MarkAsNotRunnable(testMethod, "No arguments were provided");
+
+	        //if (argsProvided > argsNeeded)
             //{
             //    ParameterInfo lastParameter = parameters[argsNeeded - 1];
             //    Type lastParameterType = lastParameter.ParameterType;
@@ -392,6 +394,13 @@ namespace NUnit.Core.Builders
 
             return true;
         }
+
+	    private static bool MarkAsNotRunnable(TestMethod testMethod, string reason)
+	    {
+		    testMethod.RunState = RunState.NotRunnable;
+		    testMethod.IgnoreReason = reason;
+		    return false;
+	    }
 
 #if CLR_2_0 || CLR_4_0
         private static Type[] GetTypeArgumentsForMethod(MethodInfo method, object[] arglist)

@@ -1,0 +1,7 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\App.config
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\nunit.exe.config
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\nunit.exe
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\nunit.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\GuiRunner\nunit-gui-exe\obj\Debug\nunit-gui.exe.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\GuiRunner\nunit-gui-exe\obj\Debug\nunit.exe
+D:\Dev\NUnit\nunit-2.6\work\src\GuiRunner\nunit-gui-exe\obj\Debug\nunit.pdb

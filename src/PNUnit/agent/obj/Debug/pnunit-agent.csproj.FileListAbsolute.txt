@@ -1,0 +1,6 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit-agent.exe.config
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit-agent.exe
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit-agent.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\agent\obj\Debug\pnunit-agent.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\agent\obj\Debug\pnunit-agent.exe
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\agent\obj\Debug\pnunit-agent.pdb

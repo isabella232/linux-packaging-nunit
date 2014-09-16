@@ -77,6 +77,22 @@ namespace NUnit.Core.Tests
         internal static object[] InstanceField =
             { new object[] { "InstanceField" } };
 
+#if CLR_2_0x || CLR_4_0
+        [Test, TestCaseSource(typeof(DataSourceClass))]
+        public void SourceCanBeInstanceOfIEnumerable(string source)
+        {
+            Assert.AreEqual("DataSourceClass", source);
+        }
+
+        internal class DataSourceClass : IEnumerable
+        {
+            public IEnumerator GetEnumerator()
+            {
+                yield return "DataSourceClass";
+            }
+        }
+#endif
+
         [Test, TestCaseSource("CheckCurrentDirectory")]
         public void SourceIsInvokedWithCorrectCurrentDirectory(bool isOK)
         {

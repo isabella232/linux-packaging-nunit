@@ -8,7 +8,6 @@ using System;
 
 namespace NUnit.Framework.Constraints
 {
-    #region ThrowsConstraint
     /// <summary>
     /// ThrowsConstraint is used to test the exception thrown by 
     /// a delegate by applying a constraint to it.
@@ -18,7 +17,7 @@ namespace NUnit.Framework.Constraints
         private Exception caughtException;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:ThrowsConstraint"/> class,
+        /// Initializes a new instance of the <see cref="ThrowsConstraint"/> class,
         /// using a constraint to be applied to the exception.
         /// </summary>
         /// <param name="baseConstraint">A constraint to apply to the caught exception.</param>
@@ -43,43 +42,31 @@ namespace NUnit.Framework.Constraints
         /// <returns>True if an exception is thrown and the constraint succeeds, otherwise false</returns>
         public override bool Matches(object actual)
         {
-            TestDelegate code = actual as TestDelegate;
-            if (code == null)
-                throw new ArgumentException(
-                    string.Format("The actual value must be a TestDelegate but was {0}",actual.GetType().Name), "actual");
+	        caughtException = ExceptionInterceptor.Intercept(actual);
 
-            this.caughtException = null;
-
-            try
-            {
-                code();
-            }
-            catch (Exception ex)
-            {
-                this.caughtException = ex;
-            }
-
-            if (this.caughtException == null)
+			if (caughtException == null)
                 return false;
 
             return baseConstraint == null || baseConstraint.Matches(caughtException);
         }
 
-#if CLR_2_0 || CLR_4_0
         /// <summary>
         /// Converts an ActualValueDelegate to a TestDelegate
         /// before calling the primary overload.
         /// </summary>
-        /// <param name="del"></param>
-        /// <returns></returns>
+#if CLR_2_0 || CLR_4_0
+        public override bool Matches<T>(ActualValueDelegate<T> del)
+		{
+            return Matches(new GenericInvocationDescriptor<T>(del));
+        }
+#else
         public override bool Matches(ActualValueDelegate del)
         {
-            TestDelegate testDelegate = new TestDelegate(delegate { del(); });
-            return Matches((object)testDelegate);
+            return Matches(new ObjectInvocationDescriptor(del));
         }
 #endif
 
-        /// <summary>
+		/// <summary>
         /// Write the constraint description to a MessageWriter
         /// </summary>
         /// <param name="writer">The writer on which the description is displayed</param>
@@ -120,76 +107,142 @@ namespace NUnit.Framework.Constraints
             return base.GetStringRepresentation();
         }
     }
-    #endregion
 
-    #region ThrowsNothingConstraint
-    /// <summary>
-    /// ThrowsNothingConstraint tests that a delegate does not
-    /// throw an exception.
-    /// </summary>
-	public class ThrowsNothingConstraint : Constraint
+	#region ExceptionInterceptor
+
+	internal class ExceptionInterceptor
 	{
-		private Exception caughtException;
+		private ExceptionInterceptor(){}
 
-        /// <summary>
-        /// Test whether the constraint is satisfied by a given value
-        /// </summary>
-        /// <param name="actual">The value to be tested</param>
-        /// <returns>True if no exception is thrown, otherwise false</returns>
-		public override bool Matches(object actual)
+		internal static Exception Intercept(object invocation)
 		{
-			TestDelegate code = actual as TestDelegate;
-			if (code == null)
-				throw new ArgumentException("The actual value must be a TestDelegate", "actual");
-
-            this.caughtException = null;
-
-            try
-            {
-                code();
-            }
-            catch (Exception ex)
-            {
-                this.caughtException = ex;
-            }
-
-			return this.caughtException == null;
-        }
+			IInvocationDescriptor invocationDescriptor = GetInvocationDescriptor(invocation);
 
 #if CLR_2_0 || CLR_4_0
-        /// <summary>
-        /// Converts an ActualValueDelegate to a TestDelegate
-        /// before calling the primary overload.
-        /// </summary>
-        /// <param name="del"></param>
-        /// <returns></returns>
-        public override bool Matches(ActualValueDelegate del)
-        {
-            TestDelegate testDelegate = new TestDelegate(delegate { del(); });
-            return Matches((object)testDelegate);
-        }
+			if (AsyncInvocationRegion.IsAsyncOperation(invocationDescriptor.Delegate))
+			{
+				using (AsyncInvocationRegion region = AsyncInvocationRegion.Create(invocationDescriptor.Delegate))
+				{
+					object result = invocationDescriptor.Invoke();
+
+					try
+					{
+						region.WaitForPendingOperationsToComplete(result);
+						return null;
+					}
+					catch (Exception ex)
+					{
+						return ex;
+					}
+				}
+			}
+			else
+#endif
+			{
+				try
+				{
+					invocationDescriptor.Invoke();
+					return null;
+				}
+				catch (Exception ex)
+				{
+					return ex;
+				}
+			}
+		}
+
+		private static IInvocationDescriptor GetInvocationDescriptor(object actual)
+		{
+			IInvocationDescriptor invocationDescriptor = actual as IInvocationDescriptor;
+
+			if (invocationDescriptor == null)
+			{
+				TestDelegate testDelegate = actual as TestDelegate;
+
+				if (testDelegate == null)
+					throw new ArgumentException(
+						String.Format("The actual value must be a TestDelegate or ActualValueDelegate but was {0}", actual.GetType().Name),
+						"actual");
+
+				invocationDescriptor = new VoidInvocationDescriptor(testDelegate);
+			}
+
+			return invocationDescriptor;
+		}
+	}
+
+	#endregion
+
+	#region InvocationDescriptor
+
+	internal class VoidInvocationDescriptor : IInvocationDescriptor
+	{
+		private readonly TestDelegate _del;
+
+		public VoidInvocationDescriptor(TestDelegate del)
+		{
+			_del = del;
+		}
+
+		public object Invoke()
+		{
+			_del();
+			return null;
+		}
+
+		public Delegate Delegate
+		{
+			get { return _del; }
+		}
+	}
+
+#if CLR_2_0 || CLR_4_0
+	internal class GenericInvocationDescriptor<T> : IInvocationDescriptor
+	{
+		private readonly ActualValueDelegate<T> _del;
+
+		public GenericInvocationDescriptor(ActualValueDelegate<T> del)
+		{
+			_del = del;
+		}
+
+		public object Invoke()
+		{
+			return _del();
+		}
+
+		public Delegate Delegate
+		{
+			get { return _del; }
+		}
+	}
+#else
+	internal class ObjectInvocationDescriptor : IInvocationDescriptor
+	{
+		private readonly ActualValueDelegate _del;
+
+		public ObjectInvocationDescriptor(ActualValueDelegate del)
+		{
+			_del = del;
+		}
+
+		public object Invoke()
+		{
+			return _del();
+		}
+
+		public Delegate Delegate
+		{
+			get { return _del; }
+		}
+	}
 #endif
 
-        /// <summary>
-        /// Write the constraint description to a MessageWriter
-        /// </summary>
-        /// <param name="writer">The writer on which the description is displayed</param>
-		public override void WriteDescriptionTo(MessageWriter writer)
-		{
-			writer.Write(string.Format("No Exception to be thrown"));
-		}
+	internal interface IInvocationDescriptor
+	{
+		object Invoke();
+		Delegate Delegate { get; }
+	}
 
-        /// <summary>
-        /// Write the actual value for a failing constraint test to a
-        /// MessageWriter. The default implementation simply writes
-        /// the raw value of actual, leaving it to the writer to
-        /// perform any formatting.
-        /// </summary>
-        /// <param name="writer">The writer on which the actual value is displayed</param>
-		public override void WriteActualValueTo(MessageWriter writer)
-		{
-			writer.WriteActualValue( this.caughtException.GetType() );
-		}
-    }
-    #endregion
+	#endregion
 }

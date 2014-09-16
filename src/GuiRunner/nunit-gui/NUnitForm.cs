@@ -1785,11 +1785,13 @@ namespace NUnit.Gui
 			string message = e.Action == NUnit.Util.TestAction.TestReloadFailed
                 ? "Test reload failed!"
                 : "Test load failed!";
+            string NL = Environment.NewLine;
 			if ( e.Exception is BadImageFormatException )
-				message += string.Format(
-                    Environment.NewLine + Environment.NewLine +
-					@"You may be attempting to load an assembly built with a later version of the CLR than
-the version under which NUnit is currently running ({0}) or trying to load a 64-bit assembly into a 32-bit process.",
+				message += string.Format(NL + NL +
+                    "The assembly could not be loaded by NUnit. PossibleProblems include:" + NL + NL +
+                    "1. The assembly may not be a valid .NET assembly." + NL + NL +
+                    "2. You may be attempting to load an assembly built with a later version of the CLR than the version under which NUnit is currently running ({0})." + NL + NL +
+                    "3. You may be attempting to load a 64-bit assembly into a 32-bit process.",
 					Environment.Version.ToString(3) );
 
             MessageDisplay.Error(message, e.Exception);
@@ -1828,13 +1830,15 @@ the version under which NUnit is currently running ({0}) or trying to load a 64-
                 "Passed: {0}   Failed: {1}   Errors: {2}   Inconclusive: {3}   Invalid: {4}   Ignored: {5}   Skipped: {6}   Time: {7}",
                 summary.Passed, summary.Failures, summary.Errors, summary.Inconclusive, summary.NotRunnable, summary.Ignored, summary.Skipped, summary.Time);
 
+            string resultPath = Path.Combine(this.TestProject.BasePath, "TestResult.xml");
             try
             {
-                TestLoader.SaveLastResult("TestResult.xml");
+                TestLoader.SaveLastResult(resultPath);
+                log.Debug("Saved result to {0}", resultPath);
             }
             catch (Exception ex)
             {
-                log.Warning("Unable to save TestResult.xml\n{0}", ex.ToString());
+                log.Warning("Unable to save result to {0}\n{1}", resultPath, ex.ToString());
             }
 
             EnableRunCommand(true);

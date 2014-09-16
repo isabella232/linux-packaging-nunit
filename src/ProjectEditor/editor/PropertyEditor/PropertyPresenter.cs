@@ -290,8 +290,8 @@ namespace NUnit.ProjectEditor
                     if (!ValidateDirectoryPath("ApplicationBase", view.ApplicationBase.Text))
                         return;
 
-                    basePath = Path.Combine(model.BasePath, view.ApplicationBase.Text);
-                    if (PathUtils.SamePath(model.BasePath, basePath))
+                    basePath = Path.Combine(model.EffectiveBasePath, view.ApplicationBase.Text);
+                    if (PathUtils.SamePath(model.EffectiveBasePath, basePath))
                         basePath = null;
                 }
 
@@ -314,12 +314,7 @@ namespace NUnit.ProjectEditor
                 if (configFile == string.Empty)
                     selectedConfig.ConfigurationFile = null;
                 else if (ValidateFilePath("DefaultConfigurationFile", configFile))
-                {
-                    if (configFile == Path.GetFileName(configFile))
-                        selectedConfig.ConfigurationFile = view.ConfigurationFile.Text;
-                    else
-                        view.MessageDisplay.Error("ConfigurationFile must be specified as a file name only - without directory path. The configuration file is always located in the application base directory.");
-                }
+                    selectedConfig.ConfigurationFile = view.ConfigurationFile.Text;
             }
         }
 

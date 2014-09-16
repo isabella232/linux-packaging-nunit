@@ -160,7 +160,7 @@ namespace NUnit.Framework.Syntax
 
         // TODO: Move these to AssertThat tests
 #if CLR_2_0 || CLR_4_0
-#if CS_3_0 || CS_4_0
+#if CS_3_0 || CS_4_0 || CS_5_0
         [Test]
         public void DelegateThrowsException()
         {
@@ -170,7 +170,7 @@ namespace NUnit.Framework.Syntax
         }
 
         [Test]
-        public void LambdaThrowsExcepton()
+        public void LambdaThrowsException()
         {
             Assert.That(
                 () => new MyClass(null),
@@ -182,8 +182,7 @@ namespace NUnit.Framework.Syntax
         {
             Assert.That(
                 () => new MyClass(null),
-                Throws.InstanceOf<ArgumentNullException>()
-                .And.Message.Matches("null"));
+                Throws.InstanceOf<ArgumentNullException>());
         }
 
         internal class MyClass
@@ -200,9 +199,7 @@ namespace NUnit.Framework.Syntax
         [Test]
         public void LambdaThrowsNothing()
         {
-            Assert.That(
-                () => null,
-                Throws.Nothing);
+            Assert.That(() => (object)null, Throws.Nothing);
         }
 #else
         [Test]

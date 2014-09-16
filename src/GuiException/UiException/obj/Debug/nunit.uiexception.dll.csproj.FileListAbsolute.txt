@@ -1,0 +1,7 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\lib\nunit.uiexception.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\lib\nunit.uiexception.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\UiException\obj\Debug\nunit.uiexception.dll.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\UiException\obj\Debug\NUnit.UiException.Properties.Resources.resources
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\UiException\obj\Debug\nunit.uiexception.dll.csproj.GenerateResource.Cache
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\UiException\obj\Debug\nunit.uiexception.dll
+D:\Dev\NUnit\nunit-2.6\work\src\GuiException\UiException\obj\Debug\nunit.uiexception.pdb

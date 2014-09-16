@@ -33,11 +33,150 @@ dt { font-weight: bold }
 
 <h2>Release Notes</h2>
 
-
 <div style="max-width:660px;text-align:right">
-<a href="releaseBreakdown.html">View Changes Separately for Each 2.6 Pre-Release</a>
+<a href="releaseBreakdown.html">View Changes Separately for Each Pre-Release</a>
 </div>
 
+<style><!--
+li { padding-bottom: .5em; }
+ul ul li { padding-bottom: 0; }
+dt { font-weight: bold }
+--></style>
+
+<h3>NUnit 2.6.3 - Version 2.6.3.13283 - October 10, 2013</h3>
+
+<h4>Framework</h4>
+<ul>
+<li>When running under .NET 4.5, <b>async</b> methods may now be used as the target of a <b>ThrowsConstraint</b>.
+<li>When running under .NET 4.5, <b>async</b> methods may now be used as an <b>ActualValueDelegate</b> passed to <b>Assert.That()</b> or <b>Assume.That()</b>.
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>1071164 	Support async methods in usage scenarios of Throws constraints
+<li>1071714 	TestContext is broken when a previous version of the runner is used alongside a new version of the framework
+<li>1071861 	Error in Path Constraints
+<li>1072379 	Report test execution time at a higher resolution
+<li>1074568 	Assert/Assume should support an async method for the ActualValueDelegate
+<li>1079296 	NUnit 2.6.2 Failure on Mono
+<li>1082330 	Better Exception if SetCulture attribute is applied multiple times
+<li>1084181   TestExecutionContext SerializationException
+<li>1086975 	Security Exception After Upgrading to 2.6.2
+<li>1096902 	Trace output is disabled by default in version 2.6.2.12296
+<li>1097854 	Incorrect documentation for console runner /test option
+<li>1107746 	Add nunit tags to nuget packages
+<li>1130239 	classicModel.html is linked in local help, but doesn't exist
+<li>1167638 	Incorrectly detected recursion with types implementing IEnumerable and overriding Equals/operators/value types
+<li>1167805 	cross-domain problems with XmlSchema and call context
+<li>1222148 	/framework switch does not recognize net-4.5
+<li>1235891 	Proposed 2.6.3 release: ArgumentNullException in NUnit.Framework.AsyncInvocationRegion..cctor
+</ul>
+
+<style><!--
+li { padding-bottom: .5em; }
+ul ul li { padding-bottom: 0; }
+dt { font-weight: bold }
+--></style>
+
+<h3>NUnit 2.6.2 - Version 2.6.2.12296 - October 22, 2012</h3>
+
+<h4>General</h4>
+
+<ul>
+<li>Tests may now be loaded and run from a shared directory specified as a UNC path.
+<li>Tests may now be run under .NET 4.5.
+<li>When running under a debugger, any nunit-agent process launched will break and allow the option to continue debugging the agent process as well.
+<li>J# and old-style managed C++ samples have been removed. F# samples are now included. Code samples are no longer included in the standard installs but are available as a separate download. All samples now use VS2010 projects.
+</ul>
+
+<h4>Development</h4>
+<ul>
+<li>The source code now includes solutions for VS2010 and VS2012. The VS2008 solution has been removed.
+<li>The NAnt build now uses NAnt 0.92.
+<li>NSubstitute has been upgraded to version 1.4.3.
+</ul>
+
+<h4>Framework</h4>
+<ul>
+<li>When running under .NET 4.5, <b>async</b> test methods are now supported. For test cases returning a value, the method must return <b>Task&lt;T&gt;</b>, where <b>T</b> is the type of the returned value. For single tests and test cases not returning a value, the method may return either <b>void</b> or <b>Task</b>.
+<li>The <b>Platform</b> attribute has been upgraded to recognize .NET 4.5, MaxOsX and XBox.
+<li><b>TestCaseSource</b> may now specify a class that implements <b>IEnumerable</b> without specifying the name of a method.
+</ul>
+
+<h4>Console</h4>
+<ul>
+<li>New options <b>/basepath</b> and <b>/privatebinpath</b> allow specifying the ApplicationBase and probing path on the command line.
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>1029785 	Test loaded from remote folder failed to run with exception System.IODirectory Not Found
+<li>1029941 	Missing basepath and privatebinpath arguments in nunit-console
+<li>1033537 	Spurious behaviour using keyboard menu key
+<li>1034242 	Update VS Solution to VS2010
+<li>1036699 	Documentation is missing info about the /test command line option
+<li>1037130 	Update NSubstitute to 1.4.3
+<li>1041365 	Add MaxOsX and Xbox support to platform attribute
+<li>1042385 	Convert all sample projects to VS2010
+<li>1043641 	New text output tab doesn't display anything until NUnit is closed and re-opened
+<li>1047272 	TestContext.CurrentContext.Result throws NullReferenceException
+<li>1048920 	Attach debugger to nunit-agent automatically
+<li>1052298 	Allow TestCaseSource to be an instance of IEnumerable
+<li>1053727 	Project Editor Unhandled Exception when setting ApplicationBase
+<li>1055701 	Upgrade NAnt to 0.92
+<li>1057911 	Trap incorrect input for nunit-console.exe options
+<li>1057912 	Clarify /runlist help message for nunit-console.exe
+<li>1057913 	Unhandled exception for /trace option in nunit-console.exe
+<li>1057981 	C#5 async tests are not supported
+<li>1060482 	Documentation: Minor Typo
+<li>1061956 	Recognize .NET 4.5 when it is running
+<li>1061957 	Packaging problems
+<li>1064014 	Simple async tests should not return Task<T>
+<li>1064100 	Void testcase with expected result should be non-runnable
+<li>1066386 	Improve support for C# async void tests
+<li>1066393 	Unable to display source for testcases with an alternate name set
+<li>1069499 	Exception thrown when trying to load an assembly not built for .NET
+<li>1069569 	Remove samples from base NUnit distribution
+</ul>
+
+<style><!--
+li { padding-bottom: .5em; }
+ul ul li { padding-bottom: 0; }
+dt { font-weight: bold }
+--></style>
+
+<h3>NUnit 2.6.1 Final Release - Version 2.6.1.12217 - August 4, 2012</h3>
+
+<h4>General</h4>
+
+<ul>
+<li>The build number (fourth component) is no longer part of the package name. For example, packages for this release use NUnit-2.6.1-rc as their base name.
+<li>NuGet packages are now provided.
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>942164  NUnit 2.6 GUI does not generate TestResult.xml
+<li>957899 	Feature: Assert.DoesNotThrow() needs exception details
+<li>959576 	NUnit-console executes in STA mode
+<li>973248 	Nunit 2.6 Gui Showing wrong result state
+<li>984040 	Has.Attribute error
+<li>992792 	Documentation bug in NoItemConstraint
+<li>992799 	SetUpFixture and SetUp doc inconsistency
+<li>993247 	Tests fail with IOException: Too many open files
+<li>994691 	Update nSubstitute to 1.4.2
+<li>997871 	Console test runner does not return non-zero exit code when there are invalid tests
+<li>1000181 	Parameterized TestFixture with System.Type as constructor arguments fails
+<li>1006604 	Explicit test runs if /exclude parameter is used
+<li>1012128 	Not all tests are carried out in Windows 7 x64
+<li>1023058   Remove limitations on location of ConfigurationFile in project editor
+<li>1025218   Using Open Generic Types In TestFixture Attribute Causes Exception When Loading Test DLL
+<li>1027227   QuickStart document needs to be updated
+<li>1027269   Problem with "Exclude these categories"
+</ul>
 
 <style><!--
 li { padding-bottom: .5em; }
@@ -333,7 +472,7 @@ dt { font-weight: bold }
 <!-- Submenu -->
 <div id="subnav">
 <ul>
-<li><a href="index.html">NUnit 2.6</a></li>
+<li><a href="index.html">NUnit 2.6.3</a></li>
 <ul>
 <li><a href="getStarted.html">Getting&nbsp;Started</a></li>
 <li><a href="writingTests.html">Writing&nbsp;Tests</a></li>
@@ -346,12 +485,13 @@ dt { font-weight: bold }
 <li><a href="samples.html">Samples</a></li>
 <li><a href="license.html">License</a></li>
 </ul>
-<li><a href="vsTestAdapter.html">NUnit&nbsp;Test&nbsp;Adapter&nbsp;0.90</a></li>
+<li><a href="vsTestAdapter.html">NUnit&nbsp;Test&nbsp;Adapter</a></li>
 <ul>
 <li><a href="vsTestAdapterLicense.html">License</a></li>
+<li><a href="vsTestAdapterReleaseNotes.html">Release&nbsp;Notes</a></li>
 </ul>
-<li><a href="&r=2.6.html"></a></li>
-<li><a href="&r=2.6.html"></a></li>
+<li><a href="&r=2.6.3.html"></a></li>
+<li><a href="&r=2.6.3.html"></a></li>
 </ul>
 </div>
 <!-- End of Submenu -->

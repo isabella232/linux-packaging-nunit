@@ -1,0 +1,6 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\lib\nunit.core.interfaces.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\lib\nunit.core.interfaces.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\NUnitCore\interfaces\obj\Debug\nunit.core.interfaces.dll
+D:\Dev\NUnit\nunit-2.6\work\src\NUnitCore\interfaces\obj\Debug\nunit.core.interfaces.pdb
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\lib\nunit.core.interfaces.xml
+D:\Dev\NUnit\nunit-2.6\work\src\NUnitCore\interfaces\obj\Debug\nunit.core.interfaces.dll.csprojResolveAssemblyReference.cache

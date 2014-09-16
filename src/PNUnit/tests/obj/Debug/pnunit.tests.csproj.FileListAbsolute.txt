@@ -1,0 +1,10 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\agent.conf
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\agent.log.conf
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\launcher.log.conf
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\runpnunit.bat
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\test.conf
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit.tests.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\tests\obj\Debug\pnunit.tests.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\tests\obj\Debug\pnunit.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\tests\obj\Debug\pnunit.tests.pdb

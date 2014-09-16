@@ -1,0 +1,5 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\tests\nunit-console.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\tests\nunit-console.tests.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\ConsoleRunner\tests\obj\Debug\nunit-console.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\src\ConsoleRunner\tests\obj\Debug\nunit-console.tests.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\ConsoleRunner\tests\obj\Debug\nunit-console.tests.csprojResolveAssemblyReference.cache

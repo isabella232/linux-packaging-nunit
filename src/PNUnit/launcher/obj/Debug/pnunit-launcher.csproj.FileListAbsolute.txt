@@ -1,0 +1,6 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit-launcher.exe.config
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit-launcher.exe
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\pnunit-launcher.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\launcher\obj\Debug\pnunit-launcher.exe
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\launcher\obj\Debug\pnunit-launcher.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\PNUnit\launcher\obj\Debug\pnunit-launcher.csprojResolveAssemblyReference.cache

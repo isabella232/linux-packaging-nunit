@@ -1,0 +1,5 @@
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\tests\nunit-editor.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\bin\Debug\tests\nunit-editor.tests.pdb
+D:\Dev\NUnit\nunit-2.6\work\src\ProjectEditor\tests\obj\Debug\nunit-editor.tests.csprojResolveAssemblyReference.cache
+D:\Dev\NUnit\nunit-2.6\work\src\ProjectEditor\tests\obj\Debug\nunit-editor.tests.dll
+D:\Dev\NUnit\nunit-2.6\work\src\ProjectEditor\tests\obj\Debug\nunit-editor.tests.pdb

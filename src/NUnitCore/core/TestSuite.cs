@@ -13,9 +13,11 @@ namespace NUnit.Core
 	using System.Collections;
 	using System.Reflection;
 	using NUnit.Core.Filters;
+    using System.Runtime.Remoting.Messaging;
 
 #if CLR_2_0 || CLR_4_0
     using System.Collections.Generic;
+using System.Diagnostics;
 #endif
 
 	/// <summary>
@@ -107,7 +109,7 @@ namespace NUnit.Core
         }
         #endregion
 
-		#region Public Methods
+        #region Public Methods
 		public void Sort()
 		{
             if (!maintainTestOrder)
@@ -246,14 +248,23 @@ namespace NUnit.Core
 		public override TestResult Run(EventListener listener, ITestFilter filter)
 		{
             listener.SuiteStarted(this.TestName);
+#if CLR_2_0 || CLR_4_0
+            long startTime = Stopwatch.GetTimestamp();
+#else
             long startTime = DateTime.Now.Ticks;
+#endif
 
 			TestResult suiteResult = this.RunState == RunState.Runnable || this.RunState == RunState.Explicit
 				? RunSuiteInContext(listener, filter)
 				: SkipSuite(listener, filter);
 			
+#if CLR_2_0 || CLR_4_0
+            long stopTime = Stopwatch.GetTimestamp();
+            double time = ((double)(stopTime - startTime)) / (double)Stopwatch.Frequency;
+#else
             long stopTime = DateTime.Now.Ticks;
             double time = ((double)(stopTime - startTime)) / (double)TimeSpan.TicksPerSecond;
+#endif
             suiteResult.Time = time;
 
             listener.SuiteFinished(suiteResult);
@@ -285,6 +296,8 @@ namespace NUnit.Core
 		{
             TestExecutionContext.Save();
 
+            TestExecutionContext.CurrentContext.CurrentTest = this;
+
             try
             {
 				return ShouldRunOnOwnThread
@@ -300,6 +313,7 @@ namespace NUnit.Core
         public TestResult RunSuite(EventListener listener, ITestFilter filter)
         {
 			TestResult suiteResult = new TestResult(this);
+            TestExecutionContext.CurrentContext.CurrentResult = suiteResult;
 			
             DoOneTimeSetUp(suiteResult);
 #if CLR_2_0 || CLR_4_0
@@ -309,10 +323,16 @@ namespace NUnit.Core
             if (this.Properties["_SETCULTURE"] != null)
                 TestExecutionContext.CurrentContext.CurrentCulture =
                     new System.Globalization.CultureInfo((string)Properties["_SETCULTURE"]);
+            else if (this.Properties["SetCulture"] != null) // For NUnitLite
+                TestExecutionContext.CurrentContext.CurrentCulture =
+                    new System.Globalization.CultureInfo((string)Properties["SetCulture"]);
 
             if (this.Properties["_SETUICULTURE"] != null)
                 TestExecutionContext.CurrentContext.CurrentUICulture =
                     new System.Globalization.CultureInfo((string)Properties["_SETUICULTURE"]);
+            else if (this.Properties["SetUICulture"] != null) // For NUnitLite
+                TestExecutionContext.CurrentContext.CurrentUICulture =
+                    new System.Globalization.CultureInfo((string)Properties["SetUICulture"]);
 
             switch (suiteResult.ResultState)
             {
@@ -513,8 +533,7 @@ namespace NUnit.Core
             return type.IsAbstract && type.IsSealed;
         }
 
-        private void RunAllTests(
-			TestResult suiteResult, EventListener listener, ITestFilter filter )
+        private void RunAllTests(TestResult suiteResult, EventListener listener, ITestFilter filter )
 		{
             if (Properties.Contains("Timeout"))
                 TestExecutionContext.CurrentContext.TestCaseTimeout = (int)Properties["Timeout"];
@@ -551,7 +570,7 @@ namespace NUnit.Core
                     if (result.ResultState == ResultState.Cancelled)
                         break;
 
-                    if ((result.IsError || result.IsFailure) && stopOnError)
+                    if ((result.IsError || result.IsFailure || result.ResultState == ResultState.NotRunnable) && stopOnError)
                         break;
                 }
             }

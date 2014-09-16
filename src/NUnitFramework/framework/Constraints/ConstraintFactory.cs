@@ -703,7 +703,7 @@ namespace NUnit.Framework.Constraints
 
         /// <summary>
         /// Returns a constraint that succeeds if the actual
-        /// value matches the Regex pattern supplied as an argument.
+        /// value matches the regular expression supplied as an argument.
         /// </summary>
         public RegexConstraint Matches(string pattern)
         {
@@ -712,7 +712,7 @@ namespace NUnit.Framework.Constraints
 
         /// <summary>
         /// Returns a constraint that succeeds if the actual
-        /// value matches the Regex pattern supplied as an argument.
+        /// value matches the regular expression supplied as an argument.
         /// </summary>
         public RegexConstraint StringMatching(string pattern)
         {
@@ -775,7 +775,16 @@ namespace NUnit.Framework.Constraints
 
         #region InRange
 
-#if !CLR_2_0 && !CLR_4_0
+#if CLR_2_0 || CLR_4_0
+        /// <summary>
+        /// Returns a constraint that tests whether the actual value falls 
+        /// within a specified range.
+        /// </summary>
+        public RangeConstraint<T> InRange<T>(T from, T to) where T : IComparable<T>
+        {
+            return new RangeConstraint<T>(from, to);
+        }
+#else
         /// <summary>
         /// Returns a constraint that tests whether the actual value falls 
         /// within a specified range.
@@ -787,21 +796,5 @@ namespace NUnit.Framework.Constraints
 #endif
 
         #endregion
-
-        #region InRange<T>
-
-#if CLR_2_0 || CLR_4_0
-        /// <summary>
-        /// Returns a constraint that tests whether the actual value falls 
-        /// within a specified range.
-        /// </summary>
-        public RangeConstraint<T> InRange<T>(T from, T to) where T : IComparable<T>
-        {
-            return new RangeConstraint<T>(from, to);
-        }
-#endif
-
-        #endregion
-
     }
 }
