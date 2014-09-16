@@ -43,7 +43,8 @@ Package: libnunit2.6-cil
 Architecture: all
 Section: cli-mono
 Depends: ${cli:Depends}, ${misc:Depends}
-Replaces: libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil
+Replaces: nunit-console (<< 2.6.3+dfsg), libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil
+Breaks: nunit-console (<< 2.6.3+dfsg)
 Suggests: libnunit-doc, monodoc-nunit-manual
 Description: Unit test framework for CLI - Assemblies
  NUnit is a unit testing framework for all .NET languages. It serves the
