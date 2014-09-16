@@ -1,3 +1,9 @@
+nunit (2.6.3+dfsg-1~xamarin1) wheezy; urgency=medium
+
+  * Upload to Xamarin repo.
+
+ -- Jo Shields <jo.shields@xamarin.com>  Tue, 16 Sep 2014 16:26:22 +0100
+
 nunit (2.6.3+dfsg-1) unstable; urgency=medium
 
   * [c7bd1b5] Imported Upstream version 2.6.3+dfsg
