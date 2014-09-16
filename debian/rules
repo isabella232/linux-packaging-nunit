@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
-DEB_CLI_ABI_VERSION = 2.6
+DEB_CLI_ABI_VERSION = 2.6.3
 DEB_CLI_API_VERSION = 2.6.3
 
 %:

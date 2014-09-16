@@ -39,12 +39,10 @@ Description: Unit test framework for CLI - GUI test runner
  .
  This package contains the graphical front-end.
 
-Package: libnunit2.6-cil
+Package: libnunit-core2.6.3-cil
 Architecture: all
 Section: cli-mono
 Depends: ${cli:Depends}, ${misc:Depends}
-Replaces: nunit-console (<< 2.6.3+dfsg), libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil
-Breaks: nunit-console (<< 2.6.3+dfsg)
 Suggests: libnunit-doc, monodoc-nunit-manual
 Description: Unit test framework for CLI - Assemblies
  NUnit is a unit testing framework for all .NET languages. It serves the
@@ -52,11 +50,82 @@ Description: Unit test framework for CLI - Assemblies
  categories, testing for exceptions and writing test results in plain
  text or XML.
  .
- This package contains the NUnit assemblies
+ This package contains the nunit.core assembly
+
+Package: libnunit-core-interfaces2.6.3-cil
+Architecture: all
+Section: cli-mono
+Depends: ${cli:Depends}, ${misc:Depends}
+Suggests: libnunit-doc, monodoc-nunit-manual
+Description: Unit test framework for CLI - Assemblies
+ NUnit is a unit testing framework for all .NET languages. It serves the
+ same purpose as JUnit does in the Java world. It supports test
+ categories, testing for exceptions and writing test results in plain
+ text or XML.
+ .
+ This package contains the nunit.core.interfaces assembly
+
+Package: libnunit-console-runner2.6.3-cil
+Architecture: all
+Section: cli-mono
+Depends: ${cli:Depends}, ${misc:Depends}
+Suggests: libnunit-doc, monodoc-nunit-manual
+Description: Unit test framework for CLI - Assemblies
+ NUnit is a unit testing framework for all .NET languages. It serves the
+ same purpose as JUnit does in the Java world. It supports test
+ categories, testing for exceptions and writing test results in plain
+ text or XML.
+ .
+ This package contains the nunit-console-interfaces assembly
+
+Package: libnunit-framework2.6.3-cil
+Architecture: all
+Section: cli-mono
+Depends: ${cli:Depends}, ${misc:Depends}
+Suggests: libnunit-doc, monodoc-nunit-manual
+Description: Unit test framework for CLI - Assemblies
+ NUnit is a unit testing framework for all .NET languages. It serves the
+ same purpose as JUnit does in the Java world. It supports test
+ categories, testing for exceptions and writing test results in plain
+ text or XML.
+ .
+ This package contains the nunit.framework assembly
+
+Package: libnunit-mocks2.6.3-cil
+Architecture: all
+Section: cli-mono
+Depends: ${cli:Depends}, ${misc:Depends}
+Suggests: libnunit-doc, monodoc-nunit-manual
+Description: Unit test framework for CLI - Assemblies
+ NUnit is a unit testing framework for all .NET languages. It serves the
+ same purpose as JUnit does in the Java world. It supports test
+ categories, testing for exceptions and writing test results in plain
+ text or XML.
+ .
+ This package contains the nunit.mocks assembly
+
+Package: libnunit-util2.6.3-cil
+Architecture: all
+Section: cli-mono
+Depends: ${cli:Depends}, ${misc:Depends}
+Suggests: libnunit-doc, monodoc-nunit-manual
+Description: Unit test framework for CLI - Assemblies
+ NUnit is a unit testing framework for all .NET languages. It serves the
+ same purpose as JUnit does in the Java world. It supports test
+ categories, testing for exceptions and writing test results in plain
+ text or XML.
+ .
+ This package contains the nunit.util assembly
 
 Package: libnunit-cil-dev
 Architecture: all
-Depends: libnunit2.6-cil (= ${binary:Version}), ${misc:Depends}
+Depends: libnunit-console-runner2.6.3-cil (= ${binary:Version}),
+         libnunit-core2.6.3-cil (= ${binary:Version}),
+         libnunit-core-interfaces2.6.3-cil (= ${binary:Version}),
+         libnunit-framework2.6.3-cil (= ${binary:Version}),
+         libnunit-mocks2.6.3-cil (= ${binary:Version}),
+         libnunit-util2.6.3-cil (= ${binary:Version}),
+         ${misc:Depends}
 Replaces: libnunit-cil, libnunit2.2.6-cil, libnunit2.4-cil (<< 2.4.7+dfsg-5)
 Description: Unit test framework for CLI - Development files
  NUnit is a unit testing framework for all .NET languages. It serves the
@@ -96,7 +165,12 @@ Description: compiled XML documentation for NUnit - monodoc manual
 Package: nunit
 Architecture: all
 Depends: libnunit-doc,
-         libnunit2.6-cil,
+         libnunit-console-runner2.6.3-cil,
+         libnunit-core2.6.3-cil,
+         libnunit-core-interfaces2.6.3-cil,
+         libnunit-framework2.6.3-cil,
+         libnunit-mocks2.6.3-cil,
+         libnunit-util2.6.3-cil,
          nunit-console,
          nunit-gui,
          ${misc:Depends}
