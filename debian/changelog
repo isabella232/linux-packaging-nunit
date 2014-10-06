@@ -1,3 +1,11 @@
+nunit (2.6.3+dfsg-1~xamarin2) wheezy; urgency=medium
+
+  * [89961b9] Force 4.5 framework, rather than using the default. This 
+    avoids a difference between Xamarin and Debian Mono, caused by this 
+    patch in Debian: https://gist.github.com/directhex/b01e24e6c4c54ed33461
+
+ -- Jo Shields <jo.shields@xamarin.com>  Mon, 06 Oct 2014 09:18:31 +0100
+
 nunit (2.6.3+dfsg-1~xamarin1) wheezy; urgency=medium
 
   * Upload to Xamarin repo.
