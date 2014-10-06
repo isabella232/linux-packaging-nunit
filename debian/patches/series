@@ -1,2 +1,2 @@
-use_default_framework.patch
+force_4.5_toolsversion.patch
 05_build_xml_doc_for_nunit.core.dpatch

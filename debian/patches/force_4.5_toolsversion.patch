@@ -1,0 +1,433 @@
+Description: use default framework
+ generated with: 
+ find . -name "*.csproj" | xargs sed -i "s/ToolsVersion=\"3.5\"//"
+ find . -name "*.csproj" | xargs sed -i -n '/TargetFrameworkVersion/ !p'
+Index: xamarin-pkg-nunit/src/ClientUtilities/tests/nunit.util.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ClientUtilities/tests/nunit.util.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ClientUtilities/tests/nunit.util.tests.csproj	2014-10-06 09:16:25.753913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/ClientUtilities/tests/resources/DebugOnly.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ClientUtilities/tests/resources/DebugOnly.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ClientUtilities/tests/resources/DebugOnly.csproj	2014-10-06 09:16:25.769913320 +0100
+@@ -10,7 +10,7 @@
+     <AppDesignerFolder>Properties</AppDesignerFolder>
+     <RootNamespace>DebugOnly</RootNamespace>
+     <AssemblyName>DebugOnly</AssemblyName>
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileAlignment>512</FileAlignment>
+   </PropertyGroup>
+   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+Index: xamarin-pkg-nunit/src/ClientUtilities/tests/resources/DisabledProject.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ClientUtilities/tests/resources/DisabledProject.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ClientUtilities/tests/resources/DisabledProject.csproj	2014-10-06 09:16:25.769913320 +0100
+@@ -10,7 +10,7 @@
+     <AppDesignerFolder>Properties</AppDesignerFolder>
+     <RootNamespace>DisabledProject</RootNamespace>
+     <AssemblyName>DisabledProject</AssemblyName>
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileAlignment>512</FileAlignment>
+   </PropertyGroup>
+   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+Index: xamarin-pkg-nunit/src/ClientUtilities/tests/resources/MissingOutputPath.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ClientUtilities/tests/resources/MissingOutputPath.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ClientUtilities/tests/resources/MissingOutputPath.csproj	2014-10-06 09:16:25.769913320 +0100
+@@ -9,7 +9,7 @@
+     <AppDesignerFolder>Properties</AppDesignerFolder>
+     <RootNamespace>MissingOutputPath</RootNamespace>
+     <AssemblyName>MissingOutputPath</AssemblyName>
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileAlignment>512</FileAlignment>
+ 	<OutputPath>bin\Common\</OutputPath>
+   </PropertyGroup>
+Index: xamarin-pkg-nunit/src/ClientUtilities/util/nunit.util.dll.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ClientUtilities/util/nunit.util.dll.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ClientUtilities/util/nunit.util.dll.csproj	2014-10-06 09:16:25.773913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj	2014-10-06 09:16:25.801913319 +0100
+@@ -23,7 +23,7 @@
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <NoWin32Manifest>true</NoWin32Manifest>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/ConsoleRunner/nunit-console/nunit-console.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ConsoleRunner/nunit-console/nunit-console.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ConsoleRunner/nunit-console/nunit-console.csproj	2014-10-06 09:16:25.801913319 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/ConsoleRunner/tests/nunit-console.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ConsoleRunner/tests/nunit-console.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ConsoleRunner/tests/nunit-console.tests.csproj	2014-10-06 09:16:25.797913319 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/GuiComponents/UiKit/nunit.uikit.dll.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/GuiComponents/UiKit/nunit.uikit.dll.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/GuiComponents/UiKit/nunit.uikit.dll.csproj	2014-10-06 09:16:25.777913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/GuiComponents/tests/nunit.uikit.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/GuiComponents/tests/nunit.uikit.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/GuiComponents/tests/nunit.uikit.tests.csproj	2014-10-06 09:16:25.777913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/GuiException/UiException/nunit.uiexception.dll.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/GuiException/UiException/nunit.uiexception.dll.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/GuiException/UiException/nunit.uiexception.dll.csproj	2014-10-06 09:16:25.749913320 +0100
+@@ -10,7 +10,7 @@
+     <AppDesignerFolder>Properties</AppDesignerFolder>
+     <RootNamespace>NUnit.UiException</RootNamespace>
+     <AssemblyName>nunit.uiexception</AssemblyName>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileAlignment>512</FileAlignment>
+     <AssemblyOriginatorKeyFile>..\..\..\..\src\GuiException\UiException\stackSgKey.snk</AssemblyOriginatorKeyFile>
+     <FileUpgradeFlags>
+Index: xamarin-pkg-nunit/src/GuiException/tests/nunit.uiexception.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/GuiException/tests/nunit.uiexception.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/GuiException/tests/nunit.uiexception.tests.csproj	2014-10-06 09:16:25.745913320 +0100
+@@ -15,7 +15,7 @@
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <UpgradeBackupLocation />
+     <TargetFrameworkProfile />
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj	2014-10-06 09:16:25.805913319 +0100
+@@ -26,7 +26,7 @@
+     <TargetZone>LocalIntranet</TargetZone>
+     <GenerateManifests>false</GenerateManifests>
+     <NoWin32Manifest>true</NoWin32Manifest>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>http://localhost/nunit/</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Web</InstallFrom>
+Index: xamarin-pkg-nunit/src/GuiRunner/nunit-gui/nunit-gui.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/GuiRunner/nunit-gui/nunit-gui.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/GuiRunner/nunit-gui/nunit-gui.csproj	2014-10-06 09:16:25.805913319 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/GuiRunner/tests/nunit-gui.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/GuiRunner/tests/nunit-gui.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/GuiRunner/tests/nunit-gui.tests.csproj	2014-10-06 09:16:25.805913319 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitCore/core/nunit.core.dll.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitCore/core/nunit.core.dll.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitCore/core/nunit.core.dll.csproj	2014-10-06 09:16:25.789913319 +0100
+@@ -23,7 +23,7 @@
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <IsWebBootstrapper>true</IsWebBootstrapper>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>http://localhost/nunit.core/</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Web</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj	2014-10-06 09:16:25.789913319 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitCore/tests/nunit.core.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitCore/tests/nunit.core.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitCore/tests/nunit.core.tests.csproj	2014-10-06 09:16:25.785913319 +0100
+@@ -23,7 +23,7 @@
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <IsWebBootstrapper>true</IsWebBootstrapper>
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>http://localhost/nunit.core.tests/</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Web</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitFramework/framework/nunit.framework.dll.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitFramework/framework/nunit.framework.dll.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitFramework/framework/nunit.framework.dll.csproj	2014-10-06 09:16:25.785913319 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitFramework/tests/nunit.framework.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitFramework/tests/nunit.framework.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitFramework/tests/nunit.framework.tests.csproj	2014-10-06 09:16:25.781913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitMocks/mocks/nunit.mocks.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitMocks/mocks/nunit.mocks.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitMocks/mocks/nunit.mocks.csproj	2014-10-06 09:16:25.753913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitMocks/tests/nunit.mocks.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitMocks/tests/nunit.mocks.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitMocks/tests/nunit.mocks.tests.csproj	2014-10-06 09:16:25.749913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/NUnitTestServer/nunit-agent-exe/nunit-agent.exe.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/NUnitTestServer/nunit-agent-exe/nunit-agent.exe.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/NUnitTestServer/nunit-agent-exe/nunit-agent.exe.csproj	2014-10-06 09:16:25.773913320 +0100
+@@ -23,7 +23,7 @@
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <NoWin32Manifest>true</NoWin32Manifest>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/PNUnit/agent/pnunit-agent.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/PNUnit/agent/pnunit-agent.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/PNUnit/agent/pnunit-agent.csproj	2014-10-06 09:16:25.797913319 +0100
+@@ -29,7 +29,7 @@
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <SccAuxPath>
+     </SccAuxPath>
+     <NoWin32Manifest>true</NoWin32Manifest>
+Index: xamarin-pkg-nunit/src/PNUnit/launcher/pnunit-launcher.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/PNUnit/launcher/pnunit-launcher.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/PNUnit/launcher/pnunit-launcher.csproj	2014-10-06 09:16:25.793913319 +0100
+@@ -31,7 +31,7 @@
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <NoWin32Manifest>true</NoWin32Manifest>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+Index: xamarin-pkg-nunit/src/PNUnit/pnunit.framework/pnunit.framework.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/PNUnit/pnunit.framework/pnunit.framework.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/PNUnit/pnunit.framework/pnunit.framework.csproj	2014-10-06 09:16:25.797913319 +0100
+@@ -28,7 +28,7 @@
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <SccAuxPath>
+     </SccAuxPath>
+     <PublishUrl>publish\</PublishUrl>
+Index: xamarin-pkg-nunit/src/PNUnit/tests/pnunit.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/PNUnit/tests/pnunit.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/PNUnit/tests/pnunit.tests.csproj	2014-10-06 09:16:25.793913319 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/ProjectEditor/editor/nunit-editor.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ProjectEditor/editor/nunit-editor.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ProjectEditor/editor/nunit-editor.csproj	2014-10-06 09:16:25.737913320 +0100
+@@ -10,7 +10,7 @@
+     <AppDesignerFolder>Properties</AppDesignerFolder>
+     <RootNamespace>NUnit.ProjectEditor</RootNamespace>
+     <AssemblyName>nunit-editor</AssemblyName>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileAlignment>512</FileAlignment>
+     <ApplicationIcon>App.ico</ApplicationIcon>
+     <FileUpgradeFlags>
+Index: xamarin-pkg-nunit/src/ProjectEditor/tests/nunit-editor.tests.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/ProjectEditor/tests/nunit-editor.tests.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/ProjectEditor/tests/nunit-editor.tests.csproj	2014-10-06 09:16:25.733913320 +0100
+@@ -11,7 +11,7 @@
+     <RootNamespace>NUnit.ProjectEditor.Tests</RootNamespace>
+     <AssemblyName>nunit-editor.tests</AssemblyName>
+     <FileAlignment>512</FileAlignment>
+-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <FileUpgradeFlags>
+     </FileUpgradeFlags>
+     <OldToolsVersion>3.5</OldToolsVersion>
+Index: xamarin-pkg-nunit/src/tests/mock-assembly/mock-assembly.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/tests/mock-assembly/mock-assembly.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/tests/mock-assembly/mock-assembly.csproj	2014-10-06 09:16:25.745913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/tests/nonamespace-assembly/nonamespace-assembly.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/tests/nonamespace-assembly/nonamespace-assembly.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/tests/nonamespace-assembly/nonamespace-assembly.csproj	2014-10-06 09:16:25.737913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
+Index: xamarin-pkg-nunit/src/tests/test-assembly/test-assembly.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/tests/test-assembly/test-assembly.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/tests/test-assembly/test-assembly.csproj	2014-10-06 09:16:25.741913320 +0100
+@@ -23,7 +23,7 @@
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+     <IsWebBootstrapper>true</IsWebBootstrapper>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>http://localhost/test-assembly/</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Web</InstallFrom>
+Index: xamarin-pkg-nunit/src/tests/test-utilities/test-utilities.csproj
+===================================================================
+--- xamarin-pkg-nunit.orig/src/tests/test-utilities/test-utilities.csproj	2014-10-06 09:12:29.000000000 +0100
++++ xamarin-pkg-nunit/src/tests/test-utilities/test-utilities.csproj	2014-10-06 09:16:25.741913320 +0100
+@@ -22,7 +22,7 @@
+     <UpgradeBackupLocation>
+     </UpgradeBackupLocation>
+     <OldToolsVersion>3.5</OldToolsVersion>
+-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
++    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+     <PublishUrl>publish\</PublishUrl>
+     <Install>true</Install>
+     <InstallFrom>Disk</InstallFrom>
