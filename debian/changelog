@@ -1,3 +1,9 @@
+nunit (2.6.3+dfsg-1~xamarin3) alpha; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 29 Mar 2017 15:30:48 +0000
+
 nunit (2.6.3+dfsg-1~xamarin2) wheezy; urgency=medium
 
   * [89961b9] Force 4.5 framework, rather than using the default. This 
