@@ -20,7 +20,7 @@ License:        MIT
 Group:          Development/Libraries/Other
 Url:            http://www.nunit.org/
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-Source0:        nunit_%{version}+dfsg.orig.tar.gz
+Source0:        nunit_%{version}.tar.gz
 Source1:	nunit.pc
 Source2:	nunit-gui.sh
 Source3:	nunit-console.sh
