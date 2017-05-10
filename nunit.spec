@@ -13,8 +13,8 @@
 # published by the Open Source Initiative.
 
 Name:           NUnit
-Version:        2.6.3
-Release:        0.xamarin.0
+Version:	2.6.3+dfsg
+Release:	0.xamarin.1
 Summary:        Unit test framework for CLI
 License:        MIT
 Group:          Development/Libraries/Other
