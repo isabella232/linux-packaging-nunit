@@ -43,17 +43,17 @@ the Microsoft .NET Framework.
 %build
 %{?exp_env}
 %{?env_options}
-xbuild /property:Configuration=Debug ./src/NUnitCore/core/nunit.core.dll.csproj
-xbuild /property:Configuration=Debug ./src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj
-xbuild /property:Configuration=Debug ./src/NUnitFramework/framework/nunit.framework.dll.csproj
-xbuild /property:Configuration=Debug ./src/NUnitMocks/mocks/nunit.mocks.csproj
-xbuild /property:Configuration=Debug ./src/ClientUtilities/util/nunit.util.dll.csproj
-xbuild /property:Configuration=Debug ./src/ConsoleRunner/nunit-console/nunit-console.csproj
-xbuild /property:Configuration=Debug ./src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj
-xbuild /property:Configuration=Debug ./src/GuiRunner/nunit-gui/nunit-gui.csproj
-xbuild /property:Configuration=Debug ./src/GuiComponents/UiKit/nunit.uikit.dll.csproj
-xbuild /property:Configuration=Debug ./src/GuiException/UiException/nunit.uiexception.dll.csproj
-xbuild /property:Configuration=Debug ./src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/NUnitCore/core/nunit.core.dll.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/NUnitFramework/framework/nunit.framework.dll.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/NUnitMocks/mocks/nunit.mocks.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/ClientUtilities/util/nunit.util.dll.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/ConsoleRunner/nunit-console/nunit-console.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/GuiRunner/nunit-gui/nunit-gui.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/GuiComponents/UiKit/nunit.uikit.dll.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/GuiException/UiException/nunit.uiexception.dll.csproj
+xbuild /p:CscToolExe=mcs /property:Configuration=Debug ./src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
 
 %install
 %{?env_options}
