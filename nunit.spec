@@ -13,14 +13,14 @@
 # published by the Open Source Initiative.
 
 Name:           NUnit
-Version:	2.6.3
+Version:	2.6.3+dfsg
 Release:	0.xamarin.4
 Summary:        Unit test framework for CLI
 License:        MIT
 Group:          Development/Libraries/Other
 Url:            http://www.nunit.org/
 BuildRoot:      %{_tmppath}/%{name}-%{version}-build
-Source0:        %{name}_%{version}+dfsg.tar.gz
+Source0:        %{name}_%{version}.tar.gz
 Source1:	nunit.pc
 Source2:	nunit-gui.sh
 Source3:	nunit-console.sh
