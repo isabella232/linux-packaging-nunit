@@ -14,7 +14,7 @@
 
 Name:           NUnit
 Version:        2.6.3
-Release:        0
+Release:        0.xamarin.0
 Summary:        Unit test framework for CLI
 License:        MIT
 Group:          Development/Libraries/Other
