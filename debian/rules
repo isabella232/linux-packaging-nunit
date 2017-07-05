@@ -7,19 +7,19 @@ DEB_CLI_API_VERSION = 2.6.3
 	dh $@ --with cli
 
 override_dh_auto_build:
-	xbuild /property:Configuration=Debug ./src/NUnitCore/core/nunit.core.dll.csproj
-	xbuild /property:Configuration=Debug ./src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj
-	xbuild /property:Configuration=Debug ./src/NUnitFramework/framework/nunit.framework.dll.csproj
-	xbuild /property:Configuration=Debug ./src/NUnitMocks/mocks/nunit.mocks.csproj
-	xbuild /property:Configuration=Debug ./src/ClientUtilities/util/nunit.util.dll.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/NUnitCore/core/nunit.core.dll.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/NUnitCore/interfaces/nunit.core.interfaces.dll.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/NUnitFramework/framework/nunit.framework.dll.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/NUnitMocks/mocks/nunit.mocks.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/ClientUtilities/util/nunit.util.dll.csproj
 
-	xbuild /property:Configuration=Debug ./src/ConsoleRunner/nunit-console/nunit-console.csproj
-	xbuild /property:Configuration=Debug ./src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/ConsoleRunner/nunit-console/nunit-console.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/ConsoleRunner/nunit-console-exe/nunit-console.exe.csproj
 
-	xbuild /property:Configuration=Debug ./src/GuiRunner/nunit-gui/nunit-gui.csproj
-	xbuild /property:Configuration=Debug ./src/GuiComponents/UiKit/nunit.uikit.dll.csproj
-	xbuild /property:Configuration=Debug ./src/GuiException/UiException/nunit.uiexception.dll.csproj
-	xbuild /property:Configuration=Debug ./src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/GuiRunner/nunit-gui/nunit-gui.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/GuiComponents/UiKit/nunit.uikit.dll.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/GuiException/UiException/nunit.uiexception.dll.csproj
+	xbuild /property:CscToolExe=mcs.exe /property:Configuration=Debug ./src/GuiRunner/nunit-gui-exe/nunit-gui.exe.csproj
 
 	rm -rf monodocer;
 	mdoc update -i ./bin/Debug/framework/nunit.framework.xml \
