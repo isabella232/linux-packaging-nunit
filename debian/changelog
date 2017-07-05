@@ -1,3 +1,9 @@
+nunit (2.6.3+dfsg-1~xamarin8) alpha; urgency=medium
+
+  * Packaging bugfix:
+
+ -- Xamarin Public Jenkins (auto-signing) <releng@xamarin.com>  Wed, 05 Jul 2017 16:38:44 +0000
+
 nunit (2.6.3+dfsg-1~xamarin7) alpha; urgency=medium
 
   * Packaging bugfix:
