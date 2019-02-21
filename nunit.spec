@@ -15,7 +15,7 @@
 Name:           NUnit
 Version:	2.6.3+dfsg
 %define realver 2.6.3
-Release:	0.xamarin.6
+Release:	0.xamarin.7
 Summary:        Unit test framework for CLI
 License:        MIT
 Group:          Development/Libraries/Other
